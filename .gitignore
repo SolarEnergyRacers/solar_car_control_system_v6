@@ -11,12 +11,6 @@
 *.gch
 *.pch
 
-# Linker files
-*.ilk
-
-# Debugger Files
-*.pdb
-
 # Compiled Dynamic libraries
 *.so
 *.dylib
@@ -37,5 +31,27 @@
 *.out
 *.app
 
-# debug information files
-*.dwo
+# local device settings fior development and test
+AC/sdkconfig.old
+AC/sdkconfig.esp32dev.old
+
+# exclude examples and temporary folders
+**/build/**
+**/examples/**
+
+# local tools settings
+**/.vscode
+AC/.pio/**
+
+# console log files
+tio-USB*.log
+
+logs_archive/**
+__pycache__/**
+
+# KiCad backup files
+PCBs/AuxController/AuxController-backups/**
+PCBs/Switchboard/Switchboard-backups/**
+PCBs/DriveController/DriveController-backups/**
+PCBs/ChassisBoard/ChassisBoard-backups/**
+docs/.*.autosave.xopp
