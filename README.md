@@ -1,6 +1,6 @@
 # solar_car_control_system_v6
 
-[solarenergyracers.ch](https://www.solarenergyracers.ch) - control system (two controller based control system for SER6 solar car)
+[solarenergyracers.ch](https://www.solarenergyracers.ch) - control system (multi controller based control system for SER v6 solar car)
 
 ![steering wheel](drafts/SteeringWheel-v0_20221016.png)
 
