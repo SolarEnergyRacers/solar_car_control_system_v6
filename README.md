@@ -71,6 +71,12 @@
 │   │   ├── CMakeLists.txt
 │   │   └── main.cpp
 │   └── upload_no_build.py
+├── PCBs
+│   ├── AuxController
+│   ├── ChassisBoard
+│   ├── DriveController
+│   ├── PDFs_Images
+│   └── SwitchBoard
 ├── docs
 ├── drafts
 ├── extras
