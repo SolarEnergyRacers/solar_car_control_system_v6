@@ -151,7 +151,7 @@ const string CarState::print(string msg, bool withColors) {
   ss << "Kd .................... " << Kd << NL;
   // [Dynamic]
   ss << "Const speed increase .. " << ConstSpeedIncrease << NL;
-  ss << "Const power invrease .. " << ConstPowerIncrease << NL;
+  ss << "Const power increase .. " << ConstPowerIncrease << NL;
   
   ss << NL;
   // [Communication]
@@ -345,35 +345,7 @@ const string CarState::printIOs(const string msg, bool withColors, bool deltaOnl
     ss << msg << NL;
 
   bool hasDelta = false;
-  for (int devNr = 0; devNr < MCP23017_NUM_DEVICES; devNr++) {
-    ss << devNr << ": ";
-    // for (int pinNr = 0; pinNr < MCP23017_NUM_PORTS; pinNr++) {
-    //   CarStatePin *pin = carState.getPin(devNr, pinNr);
-    //   if (pin->mode == OUTPUT) {
-    //     if (pin->value != pin->oldValue) {
-    //       hasDelta = true;
-    //       ss << highLightColorChg << pin->value << normalColor;
-    //     } else {
-    //       ss << highLightColorOut << pin->value << normalColor;
-    //     }
-    //   } else {
-    //     if (pin->value != pin->oldValue) {
-    //       hasDelta = true;
-    //       ss << highLightColorChg << pin->value << normalColor;
-    //     } else {
-    //       ss << pin->value;
-    //     }
-    //   }
-    //   int idx = IOExt::getIdx(devNr, pinNr);
-    //   if (idx < MCP23017_NUM_DEVICES * MCP23017_NUM_PORTS - 1) {
-    //     if ((idx + 1) % 8 == 0)
-    //       ss << " | ";
-    //     else if ((idx + 1) % 4 == 0)
-    //       ss << "-";
-    //   }
-    // }
-  }
-
+  
   // ss << NL;
   if (hasDelta || !deltaOnly)
     return ss.str();

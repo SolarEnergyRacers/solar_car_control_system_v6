@@ -26,10 +26,10 @@ string GPInputOutput::init() {
   bool hasError = false;
   // vPortCPUInitializeMutex(&mutex);
   // Init GPIO pins for CS of SD-card and TFT
-  pinMode(ESP32_AC_SD_DETECT, INPUT);
+  pinMode(ESP32_AC_SD_DETECT_GPIO35, INPUT);
 
-  pinMode(SPI_CS_SDCARD, OUTPUT);
-  digitalWrite(SPI_CS_SDCARD, HIGH);
+  // pinMode(SPI_CS_SDCARD, OUTPUT);
+  // digitalWrite(SPI_CS_SDCARD, HIGH);
 
   pinMode(SPI_CS_TFT, OUTPUT);
   digitalWrite(SPI_CS_TFT, HIGH);
@@ -40,8 +40,8 @@ string GPInputOutput::init() {
   pinMode(SPI_CS_TFT, OUTPUT);
   pinMode(SPI_RST, OUTPUT);
 
-  pinMode(ESP32_AC_BUTTON_AC_NEXT, INPUT);
-  pinMode(ESP32_AC_BUTTON_CONST_MODE, INPUT);
+  pinMode(ESP32_AC_BUTTON_NEXT_SCREEN_GPIO27, INPUT_PULLDOWN);
+  pinMode(ESP32_AC_BUTTON_CONST_MODE_GPIO02, INPUT_PULLDOWN);
 
   // console << "Start test SPI_CS_SDCARD.\n";
   // for( int i = 0; i < 100; i++){

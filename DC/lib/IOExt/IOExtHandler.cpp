@@ -12,7 +12,6 @@
 #include <stdio.h>
 #include <string>
 
-#include <MCP23017.h> // MCP23017
 #include <Wire.h>     // I2C
 
 #include <CarControl.h>
@@ -35,7 +34,7 @@ void breakPedalHandler() {
   if (!SystemInited)
     return;
 
-  carState.BreakPedal = carState.getPin(PinDI_Break)->value == 0;
+  carState.BreakPedal = carState.getPin(DI_BreakPedal_GPIO04_name)->value == 0;
   carControl.read_paddles(); // read peaddels and handels breeak
 
   if (ioExt.verboseModeDInHandler)
@@ -45,7 +44,7 @@ void breakPedalHandler() {
 void buttonSetHandler() {
   if (!SystemInited)
     return;
-  if (carState.getPin(PinDI_Button_Set)->value != 0)
+  if (carState.getPin(DI_ButtonSet_GPIO05_name)->value != 0)
     return;
   carState.ConstantModeOn = !carState.ConstantModeOn; // #SAFETY#: deceleration unlock const mode
   if (ioExt.verboseModeDInHandler)
@@ -56,7 +55,7 @@ void buttonSetHandler() {
 void buttonConfirmDriverInfoHandler() {
   if (!SystemInited)
     return;
-  if (carState.getPin(PinDI_Button_Confirm)->value != 0)
+  if (carState.getPin(DI_Button_Confirm_GPIO21_name)->value != 0)
     return;
   carState.ConfirmDriverInfo = true;
   carState.DriverInfo = "";
@@ -120,13 +119,19 @@ void buttonPlusHandler() {
 }
 
 void fwdBwdHandler() {
-  carState.DriveDirection = carState.getPin(PinDI_FWD_BWD)->value == 1 ? DRIVE_DIRECTION::FORWARD : DRIVE_DIRECTION::BACKWARD;
+  if (!SystemInited)
+    return;
+  int value = carState.getPin(DI_FWD_BWD_SENSOR_VN_GPIO39_name)->value;
+  carState.DriveDirection = value == 1 ? DRIVE_DIRECTION::FORWARD : DRIVE_DIRECTION::BACKWARD;
   if (ioExt.verboseModeDInHandler)
-    console << "Direction " << (carState.DriveDirection == DRIVE_DIRECTION::FORWARD ? "Forward" : "Backward") << "\n";
+    console << "Direction " << (carState.DriveDirection == DRIVE_DIRECTION::FORWARD ? "Forward" : "Backward") << " (" << value <<")\n";
 }
 
 void mcOnOffHandler() {
-  carState.MotorOn = carState.getPin(PinDI_MCONOFF)->value == 1;
+  if (!SystemInited)
+    return;
+  int value = carState.getPin(DI_MCONOFF_SENSOR_VP_GPIO36_name)->value;
+  carState.MotorOn = value == 1;
   if (ioExt.verboseModeDInHandler)
-    console << "MC " << (carState.MotorOn ? "On" : "Off") << "\n";
+    console << "MC " << (carState.MotorOn ? "On" : "Off") << " (" << value << ")\n";
 }

@@ -56,7 +56,7 @@ string SDCard::init() {
 // https://github.com/espressif/arduino-esp32/blob/master/libraries/SPI/examples/SPI_Multiple_Buses/SPI_Multiple_Buses.ino
 
 bool SDCard::update_sd_card_detect() {
-  carState.SdCardDetect = (bool)digitalRead(ESP32_AC_SD_DETECT);
+  carState.SdCardDetect = (bool)digitalRead(ESP32_AC_SD_DETECT_GPIO35);
   if (!carState.SdCardDetect) {
     mounted = false;
   }

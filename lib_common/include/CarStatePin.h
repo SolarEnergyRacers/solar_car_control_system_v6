@@ -11,8 +11,7 @@ using namespace std;
 
 class CarStatePin {
 public:
-  int port; // high nibble: device number, low nibble: portNr (pin)
-  int mask;
+  int gpio; // GPIO
   int mode;
   int value;
   int oldValue;
@@ -20,7 +19,7 @@ public:
   unsigned long timestamp;
   string name;
   void (*handlerFunction)();
-  bool continouseMode;
+  bool continuousMode;
   unsigned long debounceTime_ms; // in ms
 };
 

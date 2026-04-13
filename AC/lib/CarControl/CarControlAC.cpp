@@ -64,7 +64,7 @@ bool CarControl::read_nextScreenButton() {
   if (timestamp < nextScreenButton_lastPress + nextScreenButton_debounceTime_ms)
     return false;
 
-  int button_nextScreen_pressed = !digitalRead(ESP32_AC_BUTTON_AC_NEXT);
+  int button_nextScreen_pressed = digitalRead(ESP32_AC_BUTTON_NEXT_SCREEN_GPIO27);
   if (!button_nextScreen_pressed)
     return false;
   nextScreenButton_lastPress = timestamp;
@@ -116,7 +116,7 @@ bool CarControl::read_const_mode_and_mountrequest() {
   if (timestamp < mountrequest_lastPress + mountrequest_debounceTime_ms)
     return false;
 
-  bool button_constMode_pressed = !digitalRead(ESP32_AC_BUTTON_CONST_MODE); // switch constant mode (Speed, Power)
+  bool button_constMode_pressed = digitalRead(ESP32_AC_BUTTON_CONST_MODE_GPIO02); // switch constant mode (Speed, Power)
   if (!button_constMode_pressed)
     return false;
 
@@ -181,9 +181,9 @@ void CarControl::task(void *pvParams) {
       carStateRadio.push_if_radio_packet(AC_BASE0x00, packet);
 #endif
       if (carControl.verboseModeCarControlDebug)
-        console << fmt::format("[I:{:02d}|{:02d},O::{:02d}|{:02d}] CAN.PacketId=0x{:03x}-S-data:LifeSign={:4x}, button2 = {:1x} ",
+        console << fmt::format("[I:{:02d}|{:02d},O::{:02d}|{:02d}] CAN.PacketId=0x{:03x}-S-data:LifeSign={:4x}, buttonNextScreen = {:1x}, buttonConst = {:1x} ",
                                canBus.availablePacketsIn(), canBus.getMaxPacketsBufferInUsage(), canBus.availablePacketsOut(),
-                               canBus.getMaxPacketsBufferOutUsage(), AC_BASE0x00, carState.LifeSign, button_nextScreen_pressed)
+                               canBus.getMaxPacketsBufferOutUsage(), AC_BASE0x00, carState.LifeSign, button_nextScreen_pressed, read_const_mode_and_mountrequest())
                 << NL;
       // self destroying engineer info
       if (carState.EngineerInfo.compare(carStateEngineerInfoLast) != 0) {

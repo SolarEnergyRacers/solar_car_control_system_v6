@@ -57,7 +57,7 @@ remove `-D CURRENT_TIME=$UNIX_TIME` from `build_flags`
 
 - File1: `.platformio/packages/framework-arduinoespressif32/cores/esp32/binary.h`
 - File2:
-  -  Linux: `.pio/libdeps/esp32dev-linux/fmt/include/fmt/core.h`
+  - Linux: `.pio/libdeps/esp32dev-linux/fmt/include/fmt/core.h`
   - Windows:  `.pio/libdeps/esp32dev-windows/fmt/include/fmt/core.h`
 
 #### FIX

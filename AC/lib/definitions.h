@@ -10,75 +10,68 @@
 
 #define FILENAME_SER4CONFIG "/SER4CNFG.INI"
 
+#define DEFINE_CONST(name, value) \
+  constexpr auto name = value; \
+  constexpr const char* name##_name = #name;
+
 /*
  * ESP32 IOs.
  */
-#define ESP32_AC_BUTTON_AC_NEXT 27    // Next Screen
-#define ESP32_AC_BUTTON_CONST_MODE 33 // switch constant mode (Speed, Power)
-#define ESP32_AC_SD_DETECT 35         // SD card detect
+DEFINE_CONST(ESP32_AC_BUTTON_NEXT_SCREEN_GPIO27, 27)    // Next Screen
+DEFINE_CONST(ESP32_AC_BUTTON_CONST_MODE_GPIO02, 2) // switch constant mode (Speed, Power)
+DEFINE_CONST(ESP32_AC_SD_DETECT_GPIO35, 35)         // SD card detect
 
 /* Non free selectable addresses:
  *
  * 6-axis inertial sensor, gyro:
- * #define BMI088_ACC_ADDRESS 0x19
- * #define BMI088_GYRO_ADDRESS 0x69
+ * DEFINE_CONST(BMI088_ACC_ADDRESS, 0x19)
+ * DEFINE_CONST(BMI088_GYRO_ADDRESS, 0x69)
  *
  * RTC
- * const uint8_t DS1307_ADDRESS = 0x68;
+ * const uint8_t DS3231_ADDRESS = 0x68;
  */
-#define I2C_ADDRESS_DS1307 0x68
+DEFINE_CONST(I2C_ADDRESS_DS3231, 0x68)
 
 /*
  *  GPInputOutput
  */
-//#define GPIO_INTERRUPT_PIN 33
+//DEFINE_CONST(GPIO_INTERRUPT_PIN, 33)
 
 /*
  * OneWire
  */
-#define ONEWIRE_PIN 12
+DEFINE_CONST(ONEWIRE_PIN, 12)
 
 /*
  * I2C
  */
-#define I2C_SDA 23
-#define I2C_SCL 22
-// #define I2C_FREQ 200000 // 200kHz
-#define I2C_FREQ 100000 // 100kHz  (DS1307 limit)
-//#define I2C_FREQ 50000 // 50kHz
+DEFINE_CONST(I2C_SDA, 23)
+DEFINE_CONST(I2C_SCL, 22)
+//DEFINE_CONST(I2C_FREQ, 200000) // 200kHz
+DEFINE_CONST(I2C_FREQ, 100000) // 100kHz  (DS1307 limit)
+//DEFINE_CONST(I2C_FREQ, 50000) // 50kHz
 
 // analog digital coder
-#define I2C_ADDRESS_ADS1x15 0x48
-#define ADC_MAX 65535
+DEFINE_CONST(I2C_ADDRESS_ADS1x15, 0x48)
+DEFINE_CONST(ADC_MAX, 65535)
 
 // Puls width modifier
-#define PWM_NUM_PORTS 16
-#define PWM_MAX_VALUE 4096
-#define I2C_ADDRESS_PCA9685 0x42
+// DEFINE_CONST(PWM_NUM_PORTS, 16)
+// DEFINE_CONST(PWM_MAX_VALUE, 4096)
+// DEFINE_CONST(I2C_ADDRESS_PCA9685, 0x42)
 
-// Extended digital IOs
-#define MCP23017_NUM_DEVICES 2
-#define MCP23017_NUM_PORTS 16
-#define IOExtPINCOUNT (MCP23017_NUM_DEVICES * MCP23017_NUM_PORTS)
-#define I2C_ADDRESS_MCP23017_IOExt0 0x20
-#define I2C_ADDRESS_MCP23017_IOExt1 0x21
-#define I2C_INTERRUPT 33
 
-// digital potentiometer
-// address = b0101{DS1803_ADDR2, DS1803_ADDR1, DS1803_ADDR0}
-#define DS1803_BASE_ADDR 0x28
-#define DS1803_ADDR0 0 // pulled down to ground
-#define DS1803_ADDR1 0 // pulled down to ground
-#define DS1803_ADDR2 0 // pulled down to ground
-#define I2C_ADDRESS_DS1803 (DS1803_BASE_ADDR | (DS1803_ADDR2 << 2) | (DS1803_ADDR1 << 1) | DS1803_ADDR0)
+
+DEFINE_CONST(IOExtPINCOUNT, 10)
+//DEFINE_CONST(I2C_INTERRUPT, 33)
 
 /*
  * SERIAL, SERIAL2
  *
  * RX and TX are defined in pins_arduino.h, all others here
  */
-#define SERIAL2_RX 16
-#define SERIAL2_TX 17
+DEFINE_CONST(SERIAL2_RX, 16)
+DEFINE_CONST(SERIAL2_TX, 17)
 
 /*
  * CAN Bus
@@ -101,15 +94,15 @@
  *  GPIO21   CS (first spi device)
  *
  */
-#define SPI_MOSI 18
-#define SPI_MISO 19
-#define SPI_CLK 5
+DEFINE_CONST(SPI_MOSI, 18)
+DEFINE_CONST(SPI_MISO, 19)
+DEFINE_CONST(SPI_CLK, 5)
 
-#define SPI_DC 4
-#define SPI_RST 21
+DEFINE_CONST(SPI_DC, 4)
+DEFINE_CONST(SPI_RST, 21)
 
-#define SPI_CS_TFT 32
-#define SPI_CS_SDCARD 14
+DEFINE_CONST(SPI_CS_TFT, 32)
+DEFINE_CONST(SPI_CS_SDCARD, 14)
 
 /*
  * ESP32 JTAG Debug Probe Wiring

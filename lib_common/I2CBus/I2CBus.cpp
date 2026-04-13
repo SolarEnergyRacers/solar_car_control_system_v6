@@ -92,15 +92,10 @@ uint8_t I2CBus::scan_i2c_devices() {
   msg += "     Address | Device                               | Location      \n";
   msg += "     ------- | ------------------------------------ | --------------\n";
   msg += "      0x{:02x}   | ESP32 I2C master                     | AC + DC    \n";
-  msg += "      0x{:02x}   | MCP23017, Extended digital IOs       | DC    \n";
-  msg += "      0x{:02x}   | DS1803, digital analog coder         | DC    \n";
+  //msg += "      0x{:02x}   | DS1803, digital analog coder         | DC    \n";
   msg += "      0x{:02x}   | ADS1115, analog digital coder        | DC    \n";
-  msg += "      0x{:02x}   | DS1307, real time clock              | AC    \n";
-  // msg += "      0x19   | BMI088, 6-axis inertial sensor, acc  | main board    \n";
-  // msg += "      0x21   | MCP23017, Extended digital IOs       | steering wheel\n";
-  // msg += "      0x49   | ADS1115, analog digital coder        | main board    \n";
-  // msg += "      0x4a   | ADS1115, analog digital coder        | steering wheel\n";
-  // msg += "      0x69   | BMI088, 6-axis inertial sensor, gyro | main board    \n";
-  console << fmt::format(msg, _Master_, _ExtIO_, _DAC_, _ADC_, _RTC_);
+  msg += "      0x{:02x}   | DS3231, real time clock              | AC    \n";
+
+  console << fmt::format(msg, _Master_, _ADC_, _RTC_);
   return i2cDevices;
 }

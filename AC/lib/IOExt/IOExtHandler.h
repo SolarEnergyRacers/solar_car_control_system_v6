@@ -18,12 +18,12 @@
 
 // known pin handler
 // the handler must its bit copy to oldValue
-void buttonPlusHandler();
-void buttonConfirmDriverInfoHandler();
-void buttonSetHandler();
-void buttonMinusHandler();
-void breakPedalHandler();
-void fwdBwdHandler();
-void mcOnOffHandler();
+// void buttonPlusHandler();
+// void buttonConfirmDriverInfoHandler();
+// void buttonSetHandler();
+// void buttonMinusHandler();
+// void breakPedalHandler();
+// void fwdBwdHandler();
+// void mcOnOffHandler();
 
 #endif // SER_IOEXT_HANDLER_H

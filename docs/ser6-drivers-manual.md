@@ -18,36 +18,36 @@ TODO: DESCRIBE IT!
 
 ![switch board](assets.ser6-drivers-manual/image-20230506130251806.png)
 
-| Switch Name | Function (what is switched)        | Driver Screen / Steering Wheel | Engineer Screen |
-| ------------- | ------------------------------------ | --------------- | ----------------- |
-| Spare | - | - | - |
-| Aux | AC (auxiliary controller) power on (up) / off (down) | %            | %              |
-| PreChg |  | no | no |
-| MC   | MC (motor controller)  power on/off | yes<br />(right from Motor current) | yes           |
+| Switch Name | Function (what is switched)                            | Driver Screen / Steering Wheel                | Engineer Screen |
+| ----------- | ------------------------------------------------------ | --------------------------------------------- | --------------- |
+| Spare       | -                                                      | -                                             | -               |
+| Aux         | AC (auxiliary controller) power on (up) / off (down)   | %                                             | %               |
+| PreChg      |                                                        | no                                            | no              |
+| MC          | MC (motor controller)  power on/off                    | yes<br />(right from Motor current)           | yes             |
 | Drive       | DC (drive controller) power on (up) / off (down)       | %                                             | %               |
 | FrontLight  |                                                        | Right blue LED                                |                 |
 | DriveLight  |                                                        | Left yellow LED                               |                 |
 | Rearview    | Rear view camera power on (up) / off (down)            | no                                            | no              |
 | PR1         | Aggressiveness / sensitivity of the PLUS/MINUS buttons | yes<br />(below target speed)                 | no              |
-| Dir | Drive direction forward / backward | yes if backward<br />(red below target speed) | no |
+| Dir         | Drive direction forward / backward                     | yes if backward<br />(red below target speed) | no              |
 
 ### Steering Wheel
 
 ![steering wheel](assets.ser6-drivers-manual/image-20230506132037797.png)
 
-| Button | Name                  | Function                                                     |
-| ------ | --------------------- | ------------------------------------------------------------ |
-| L1     | left indicator        | on/off                                                       |
-| R1     | right indicator       | on/off                                                       |
-| L1+R1  | Hazard warning lights | on/off                                                       |
-| L2     | MINUS                 | decreases acceleration, switch on constant mode, current speed/power is overtaken as target speed |
-| R2     | PLUS                  | increases acceleration, switch on constant mode, current speed/power is overtaken as target speed |
-| L3     | confirm               | confirm that the driver has read the info text (send the confirm back to the AC and radio) |
-| R3     | const. on             | switches on the constant mode, overtake last used target speed/power |
-| L4     | SPEAK                 | driver speak button for radio communication                  |
+| Button | Name                  | Function                                                                                                           |
+| ------ | --------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| L1     | left indicator        | on/off                                                                                                             |
+| R1     | right indicator       | on/off                                                                                                             |
+| L1+R1  | Hazard warning lights | on/off                                                                                                             |
+| L2     | MINUS                 | decreases acceleration, switch on constant mode, current speed/power is overtaken as target speed                  |
+| R2     | PLUS                  | increases acceleration, switch on constant mode, current speed/power is overtaken as target speed                  |
+| L3     | confirm               | confirm that the driver has read the info text (send the confirm back to the AC and radio)                         |
+| R3     | const. on             | switches on the constant mode, overtake last used target speed/power                                               |
+| L4     | SPEAK                 | driver speak button for radio communication                                                                        |
 | R4     | Const/Mount           | Driver screen: switches between speed and power constant mode<br />Engineer screen: mounts or unmounts the sd-card |
-| L5     | Horn                  | blows the cattle off the road                                |
-| R5     | Next Screen           | switches between Driver and Engineer screen                  |
+| L5     | Horn                  | blows the cattle off the road                                                                                      |
+| R5     | Next Screen           | switches between Driver and Engineer screen                                                                        |
 
 ## Car Start
 
@@ -61,10 +61,16 @@ At least the display holds for a few seconds countdown to allow an additional ch
 
 ![driver screen](assets.ser6-drivers-manual/image-20230506134445977.png)
 
-|Text | Meaning|
-|---|---|
-|ok.||
-|No DC connection!	| Drive Controller not running or no data connection.|
+| Text              | Meaning                                             |
+| ----------------- | --------------------------------------------------- |
+| ok.               |                                                     |
+| No DC connection! | Drive Controller not running or no data connection. |
+
+In the left buottom corner ther is a life time indicator
+
+- Dark green / green blinking: AC-DC-Connection ok
+- contant light: connection broken
+- Red light
 
 ### Engineering Screen
 
@@ -72,17 +78,13 @@ TODO
 
 ### Control Mode
 
-~~Press button P2 until *button mode* is displayed on screen below the acceleration.~~
-
- Button        | Function
----|---
-PLUS | decrease deceleration (recuperation) ... increase acceleration
-MINUS | decrease acceleration ... increase deceleration (recuperation)
-ADJUST | toggle between 1 unit and 10 unit steps for plus and minus
-Break press | max break deceleration (recuperation)
-Break release | set acceleration to 0 (neither recuperation nor acceleration)
- |  
-
+ | Button        | Function                                                       |
+ | ------------- | -------------------------------------------------------------- |
+ | PLUS          | decrease deceleration (recuperation) ... increase acceleration |
+ | MINUS         | decrease acceleration ... increase deceleration (recuperation) |
+ | Break press   | max break deceleration (recuperation)                          |
+ | Break release | set acceleration to 0 (neither recuperation nor acceleration)  |
+ |               |                                                                |
 
 Constant mode off:
 
@@ -91,23 +93,18 @@ Constant mode off:
 
 Constant mode on:
 
-- PLUS increments without overtaking recent speed
-
-- MINUS decrements without overtaking recent speed
-
+- PLUS increments without overtaking recent spee- MINUS decrements without overtaking recent speed
   The amount of each step can be adjusted with the Potentiometer on the switch board.
 
 ### Paddle Control Mode
 
 The paddles are used to control the acceleration and deceleration (recuperation) values send to the motor controller (MC).
 
-They are force sensitive: The more you pull them, the greater the setting value. 
-
-~~Press button P2 until *paddles mode* is displayed on screen below the acceleration.~~
+They are force sensitive: The more you pull them, the greater the setting value.
 
 #### Adjust Paddles
 
-After each start the paddles gets be adjusted automatically. 
+After each start the paddles gets be adjusted automatically.
 
 > Make sure that the paddles are in the home position, i.e. the position in which the paddles are set to partially tighten and then fully release. **Never push the paddles towards the front of the vehicle!**
 
@@ -117,15 +114,13 @@ If the control range of the paddles is to rough then the adjust procedure must b
 
 ## Car Operate
 
-
-
 ## Steering Wheel
 
 ### Buttons
 
 #### Right / Left Indicators and Hazard Warning Lights
 
-Press left or indicator (`left` or `right`)  button to switch indicators. The directions are displayed as yellow triangles on the display. Press again to switch off. 
+Press left or indicator (`left` or `right`)  button to switch indicators. The directions are displayed as yellow triangles on the display. Press again to switch off.
 
 To switch on hazard indicator (all indicators blinking) press both indicator buttons at the same time. The hazard lights are shown as red triangles on the display.
 
@@ -139,16 +134,11 @@ Use the paddles to increase (right paddle) and decrease (left paddle) speed of t
 
 Constant mode is usable in paddle control mode and in classic control mode.
 
-
 | Button                 | function                                         |
-| ------------------------ | -------------------------------------------------- |
+| ---------------------- | ------------------------------------------------ |
 | SET (first time press) | set constant mode                                |
 | SET (next time press)  | overtake current speed / power                   |
 | RES                    | reset constant mode                              |
 | PWR/SPD                | switch between constant power and constant speed |
-| PLUS | increase the target speed |
-| MINUS | decrease the target speed |
-
-
-
-​	
+| PLUS                   | increase the target speed                        |
+| MINUS                  | decrease the target speed                        |

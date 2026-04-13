@@ -30,8 +30,8 @@ private:
 public:
   enum Pin { // high nibble: device number, low nibble: port
     // ADC0
-    MOTOR_SPEED_PORT = 0x00,
-    SWITCH_POTENTIOMETER_PORT = 0x01,
+    SWITCH_POTENTIOMETER_PORT = 0x00,
+    MOTOR_SPEED_PORT = 0x01,
     STW_ACC_PORT = 0x02,
     STW_DEC_PORT = 0x03,
   };

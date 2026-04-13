@@ -204,10 +204,9 @@ public:
   bool GreenLight;
 
   // All IO pins
-  static CarStatePin pins[IOExtPINCOUNT];
+  static CarStatePin pins[IOPINCOUNT];
   int getIdx(const string pinName);
-  CarStatePin *getPin(int devNr, int pinNr);
-  CarStatePin *getPin(int port);
+  CarStatePin *getPin(int gpio);
   CarStatePin *getPin(const string pinName);
 
   std::map<string, int> idxOfPin;

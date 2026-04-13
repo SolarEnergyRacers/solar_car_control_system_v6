@@ -24,7 +24,6 @@
 #include <Helper.h>
 #include <I2CBus.h>
 #include <IOExt.h>
-// #include <MCP23017.h>
 
 extern ADC adc;
 extern CANBus canBus;
@@ -32,7 +31,7 @@ extern CarControl carControl;
 extern ConstSpeed constSpeed;
 extern CarState carState;
 extern Console console;
-extern DAC dac;
+// extern DAC dac;
 extern I2CBus i2cBus;
 extern IOExt ioExt;
 
@@ -157,18 +156,18 @@ void CarControl::set_DAC() {
   int setpoint = (int)(((float)carState.AccelerationDisplay / MAX_ACCELERATION_DISPLAY_VALUE) * DAC_MAX);
   int valueDAC_dec = carState.AccelerationDisplay < 0 ? -setpoint : 0;
   int valueDAC_acc = carState.AccelerationDisplay < 0 ? 0 : setpoint;
-  dac.set_pot(valueDAC_dec, DAC::pot_chan::POT_CHAN1_DEC);
-  dac.set_pot(valueDAC_acc, DAC::pot_chan::POT_CHAN0_ACC);
+  // dac.set_pot(valueDAC_dec, DAC::pot_chan::POT_CHAN1_DEC);
+  // dac.set_pot(valueDAC_acc, DAC::pot_chan::POT_CHAN0_ACC);
 
-  if (carControl.verboseMode) {
-    console << fmt::format("set DAC:: valueDAC_dec={:6d}, valueDAC_acc={:6d} | valueDec={:6d}, valueAcc={:6d} [valueDisplay={:4d}] > Speed={:3d} ({:6d})\n", 
-                            valueDAC_dec, valueDAC_acc, carState.Deceleration, carState.Acceleration, carState.AccelerationDisplay, carState.Speed, adc.motor_speed);
-  }
+  // if (carControl.verboseMode) {
+  //   console << fmt::format("set DAC:: valueDAC_dec={:6d}, valueDAC_acc={:6d} | valueDec={:6d}, valueAcc={:6d} [valueDisplay={:4d}] > Speed={:3d} ({:6d})\n", 
+  //                           valueDAC_dec, valueDAC_acc, carState.Deceleration, carState.Acceleration, carState.AccelerationDisplay, carState.Speed, adc.motor_speed);
+  // }
 }
 
 void CarControl::switch_break_light() {
   // -10 means to switch on brak light at approx. 4km/h / s (1.1m/s^2)
-  carState.getPin(PinDO_BreakLight)->value = carState.AccelerationDisplay < -10 ? 1 : 0;
+  carState.getPin(DO_BreakLight_GPIO27)->value = carState.AccelerationDisplay < -10 ? 1 : 0;
 }
 
 void CarControl::task(void *pvParams) {

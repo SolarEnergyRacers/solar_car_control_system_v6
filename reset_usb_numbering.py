@@ -7,12 +7,17 @@ $ sudo python reset__numbering.py driver_name
 Where driver_name is the output from
 
 $ lsmod | grep usbserial
+
+https://gist.github.com/edro15/1c6cd63894836ed982a7d88bef26e4af
 """
 import os
 import subprocess
 import sys
 from subprocess import Popen, PIPE
 import fcntl
+
+driver = "CH341"
+driver = "CH340"
 
 def list_usb():
     """
@@ -31,11 +36,12 @@ def list_usb():
     return ""
 
 if len(sys.argv) != 2 or len(sys.argv[-1]) < 1:
-    print("Usage:\n\treset_usb_numbering.py driver name")
+    print("Usage:\n\treset_usb_numbering.py drivername")
     usb_devices = '\n'.join(list_usb())
     print(f"\tFound Drivers (lsmod | grep usbserial): \n\t\t{usb_devices}")
-    sys.exit()
-driver = sys.argv[-1]
+    #sys.exit()
+else:
+    driver = sys.argv[-1]
 print(f"Resetting driver: '{driver}'...")
 USBDEVFS_RESET= 21780
 
@@ -49,5 +55,10 @@ try:
     device = lsusb_out[3][:-1].decode("utf-8")
     f = open(f"/dev/bus/usb/{bus}/{device}", 'w', os.O_WRONLY)
     fcntl.ioctl(f, USBDEVFS_RESET, 0)
+
+    result = subprocess.run("ls /dev/ttyUSB*", shell=True, check=True, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, text=True)
+    ttys = [s for s in result.stdout.strip().split("\n")]
+    print(ttys)
 except Exception as ex:
     print(f"Failed to reset device. Exception: {ex}")

@@ -1,4 +1,4 @@
-# Prerequisites
+    # Prerequisites
 *.d
 
 # Compiled Object files
@@ -55,3 +55,5 @@ PCBs/Switchboard/Switchboard-backups/**
 PCBs/DriveController/DriveController-backups/**
 PCBs/ChassisBoard/ChassisBoard-backups/**
 docs/.*.autosave.xopp
+PCBs/**/*.lck
+PCBs/ChassisBoard/fp-info-cache

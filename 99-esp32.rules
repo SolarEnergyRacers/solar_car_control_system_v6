@@ -1,0 +1,5 @@
+# Rule for first ESP32 board (plugged into port with KERNELS 1-1.2)
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", KERNELS=="1-1", SYMLINK+="esp32-ac"
+
+# Rule for second ESP32 board (plugged into port with KERNELS 1-1.3)
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", KERNELS=="1-2", SYMLINK+="esp32-dc"

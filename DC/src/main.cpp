@@ -48,7 +48,7 @@
 #include <I2CBus.h>
 #include <IOExt.h>
 #include <OneWire.h>
-#include <SPIBus.h>
+// #include <SPIBus.h>
 #include <Serial.h>
 #include <System.h>
 
@@ -75,11 +75,11 @@ CarState carState;
 CmdHandler cmdHandler;
 Console console;
 ConstSpeed constSpeed;
-DAC dac;
+//DAC dac;
 GPInputOutput gpio; // I2C Interrupts, GPInputOutput pin settings
 I2CBus i2cBus;
 IOExt ioExt;
-SPIBus spiBus;
+// SPIBus spiBus;
 Uart uart; // SERIAL
 
 static void adcTask(void *pvParams) { adc.task(pvParams); }
@@ -113,8 +113,8 @@ void app_main(void) {
   console << msg << NL;
   // init buses
   console << "-- init bus systems ----------------------------------------" << NL;
-  msg = spiBus.init();
-  console << msg << NL;
+  // msg = spiBus.init();
+  // console << msg << NL;
   // msg = oneWireBus.init();
   // console << msg << NL;
   msg = i2cBus.init();
@@ -178,11 +178,11 @@ void app_main(void) {
   console << " done." << NL;
   msg = carControl.report_task_init();
   console << msg << NL;
-  // DAC
-  msg = dac.init();
-  console << msg << NL;
-  dac.verboseModeDAC = false;
-  // vTaskDelay(10);
+  // // DAC
+  // msg = dac.init();
+  // console << msg << NL;
+  // dac.verboseModeDAC = false;
+  // // vTaskDelay(10);
 
   // IOExt
   msg = ioExt.init_t(1, 10, 10000, base_offset_suspend + 90);

@@ -93,40 +93,40 @@ c [-|s|p] _ _ _ _ _ _ constant mode on (-:off|s:speed|p:power)
 
 #### SYSTEM COMMANDS
 
-| command          | Function                                                                                |
-| :--------------- | :-------------------------------------------------------------------------------------- |
-| R                | reset and reinit driver display                                                         |
-| C                | switch to console screen                                                                |
-| E                | switch to engineer screen                                                               |
-| D                | switch to driver display                                                                |
-| T yy mm dd hh MM | set rtc date and time                                                                   |
-| t                | get date and time                                                                       |
-| -                | adjust paddels                                                                          |
-| P                | print directory of sdcard                                                               |
-| s                | print status of all values                                                              |
-| S                | print status                                                                            |
-| J                | write JSON status to sdcard                                                             |
+| command          | Function                                                                              |
+| :--------------- | :------------------------------------------------------------------------------------ |
+| R                | reset and reinit driver display                                                       |
+| C                | switch to console screen                                                              |
+| E                | switch to engineer screen                                                             |
+| D                | switch to driver display                                                              |
+| T yy mm dd hh MM | set rtc date and time                                                                 |
+| t                | get date and time                                                                     |
+| -                | adjust paddels                                                                        |
+| P                | print directory of sdcard                                                             |
+| s                | print status of all values                                                            |
+| S                | print status                                                                          |
+| J                | write JSON status to sdcard                                                           |
 | v or V           | Log state as csv to sd card, V: with header (write csv data row into `/SER4DATA.CSV`) |
-| M                | mount sdcard and eneable logging                                                        |
-| P                | print directory of sdcard                                                               |
-| U                | unmount sdcard and disable logging                                                      |
-| ~H~             | ~memory_info~                                                                          |
-| k kp ki kd       | update PID constants                                                                    |
-| I                | scan I2C devices                                                                        |
-| i                | IO ReadAll                                                                              |
-| ii               | verbose IO input view                                                                   |
-| io               | verbose IO output view                                                                  |
-|                  |                                                                                         |
-| iR               | re-init IO                                                                              |
+| M                | mount sdcard and eneable logging                                                      |
+| P                | print directory of sdcard                                                             |
+| U                | unmount sdcard and disable logging                                                    |
+| ~H~              | ~memory_info~                                                                         |
+| k kp ki kd       | update PID constants                                                                  |
+| I                | scan I2C devices                                                                      |
+| i                | IO ReadAll                                                                            |
+| ii               | verbose IO input view                                                                 |
+| io               | verbose IO output view                                                                |
+|                  |                                                                                       |
+| iR               | re-init IO                                                                            |
 
 #### DRIVER INFO COMMANDS
 
-| command     | Function                        |
-| ----------- | ------------------------------- |
+| command   | Function                        |
+| --------- | ------------------------------- |
 | :`<text>` | display driver info text        |
 | !`<text>` | display driver warn text        |
-| u [-]       | green speed up arrow (- => off) |
-| d [-]       | red speed down arrow (- => off) |
+| u [-]     | green speed up arrow (- => off) |
+| d [-]     | red speed down arrow (- => off) |
 
 ### Console Procedures
 
@@ -136,7 +136,7 @@ Mount SD card and start logging:
 - plug in the SD card
 - Press button `R3`
 
-The Engineer Info at the bottom of the Engineer Screen 
+The Engineer Info at the bottom of the Engineer Screen
 
 ## Car Start
 
@@ -148,7 +148,7 @@ The last display is a 4 Seconds countdown to allow an additional view to the val
 
 ### Adjust Paddles
 
-During each start the paddles gets be adjusted automatically. 
+During each start the paddles gets be adjusted automatically.
 
 > Make sure that the paddles are in the home position, i.e. the position in which the paddles are set to partially tighten and then fully release. **Never push the paddles towards the front of the vehicle!**
 

@@ -368,16 +368,6 @@ string CmdHandler::printSystemValues() {
   ss << fmt::format("DAC: POT-0 (accel)= {:4d}, POT-1 (recup)= {:4d}\n", dac.get_pot(DAC::pot_chan::POT_CHAN0),
                     dac.get_pot(DAC::pot_chan::POT_CHAN1));
 #endif
-  // for (int devNr = 0; devNr < MCP23017_NUM_DEVICES; devNr++) {
-  //   for (int pinNr = 0; pinNr < MCP23017_NUM_PORTS; pinNr++) {
-  //     CarStatePin *pin = carState.getPin(devNr, pinNr);
-  //     ss << fmt::format("{:20s} {:#04x}: {%10s} Pin ", pin->name, pin->port, pin->mode);
-  //     if (pin->value == 0) {
-  //       ss << "SET\n";
-  //     } else {
-  //       ss << "UNSET\n";
-  //     }
-  //   }
-  // }
+  
   return ss.str();
 }

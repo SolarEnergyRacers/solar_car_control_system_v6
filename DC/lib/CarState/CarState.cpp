@@ -26,8 +26,7 @@ extern IOExt ioExt;
 // extern ESP32Time esp32time;
 
 int CarState::getIdx(const string pinName) { return idxOfPin.find(pinName)->second; }
-CarStatePin *CarState::getPin(int devNr, int pinNr) { return &(carState.pins[IOExt::getIdx(devNr, pinNr)]); }
-CarStatePin *CarState::getPin(int port) { return &(carState.pins[IOExt::getIdx(port)]); }
+CarStatePin *CarState::getPin(int idx) { return &(carState.pins[idx]); }
 CarStatePin *CarState::getPin(const string pinName) { return &(carState.pins[carState.getIdx(pinName)]); }
 
 void CarState::init_values() {
@@ -334,33 +333,28 @@ const string CarState::printIOs(const string msg, bool withColors, bool deltaOnl
     ss << msg << NL;
 
   bool hasDelta = false;
-  for (int devNr = 0; devNr < MCP23017_NUM_DEVICES; devNr++) {
-    ss << "devNr " << devNr << ": ";
-    for (int pinNr = 0; pinNr < MCP23017_NUM_PORTS; pinNr++) {
-      CarStatePin *pin = carState.getPin(devNr, pinNr);
-      if (pin->mode == OUTPUT) {
-        if (pin->value != pin->oldValue) {
-          hasDelta = true;
-          ss << highLightColorChg << pin->value << normalColor;
-        } else {
-          ss << highLightColorOut << pin->value << normalColor;
-        }
+  for (int pinNr = 0; pinNr < sizeof(CarState::pins) / sizeof(CarState::pins[0]); pinNr++) {
+    CarStatePin *pin = carState.getPin(pinNr);
+    if (pin->mode == OUTPUT) {
+      if (pin->value != pin->oldValue) {
+        hasDelta = true;
+        ss << highLightColorChg << pin->value << normalColor;
       } else {
-        if (pin->value != pin->oldValue) {
-          hasDelta = true;
-          ss << highLightColorChg << pin->value << normalColor;
-        } else {
-          ss << pin->value;
-        }
+        ss << highLightColorOut << pin->value << normalColor;
       }
-      int idx = IOExt::getIdx(devNr, pinNr);
-      if (idx < MCP23017_NUM_DEVICES * MCP23017_NUM_PORTS - 1) {
-        if ((idx + 1) % 8 == 0)
-          ss << " | ";
-        else if ((idx + 1) % 4 == 0)
-          ss << "-";
+    } else {
+      if (pin->value != pin->oldValue) {
+        hasDelta = true;
+        ss << highLightColorChg << pin->value << normalColor;
+      } else {
+        ss << pin->value;
       }
     }
+    int idx = pinNr; //IOExt::getIdx(pinNr);
+    if ((idx + 1) % 8 == 0)
+      ss << " | ";
+    else if ((idx + 1) % 4 == 0)
+      ss << "-";
   }
 
   // ss << NL;

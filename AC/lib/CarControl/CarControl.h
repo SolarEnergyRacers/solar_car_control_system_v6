@@ -9,8 +9,6 @@
 #include <map>
 #include <string>
 
-// #include <MCP23017.h>
-
 #include <AbstractTask.h>
 #include <global_definitions.h>
 #include "../definitions.h"

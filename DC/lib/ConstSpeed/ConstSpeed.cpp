@@ -30,7 +30,7 @@ extern ConstSpeed constSpeed;
 extern CarState carState;
 extern CarControl carControl;
 extern bool SystemInited;
-extern DAC dac;
+// extern DAC dac;
 
 float normalisation_factor = (float)MAX_ACCELERATION_DISPLAY_VALUE / DAC_MAX;
 

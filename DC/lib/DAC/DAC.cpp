@@ -42,8 +42,7 @@ string DAC::re_init() {
 string DAC::init() {
   console << "[  ] Init 'DAC'...\n";
   dacInited = reset_pot();
-  console << fmt::format("     DAC initialisation with I2C_ADDRESS_DS1803={:02x} {}.\n", I2C_ADDRESS_DS1803,
-                         dacInited ? "successful" : "failed");
+  console << fmt::format("     DAC initialisation {}.\n", dacInited ? "successful" : "failed");
   return fmt::format("[{}] DAC initialized.", dacInited ? "ok" : "--");
 }
 
@@ -81,23 +80,23 @@ bool DAC::reset_pot() {
   bool success = false;
   uint8_t command = get_cmd(POT_CHAN_ALL);
   //#SAFTY#
-  xSemaphoreTakeT(i2cBus.mutex);
-  try {
-    Wire.beginTransmission(I2C_ADDRESS_DS1803);
-    if (Wire.write(command) > 0) {
-      success = true;
-    }
-    if (Wire.write(0) > 0) {
-      success = true;
-    } // first pot value
-    if (Wire.write(0) > 0) {
-      success = true;
-    } // second pot value
-    Wire.endTransmission();
-  } catch (exception &ex) {
-    success = false;
-  }
-  xSemaphoreGive(i2cBus.mutex);
+  // xSemaphoreTakeT(i2cBus.mutex);
+  // try {
+  //   Wire.beginTransmission(I2C_ADDRESS_DS1803);
+  //   if (Wire.write(command) > 0) {
+  //     success = true;
+  //   }
+  //   if (Wire.write(0) > 0) {
+  //     success = true;
+  //   } // first pot value
+  //   if (Wire.write(0) > 0) {
+  //     success = true;
+  //   } // second pot value
+  //   Wire.endTransmission();
+  // } catch (exception &ex) {
+  //   success = false;
+  // }
+  // xSemaphoreGive(i2cBus.mutex);
   return success;
 }
 
@@ -124,24 +123,24 @@ bool DAC::set_pot(uint8_t val, pot_chan channel) {
   uint8_t oldValue = get_pot(channel);
   if (oldValue != val) {
     try {
-      xSemaphoreTakeT(i2cBus.mutex);
-      Wire.beginTransmission(I2C_ADDRESS_DS1803);
-      if (Wire.write(command) == 0) {
-        success = false;
-      }
-      if (Wire.write(val) == 0) {
-        success = false;
-      } // first pot value
-      if (channel == POT_CHAN_ALL) {
-        if (Wire.write(val) == 0) {
-          success = false;
-        } // second pot value
-      }
-      Wire.endTransmission();
+    //   xSemaphoreTakeT(i2cBus.mutex);
+    //   Wire.beginTransmission(I2C_ADDRESS_DS1803);
+    //   if (Wire.write(command) == 0) {
+    //     success = false;
+    //   }
+    //   if (Wire.write(val) == 0) {
+    //     success = false;
+    //   } // first pot value
+    //   if (channel == POT_CHAN_ALL) {
+    //     if (Wire.write(val) == 0) {
+    //       success = false;
+    //     } // second pot value
+    //   }
+    //   Wire.endTransmission();
     } catch (exception &ex) {
       success = false;
     }
-    xSemaphoreGive(i2cBus.mutex);
+    // xSemaphoreGive(i2cBus.mutex);
     if (verboseModeDAC) {
       console << fmt::format("dac:    {:02x}-chn | {:5d}-val | {:5d}-acc | {:5d}-dec  | {:5d}-accD | {}-lck\n", channel, val,
                              carState.Acceleration, carState.Deceleration, carState.AccelerationDisplay, carState.AccelerationLocked);
@@ -155,11 +154,11 @@ uint16_t DAC::get_pot(pot_chan channel) {
     return 0;
   uint8_t pot0 = 0; // get pot0
   uint8_t pot1 = 0; // get pot1
-  xSemaphoreTakeT(i2cBus.mutex);
-  Wire.requestFrom(I2C_ADDRESS_DS1803, 2); // request 2 bytes
-  pot0 = Wire.read();
-  pot1 = Wire.read();
-  xSemaphoreGive(i2cBus.mutex);
+  // xSemaphoreTakeT(i2cBus.mutex);
+  // Wire.requestFrom(I2C_ADDRESS_DS1803, 2); // request 2 bytes
+  // pot0 = Wire.read();
+  // pot1 = Wire.read();
+  // xSemaphoreGive(i2cBus.mutex);
 
   if (channel == POT_CHAN_ALL) {
     return pot0 | (pot1 << 8);

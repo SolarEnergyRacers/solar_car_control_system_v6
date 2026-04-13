@@ -49,7 +49,7 @@ extern CANBus canBus;
 extern ConstSpeed constSpeed;
 extern CarControl carControl;
 extern Console console;
-extern DAC dac;
+// extern DAC dac;
 #if RTC_ON
 extern RTC rtc;
 extern ESP32Time esp32time;
@@ -145,8 +145,8 @@ void CmdHandler::task(void *pvParams) {
             adc.verboseModeADC = !adc.verboseModeADC;
             console << "set verboseModeADC: " << adc.verboseModeADC << NL;
           } else if (input[1] == 'd') {
-            dac.verboseModeDAC = !dac.verboseModeDAC;
-            console << "set verboseModeDAC: " << dac.verboseModeDAC << NL;
+            // dac.verboseModeDAC = !dac.verboseModeDAC;
+            // console << "set verboseModeDAC: " << dac.verboseModeDAC << NL;
           } else if (input[1] == 'c') {
             carControl.verboseMode = !carControl.verboseMode;
             console << "set verboseMode for acc-/dec-controls: " << carControl.verboseMode << NL;
