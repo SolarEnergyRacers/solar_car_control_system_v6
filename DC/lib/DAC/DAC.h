@@ -10,6 +10,16 @@
 class DAC {
 private:
   bool isLocked = false; // TODO true;
+  int MAX_DUTY_CYCLE = 1;
+  const int PinACCL = PO_AccelPWM_GPIO16; /* GPIO16 */
+  const int PinDECCL = PO_DeccelPWM_GPIO02; /* GPIO02 */
+
+  /* Setting PWM Properties */
+  //const int PWMFreq = 5000; /* 5 KHz */
+  const int PWMFreq = 50; /* 50 Hz */
+  const int PWMChannelACCL = 0;
+  const int PWMChannelDECL = 1;
+  const int PWMResolution = 10;
 
 public:
   enum pot_chan {
@@ -20,7 +30,8 @@ public:
 
 private:
   void unlock_acceleration() { isLocked = false; };
-  uint8_t get_cmd(pot_chan channel);
+  uint8_t pot0 = 0;
+  uint8_t pot1 = 0;
 
 public:
   string getName(void) { return "DAC"; };

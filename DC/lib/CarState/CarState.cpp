@@ -26,7 +26,7 @@ extern IOExt ioExt;
 // extern ESP32Time esp32time;
 
 int CarState::getIdx(const string pinName) { return idxOfPin.find(pinName)->second; }
-CarStatePin *CarState::getPin(int idx) { return &(carState.pins[idx]); }
+CarStatePin *CarState::getPin(int idx) { return &(carState.pins[idx]  ); }
 CarStatePin *CarState::getPin(const string pinName) { return &(carState.pins[carState.getIdx(pinName)]); }
 
 void CarState::init_values() {

@@ -49,7 +49,7 @@ extern CANBus canBus;
 extern ConstSpeed constSpeed;
 extern CarControl carControl;
 extern Console console;
-// extern DAC dac;
+extern DAC dac;
 #if RTC_ON
 extern RTC rtc;
 extern ESP32Time esp32time;
@@ -145,8 +145,8 @@ void CmdHandler::task(void *pvParams) {
             adc.verboseModeADC = !adc.verboseModeADC;
             console << "set verboseModeADC: " << adc.verboseModeADC << NL;
           } else if (input[1] == 'd') {
-            // dac.verboseModeDAC = !dac.verboseModeDAC;
-            // console << "set verboseModeDAC: " << dac.verboseModeDAC << NL;
+            dac.verboseModeDAC = !dac.verboseModeDAC;
+            console << "set verboseModeDAC: " << dac.verboseModeDAC << NL;
           } else if (input[1] == 'c') {
             carControl.verboseMode = !carControl.verboseMode;
             console << "set verboseMode for acc-/dec-controls: " << carControl.verboseMode << NL;
@@ -196,12 +196,12 @@ void CmdHandler::task(void *pvParams) {
         case 'O':
           if (input[1] == 'o') {
             carControl.verboseMode = !carControl.verboseMode;
-            console << "set verboseMode: " << carControl.verboseMode << NL;
+            console << "set carControl.verboseMode: " << carControl.verboseMode << NL;
           } else if (input[1] == 'O') {
             carControl.verboseModeDebug = !carControl.verboseModeDebug;
-            console << "set verboseModeDebug: " << carControl.verboseModeDebug << NL;
+            console << "set carControl.verboseModeDebug: " << carControl.verboseModeDebug << NL;
           } else {
-            console << "set verboseMode CarControl needs a specifier: o,O." << NL;
+            console << "set carControl.verboseMode needs a specifier: o,O." << NL;
           }
           break;
         case 'T': {

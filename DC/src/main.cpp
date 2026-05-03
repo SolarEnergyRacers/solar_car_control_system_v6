@@ -13,8 +13,8 @@
 #include <sdkconfig.h>
 
 // definitions
-#include <global_definitions.h>
 #include "../lib/definitions.h"
+#include <global_definitions.h>
 // standard libraries
 #include <Streaming.h>
 #include <fmt/core.h>
@@ -52,6 +52,7 @@
 #include <Serial.h>
 #include <System.h>
 
+#include <ESP32_PWM.h>
 #include <esp_task_wdt.h>
 
 // add C linkage definition
@@ -75,7 +76,7 @@ CarState carState;
 CmdHandler cmdHandler;
 Console console;
 ConstSpeed constSpeed;
-//DAC dac;
+DAC dac;
 GPInputOutput gpio; // I2C Interrupts, GPInputOutput pin settings
 I2CBus i2cBus;
 IOExt ioExt;
@@ -89,6 +90,27 @@ static void cmdHandlerTask(void *pvParams) { cmdHandler.task(pvParams); }
 static void constSpeedTask(void *pvParams) { constSpeed.task(pvParams); }
 static void ioExtTask(void *pvParams) { ioExt.task(pvParams); }
 
+// //--LEDC------------------------------------------------
+// #include "driver/ledc.h"
+// #include "esp_err.h"
+// #include "esp_pm.h"
+// #include "sdkconfig.h"
+
+// #define LEDC_TIMER LEDC_TIMER_0
+// #define LEDC_MODE LEDC_LOW_SPEED_MODE
+// #define LEDC_OUTPUT_IO (2) // Define the output GPIO
+// #define LEDC_CHANNEL LEDC_CHANNEL_0
+// #define LEDC_DUTY_RES LEDC_TIMER_13_BIT // Set duty resolution to 13 bits
+// #define LEDC_DUTY (4096)                // Set duty to 50%. (2 ** 13) * 50% = 4096
+// #if CONFIG_PM_ENABLE
+// #define LEDC_CLK_SRC LEDC_USE_RC_FAST_CLK // choose a clock source that can maintain during light sleep
+// #define LEDC_FREQUENCY (400)              // Frequency in Hertz. Set frequency at 400 Hz
+// #else
+// #define LEDC_CLK_SRC LEDC_AUTO_CLK
+// #define LEDC_FREQUENCY (4000) // Frequency in Hertz. Set frequency at 4 kHz
+// #endif
+// static void example_ledc_init();
+// //------------------------------------------------LEDC--
 void app_main(void) {
   string msg;
   // init console IO and radio console
@@ -178,11 +200,12 @@ void app_main(void) {
   console << " done." << NL;
   msg = carControl.report_task_init();
   console << msg << NL;
-  // // DAC
-  // msg = dac.init();
-  // console << msg << NL;
-  // dac.verboseModeDAC = false;
-  // // vTaskDelay(10);
+
+  // DAC (PWM)
+  msg = dac.init();
+  console << msg << NL;
+  dac.verboseModeDAC = false;
+  // vTaskDelay(10);
 
   // IOExt
   msg = ioExt.init_t(1, 10, 10000, base_offset_suspend + 90);
@@ -256,7 +279,6 @@ void app_main(void) {
   vTaskDelay(10);
   console << ss.str();
   SystemInited = true;
-
   esp_task_wdt_init(3600 * 48, false);
   // esp_task_wdt_init(5, false);
 }

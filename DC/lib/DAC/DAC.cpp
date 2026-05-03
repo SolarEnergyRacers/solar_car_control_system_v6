@@ -20,10 +20,8 @@
 #include <CarState.h>
 #include <Console.h>
 #include <DAC.h>
-//#include <DriverDisplay.h>
 #include <Helper.h>
 #include <I2CBus.h>
-//#include <SPI.h>
 
 #define BASE_ADDR_CMD 0xA8
 
@@ -46,25 +44,6 @@ string DAC::init() {
   return fmt::format("[{}] DAC initialized.", dacInited ? "ok" : "--");
 }
 
-uint8_t DAC::get_cmd(pot_chan channel) {
-  uint8_t command = BASE_ADDR_CMD;
-  switch (channel) {
-  case POT_CHAN0_ACC:
-    command |= 0x1;
-    break;
-  case POT_CHAN1_DEC:
-    command |= 0x2;
-    break;
-  case POT_CHAN_ALL:
-    command |= 0x3;
-    break;
-  default:
-    command |= 0x1;
-    break;
-  }
-  return command;
-}
-
 void DAC::reset_and_lock_pot() {
   lock_acceleration();
   dacInited = reset_pot();
@@ -77,27 +56,25 @@ void DAC::lock_acceleration() {
 };
 
 bool DAC::reset_pot() {
-  bool success = false;
-  uint8_t command = get_cmd(POT_CHAN_ALL);
-  //#SAFTY#
-  // xSemaphoreTakeT(i2cBus.mutex);
-  // try {
-  //   Wire.beginTransmission(I2C_ADDRESS_DS1803);
-  //   if (Wire.write(command) > 0) {
-  //     success = true;
-  //   }
-  //   if (Wire.write(0) > 0) {
-  //     success = true;
-  //   } // first pot value
-  //   if (Wire.write(0) > 0) {
-  //     success = true;
-  //   } // second pot value
-  //   Wire.endTransmission();
-  // } catch (exception &ex) {
-  //   success = false;
-  // }
-  // xSemaphoreGive(i2cBus.mutex);
-  return success;
+  bool success_ACCL = true;
+  bool success_DECCL = true;
+  MAX_DUTY_CYCLE = (int)(pow(2, PWMResolution) - 1);
+
+  // #SAFTY#
+  uint32_t retValue = ledcSetup(PWMChannelACCL, PWMFreq, PWMResolution);
+
+  if (!retValue) {
+    console << "PWM initialization failed!" << NL;
+    return false;
+  }
+  /* Attach the LED PWM Channel to the GPIO Pin */
+  ledcAttachPin(PinACCL, PWMChannelACCL);
+   ledcAttachPin(PinDECCL, PWMChannelDECL);
+
+  console << "PWM inited [" << retValue << "] ACCEL at GPIO " << PO_AccelPWM_GPIO16_name << "(" << PO_AccelPWM_GPIO16 << ")"
+          << "DECCEL at GPIO " << PO_DeccelPWM_GPIO02_name << "(" << PO_DeccelPWM_GPIO02 << ")" << NL;
+
+  return success_ACCL && success_DECCL;
 }
 
 bool DAC::set_pot(uint8_t val, pot_chan channel) {
@@ -114,52 +91,40 @@ bool DAC::set_pot(uint8_t val, pot_chan channel) {
     carState.AccelerationLocked = false;
     string s = "DAC unlocked.\n";
     console << s;
-    // if (driverDisplay.get_DisplayStatus() == DISPLAY_STATUS::DRIVER_RUNNING) {
-    //   driverDisplay.print(s.c_str());
-    // }
   }
-  // setup command
-  uint8_t command = get_cmd(channel);
   uint8_t oldValue = get_pot(channel);
-  if (oldValue != val) {
-    try {
-    //   xSemaphoreTakeT(i2cBus.mutex);
-    //   Wire.beginTransmission(I2C_ADDRESS_DS1803);
-    //   if (Wire.write(command) == 0) {
-    //     success = false;
-    //   }
-    //   if (Wire.write(val) == 0) {
-    //     success = false;
-    //   } // first pot value
-    //   if (channel == POT_CHAN_ALL) {
-    //     if (Wire.write(val) == 0) {
-    //       success = false;
-    //     } // second pot value
-    //   }
-    //   Wire.endTransmission();
-    } catch (exception &ex) {
-      success = false;
-    }
-    // xSemaphoreGive(i2cBus.mutex);
-    if (verboseModeDAC) {
-      console << fmt::format("dac:    {:02x}-chn | {:5d}-val | {:5d}-acc | {:5d}-dec  | {:5d}-accD | {}-lck\n", channel, val,
-                             carState.Acceleration, carState.Deceleration, carState.AccelerationDisplay, carState.AccelerationLocked);
-    }
+  if (oldValue == val) {
+    // if (verboseModeDAC) {
+    //   console << fmt::format("dac:    {:02x}-chn: val:{:5d} -->No Change", channel, val) << NL;
+    // }
+    return false;
   }
+  
+  int dutyCycle;
+  try {
+    dutyCycle = (float)val / DAC_MAX * MAX_DUTY_CYCLE;
+    if (channel == POT_CHAN0_ACC) {
+      pot0 = val;
+      ledcWrite(PWMChannelACCL, dutyCycle);
+    }
+    if(channel == POT_CHAN1_DEC) {
+      pot1 = val;
+      ledcWrite(PWMChannelDECL, dutyCycle);
+    }
+  } catch (exception &ex) {
+    success = false;
+  }
+  if (verboseModeDAC) {
+    console << fmt::format("dac:    {:02x}-chn: val:{:5d} --> {:5d} acce:{:5d} | decc:{:5d}  | display:{:5d} | AccelerationLocked={} (DOAX_MAX={}, MAX_DUTY_CYCLE={})\n", 
+      channel, val, dutyCycle, carState.Acceleration, carState.Deceleration, carState.AccelerationDisplay, carState.AccelerationLocked, DAC_MAX, MAX_DUTY_CYCLE);
+  }
+
   return success;
 }
 
 uint16_t DAC::get_pot(pot_chan channel) {
   if (!dacInited)
     return 0;
-  uint8_t pot0 = 0; // get pot0
-  uint8_t pot1 = 0; // get pot1
-  // xSemaphoreTakeT(i2cBus.mutex);
-  // Wire.requestFrom(I2C_ADDRESS_DS1803, 2); // request 2 bytes
-  // pot0 = Wire.read();
-  // pot1 = Wire.read();
-  // xSemaphoreGive(i2cBus.mutex);
-
   if (channel == POT_CHAN_ALL) {
     return pot0 | (pot1 << 8);
   } else if (channel == POT_CHAN0_ACC) {
