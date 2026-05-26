@@ -26,7 +26,6 @@
 #define BASE_ADDR_CMD 0xA8
 
 extern CarState carState;
-// extern DriverDisplay driverDisplay;
 extern I2CBus i2cBus;
 extern Console console;
 extern bool dacInited;

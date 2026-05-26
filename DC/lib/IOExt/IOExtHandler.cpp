@@ -34,7 +34,7 @@ void breakPedalHandler() {
   if (!SystemInited)
     return;
 
-  carState.BreakPedal = carState.getPin(DI_BreakPedal_GPIO04_name)->value == 0;
+  carState.BreakPedal = carState.getPin(DI_BreakPedal_GPIO04_name)->value != 0;
   carControl.read_paddles(); // read peaddels and handels breeak
 
   if (ioExt.verboseModeDInHandler)
