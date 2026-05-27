@@ -58,3 +58,5 @@ docs/.*.autosave.xopp
 PCBs/**/*.lck
 PCBs/**/.history
 PCBs/ChassisBoard/fp-info-cache
+.history
+PCBs/DriveController/.history
