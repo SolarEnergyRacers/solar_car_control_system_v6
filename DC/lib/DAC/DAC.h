@@ -15,8 +15,9 @@ private:
   const int PinDECCL = PO_DeccelPWM_GPIO02; /* GPIO02 */
 
   /* Setting PWM Properties */
-  //const int PWMFreq = 5000; /* 5 KHz */
-  const int PWMFreq = 50; /* 50 Hz */
+  // const int PWMFreq = 5000; /* 5 KHz */
+  const int PWMFreq = 1000; /* 1 KHz */
+  //const int PWMFreq = 50; /* 50 Hz */
   const int PWMChannelACCL = 0;
   const int PWMChannelDECL = 1;
   const int PWMResolution = 10;
