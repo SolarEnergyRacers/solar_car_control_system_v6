@@ -207,8 +207,8 @@ void app_main(void) {
   dac.verboseModeDAC = false;
   // vTaskDelay(10);
 
-  // IOExt
-  msg = ioExt.init_t(1, 10, 10000, base_offset_suspend + 90);
+  // IOExt (faster polling for responsive button/input handling)
+  msg = ioExt.init_t(1, 10, 10000, base_offset_suspend + 20);
   console << msg << NL;
   ioExt.verboseModeDIn = false;
   ioExt.verboseModeDInHandler = false;
@@ -226,8 +226,8 @@ void app_main(void) {
   console << msg << NL;
   // vTaskDelay(10);
 
-  // ADC
-  msg = adc.init_t(1, 20, 10000, base_offset_suspend + 90);
+  // ADC (increased priority and sampling rate to reduce paddle lag)
+  msg = adc.init_t(1, 21, 10000, base_offset_suspend + 10);
   console << msg << NL;
   adc.verboseModeADC = false;
   adc.verboseModeADCDebug = false;

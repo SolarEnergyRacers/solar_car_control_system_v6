@@ -146,7 +146,7 @@ public:
   int getMaxPacketsBufferOutUsage() { return counterMaxPacketsOut; };
 
   // SemaphoreHandle_t mutex_in;
-  // SemaphoreHandle_t mutex_out;
+  SemaphoreHandle_t mutex_out;
   bool verboseModeCanIn = false;
   bool verboseModeCanInNative = false;
   bool verboseModeCanOut = false;

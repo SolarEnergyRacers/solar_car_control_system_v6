@@ -140,6 +140,7 @@ bool CarControl::read_const_mode_and_mountrequest() {
     break;
   case DISPLAY_STATUS::DRIVER_RUNNING:
     carState.ConstantMode = (carState.ConstantMode == CONSTANT_MODE::POWER) ? CONSTANT_MODE::SPEED : CONSTANT_MODE::POWER;
+    console << "Switch ConstMode toggle: switch to " << (carState.ConstantMode == CONSTANT_MODE::SPEED ? "SPEED" : "POWER") << NL;
     break;
   default:
     break;

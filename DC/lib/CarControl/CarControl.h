@@ -42,8 +42,8 @@ public:
 private:
   int ads_min_dec = 0;
   int ads_min_acc = 0;
-  int ads_max_dec = 45000;
-  int ads_max_acc = 45000;
+  int ads_max_dec = 15000; //45000
+  int ads_max_acc = 15000; //45000
   int accelLast = INT_MAX;
   int recupLast = INT_MAX;
   int accelerationDisplayLast = INT_MAX;

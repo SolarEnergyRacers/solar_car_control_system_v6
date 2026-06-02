@@ -47,7 +47,7 @@ string ADC::init() {
     // 1 bit = 3mV (ADS1015) / 0.1875mV (ADS1115)
     adsDevice.setGain(0);
     adsDevice.setMode(1);
-    adsDevice.setDataRate(3);
+    adsDevice.setDataRate(7);  // 860 SPS (fastest) for responsive paddle input
 
     // conversion factor:
     // bit-value -> mV: 2/3x gain +/- 6.144V
@@ -105,7 +105,8 @@ void ADC::task(void *pvParams) {
       int dec = read(Pin::STW_DEC_PORT) - carState.StartOffset_dec;
       if(acc < 0) acc = 0;
       if(dec < 0) dec = 0;
-      if (abs(motor_speed - mot) > 2 || abs(switch_potentiometer - pot) > 2 || abs(stw_acc - acc) > 1 || abs(stw_dec - dec) > 1) {
+      // Reduced thresholds for faster paddle response: only require 1 unit change instead of hysteresis
+      if (abs(motor_speed - mot) > 2 || abs(switch_potentiometer - pot) > 2 || abs(stw_acc - acc) > 0 || abs(stw_dec - dec) > 0) {
         if (adc.verboseModeADC)
           console << fmt::format("ADC: speed={:6d} | dec={:6d} | acc={:6d} | poti= {:6d}\n", mot, dec, acc, pot);
 

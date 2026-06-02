@@ -26,7 +26,10 @@ extern Console console;
 extern CANBus canBus;
 
 bool CANBus::is_to_ignore_packet(uint16_t packetId) {
-  return packetId != (DC_BASE_ADDR | 0x00) && packetId != (DC_BASE_ADDR | 0x01) && !canBus.isPacketToRenew(packetId);
+  return packetId != (DC_BASE_ADDR | 0x00) && 
+         packetId != (DC_BASE_ADDR | 0x01) && 
+         max_ages.find(packetId) == max_ages.end() &&
+         !canBus.isPacketToRenew(packetId);
 }
 
 void CANBus::handle_rx_packet(CANPacket packet) {

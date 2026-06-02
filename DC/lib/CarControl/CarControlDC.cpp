@@ -186,13 +186,10 @@ void CarControl::task(void *pvParams) {
       }
 
       // read_reference_cell_data();
-      // vTaskDelay(10);
       read_speed();
-      vTaskDelay(10);
       read_potentiometer();
-      vTaskDelay(10);
       if (read_paddles())
-        set_DAC();
+        set_DAC();  // write DAC immediately when paddles change
       switch_break_light();
       // update OUTPUT pins
       ioExt.writeAllPins(PinHandleMode::FORCED);

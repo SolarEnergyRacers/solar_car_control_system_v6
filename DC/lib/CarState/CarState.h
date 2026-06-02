@@ -227,7 +227,7 @@ public:
   double Kd = 0.01; // differential
 
   // [Dynamic]
-  int PaddleDamping = 160; // 0...ca.30000
+  int PaddleDamping = 50;   // reduced from 160 for faster response (0...ca.30000)
   int StartOffset_acc = 0; // 0 ... 65535: offset calculated for paddle at start
   int StartOffset_dec = 0; // 0 ... 65535: offset calculated for paddle at start
 
