@@ -21,7 +21,6 @@
 #include <SDCard.h>
 #include <SPIBus.h>
 
-#include <ADS1X15.h>
 #include <Adafruit_GFX.h>     // graphics library
 #include <Adafruit_ILI9341.h> // display
 #include <Fonts/FreeMono12pt7b.h>

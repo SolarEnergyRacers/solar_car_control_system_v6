@@ -5,7 +5,6 @@
 #ifndef SER_DRIVER_DISPLAY_C_H
 #define SER_DRIVER_DISPLAY_C_H
 
-#include <ADS1X15.h>
 #include <Adafruit_ILI9341.h>
 
 #include <CarState.h>

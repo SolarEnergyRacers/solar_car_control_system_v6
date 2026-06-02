@@ -16,7 +16,6 @@
 // #include <SD_MMC.h>
 #include <SPI.h>
 
-#include <ADS1X15.h>
 #include <Adafruit_ILI9341.h>
 #include <CarState.h>
 #include <Console.h>
