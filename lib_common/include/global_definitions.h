@@ -14,7 +14,7 @@
 #define CAN_RX_BUFFER_SIZE 400
 #define CAN_TASK_WAIT 50
 
-#define MC_BASE_ADDR 0x500
+// #define MC_BASE_ADDR 0x500
 #define BMS_BASE_ADDR 0x700
 #define MPPT1_BASE_ADDR 0x600
 #define MPPT2_BASE_ADDR 0x610

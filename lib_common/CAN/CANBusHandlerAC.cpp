@@ -303,32 +303,32 @@ void CANBus::handle_rx_packet(CANPacket packet) {
       console << "T3=" << carState.T3 << NL;
     }
     break;
-  case MC_BASE_ADDR | 0x09: // ERPM, Current, Duty Cycle
-    if (verboseModeCanIn) {
-    }
-    break;
-  case MC_BASE_ADDR | 0x0e: // Ah Used, Ah Charged
-    if (verboseModeCanIn) {
-    }
-    break;
-  case MC_BASE_ADDR | 0x0f: // Wh Used, Wh Charged
-    if (verboseModeCanIn) {
-    }
-    break;
-  case MC_BASE_ADDR | 0x10: // Temp Fet, Temp Motor, Current In, PID position
-    carState.MotorCurrent = packet.getData_u16(2) / 10.;
-    if (verboseModeCanIn) {
-      console << "------------------------- McCurrent=" << carState.MotorCurrent
-              << " (" << packet.getData_u16(2) << ") "
-              << (carState.MotorCurrent > 0 ? "==============="
-                                            : "------------")
-              << NL;
-    }
-    break;
-  case MC_BASE_ADDR | 0x1b: // Tachometer, Voltage In
-    if (verboseModeCanIn) {
-    }
-    break;
+  // case MC_BASE_ADDR | 0x09: // ERPM, Current, Duty Cycle
+  //   if (verboseModeCanIn) {
+  //   }
+  //   break;
+  // case MC_BASE_ADDR | 0x0e: // Ah Used, Ah Charged
+  //   if (verboseModeCanIn) {
+  //   }
+  //   break;
+  // case MC_BASE_ADDR | 0x0f: // Wh Used, Wh Charged
+  //   if (verboseModeCanIn) {
+  //   }
+  //   break;
+  // case MC_BASE_ADDR | 0x10: // Temp Fet, Temp Motor, Current In, PID position
+  //   carState.MotorCurrent = packet.getData_u16(2) / 10.;
+  //   if (verboseModeCanIn) {
+  //     console << "------------------------- McCurrent=" << carState.MotorCurrent
+  //             << " (" << packet.getData_u16(2) << ") "
+  //             << (carState.MotorCurrent > 0 ? "==============="
+  //                                           : "------------")
+  //             << NL;
+  //   }
+  //   break;
+  // case MC_BASE_ADDR | 0x1b: // Tachometer, Voltage In
+  //   if (verboseModeCanIn) {
+  //   }
+  //   break;
   }
 }
 
