@@ -96,6 +96,8 @@ private:
   int counterW;
   int counterR_notAvail;
   int counterW_notAvail;
+  int txFailStreak = 0;
+  uint32_t lastReinitMs = 0;
 
   CANRxBuffer rxBufferIn;
   CANRxBuffer rxBufferOut;

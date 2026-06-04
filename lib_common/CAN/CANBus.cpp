@@ -23,23 +23,52 @@ extern bool SystemInited;
 using namespace std;
 
 BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+static inline bool is_relevant_can_id(uint16_t packetId) {
+    if (packetId == (AC_BASE_ADDR | 0x00) ||
+        packetId == (DC_BASE_ADDR | 0x00) ||
+        packetId == (DC_BASE_ADDR | 0x01)) {
+        return true;
+    }
+
+    if (packetId == BMS_BASE_ADDR ||
+        packetId == (BMS_BASE_ADDR | 0xF7) ||
+        packetId == (BMS_BASE_ADDR | 0xF8) ||
+        packetId == (BMS_BASE_ADDR | 0xF9) ||
+        packetId == (BMS_BASE_ADDR | 0xFA) ||
+        packetId == (BMS_BASE_ADDR | 0xFD)) {
+        return true;
+    }
+
+    if (packetId == (MPPT1_BASE_ADDR | 0x01) || packetId == (MPPT1_BASE_ADDR | 0x02) ||
+        packetId == (MPPT2_BASE_ADDR | 0x01) || packetId == (MPPT2_BASE_ADDR | 0x02) ||
+        packetId == (MPPT3_BASE_ADDR | 0x01) || packetId == (MPPT3_BASE_ADDR | 0x02)) {
+        return true;
+    }
+
+    return false;
+}
+
+static inline bool is_critical_can_tx_id(uint16_t packetId) {
+    return packetId == (AC_BASE_ADDR | 0x00) ||
+           packetId == (DC_BASE_ADDR | 0x00) ||
+           packetId == (DC_BASE_ADDR | 0x01);
+}
+
 void onReceive(int packetSize) {
     if (!SystemInited)
         return;
 
     if (packetSize <= 0 || packetSize > 8) {
-        console << fmt::format("     ERROR: CANBus received packet with invalid size {}.\n", packetSize);
         return;
     }
 
     if (!CAN.available()) {
-        console << fmt::format("     ERROR: CANBus received packet with size {}, but no packet available.\n", packetSize);
         return;
     }
 
     uint16_t packetId = CAN.packetId();
-    if (canBus.is_to_ignore_packet(packetId)) {
-        console << fmt::format("     INFO: CANBus received packet with id {}, but ignored due to max age setting.\n", packetId);
+    if (!is_relevant_can_id(packetId)) {
         return;
     }
 
@@ -50,7 +79,6 @@ void onReceive(int packetSize) {
     for (int i = 0; i < packetSize; i++) {
         int byte = CAN.read();
         if (byte < 0) {
-            console << fmt::format("     ERROR: CANBus received packet with size {}, but failed to read byte {}.\n", packetSize, i);
             return;
         }
         rxData |= ((uint64_t)byte << (i * 8));
@@ -60,24 +88,49 @@ void onReceive(int packetSize) {
     canBus.pushIn(CANPacket(packetId, rxData));
     canBus.counterI++;
     canBus.counterI_notAvail = 0;
-    canBus.setPacketTimeStamp(packetId, millis());
 }
 
 bool CANBus::isPacketToRenew(uint16_t packetId) {
-    return max_ages[packetId] == 0 ||
-           (max_ages[packetId] != -1 &&
-            millis() - ages[packetId] > max_ages[packetId]);
+    auto maxAgeIt = max_ages.find(packetId);
+    if (maxAgeIt == max_ages.end()) {
+        return false;
+    }
+
+    int32_t maxAge = maxAgeIt->second;
+    if (maxAge == -1) {
+        return false;
+    }
+    if (maxAge == 0) {
+        return true;
+    }
+
+    auto ageIt = ages.find(packetId);
+    if (ageIt == ages.end() || ageIt->second == INT32_MAX) {
+        return true;
+    }
+
+    return millis() - ageIt->second > maxAge;
 }
 
 void CANBus::setPacketTimeStamp(uint16_t packetId, int32_t millis) {
-    ages[packetId] = millis;
+    auto ageIt = ages.find(packetId);
+    if (ageIt != ages.end()) {
+        ageIt->second = millis;
+    }
 }
 
 CANBus::CANBus() { init_ages(); }
 
 string CANBus::re_init() {
+    lastReinitMs = millis();
     CAN.end();
     vTaskDelay(50 / portTICK_PERIOD_MS);
+    while (rxBufferOut.isAvailable()) {
+        rxBufferOut.pop();
+    }
+    while (rxBufferIn.isAvailable()) {
+        rxBufferIn.pop();
+    }
     return CANBus::init();
 }
 
@@ -89,6 +142,7 @@ string CANBus::init() {
     counterI_notAvail = 0;
     counterR_notAvail = 0;
     counterW_notAvail = 0;
+    txFailStreak = 0;
 
     counterMaxPacketsIn = 0;
     counterMaxPacketsOut = 0;
@@ -297,7 +351,8 @@ void CANBus::write_rx_packet(CANPacket packet) {
     uint16_t adr = 0;
     try {
         if (xSemaphoreTake(mutex_out, (TickType_t)32) != pdTRUE) {
-          console << fmt::format("\nFAIL on Package [{:x}] write,  counterW_notAvail={}\n", adr, counterW_notAvail); counterW_notAvail++;
+                    counterW_notAvail++;
+                    txFailStreak++;
           return;
         }
         adr = packet.getId();
@@ -309,10 +364,7 @@ void CANBus::write_rx_packet(CANPacket packet) {
         counterW++;
         if (verboseModeCanOutNative)
             console << print_raw_packet("W", packet) << NL;
-  
-        spinlock_t foo;
-        spinlock_initialize(&foo);
-        taskENTER_CRITICAL(&foo);
+
         CAN.beginPacket(adr);
         CAN.write(packet.getData_i8(0));
         CAN.write(packet.getData_i8(1));
@@ -323,20 +375,19 @@ void CANBus::write_rx_packet(CANPacket packet) {
         CAN.write(packet.getData_i8(6));
         CAN.write(packet.getData_i8(7));
         bool ok = CAN.endPacket();
-        taskEXIT_CRITICAL(&foo);
-        yield();  // try to make up for busy wait in CRITICAL
         xSemaphoreGive(mutex_out);
         if (!ok) {
             counterW_notAvail++;
-            if (counterW_notAvail > 4) {
-                console << "CAN transmit failed, forcing reinit\n";
-                canBus.re_init();
+            if ((counterW_notAvail % 100) == 0) {
+                console << fmt::format("CAN transmit timeout/fail (W_notAvail={})\n", counterW_notAvail);
             }
         } else {
             counterW_notAvail = 0;
+            txFailStreak = 0;
         }
     } catch (exception& ex) {
         xSemaphoreGive(mutex_out);
+        txFailStreak++;
         console << "ERROR: Couldn not send uint64_t data to address " << adr
                 << ", ex: " << ex.what() << NL;
     }
@@ -357,6 +408,11 @@ string CANBus::print_raw_packet(const string msg, CANPacket packet) {
 
 void CANBus::task(void* pvParams) {
     deadCounter = 0;
+    static constexpr uint16_t MAX_RX_PACKETS_PER_CYCLE = 48;
+    static constexpr uint16_t MAX_TX_PACKETS_PER_CYCLE = 4;
+    static constexpr uint16_t TX_PRIORITY_SCAN_WINDOW = 16;
+    static constexpr uint16_t REINIT_FAIL_THRESHOLD = 200;
+    static constexpr uint32_t REINIT_COOLDOWN_MS = 8000;
 
     // reset CAN controller
     *((volatile uint32_t*)(0x3ff6b000 + 0x00 * 4)) |= 0x01;
@@ -368,21 +424,35 @@ void CANBus::task(void* pvParams) {
             if (deadCounter == 0) {
                 deadCounter = millis() + 15e3;  // on boot: do not terminate for some time
             }
-            if (counterR_notAvail > 8 || counterI_notAvail > 8 ||
-                counterW_notAvail > 8) {
+                if ((counterR_notAvail > REINIT_FAIL_THRESHOLD || counterI_notAvail > REINIT_FAIL_THRESHOLD ||
+                 txFailStreak > REINIT_FAIL_THRESHOLD) &&
+                (millis() - lastReinitMs > REINIT_COOLDOWN_MS)) {
                 console << NL
-                        << fmt::format("CANBus REINIT trigger: I{}|{}, R{}|{}, W{}|{}",
+                    << fmt::format("CANBus REINIT trigger: I{}|{}, R{}|{}, W{}|{}, txFailStreak={}",
                                        counterI_notAvail, counterI, counterR_notAvail,
-                                       counterR, counterW_notAvail, counterW)
+                               counterR, counterW_notAvail, counterW, txFailStreak)
                         << NL;
                 canBus.re_init();
             }
 
             // if(verboseModeCanOutNative) console << "CAN 1" << NL;
 
-            while (rxBufferIn.isAvailable()) {
-                handle_rx_packet(rxBufferIn.pop());
+            uint16_t rxProcessed = 0;
+            while (rxBufferIn.isAvailable() && rxProcessed < MAX_RX_PACKETS_PER_CYCLE) {
+                CANPacket packet = rxBufferIn.pop();
+                uint16_t packetId = packet.getId();
+                if (packetId == 0 || is_to_ignore_packet(packetId)) {
+                    rxProcessed++;
+                    continue;
+                }
+
+                setPacketTimeStamp(packetId, millis());
+                handle_rx_packet(packet);
                 deadCounter = millis();
+                rxProcessed++;
+                if ((rxProcessed % 16) == 0) {
+                    vTaskDelay(1);
+                }
                 // deadCounter = max((uint64_t)deadCounter, millis());
                 // // only ever increment (prevent override of grace period at startup)
             }
@@ -390,8 +460,63 @@ void CANBus::task(void* pvParams) {
             // if(verboseModeCanOutNative) console << "CAN 2" << NL;
 
             // uint bench = esp_timer_get_time(); // this might be an unacceptably long time to disable all and any context switches / ISR? -> log time (~80us -> ok?)
-            while (rxBufferOut.isAvailable()) {
-                write_rx_packet(rxBufferOut.pop());
+            if (counterW_notAvail > 40 && availablePacketsOut() > 8) {
+                while (rxBufferOut.isAvailable() && availablePacketsOut() > 4) {
+                    uint16_t scanCount = min((uint16_t)availablePacketsOut(), TX_PRIORITY_SCAN_WINDOW);
+                    CANPacket scanBuffer[TX_PRIORITY_SCAN_WINDOW];
+                    int dropIndex = -1;
+
+                    for (uint16_t i = 0; i < scanCount; i++) {
+                        scanBuffer[i] = rxBufferOut.pop();
+                        if (dropIndex < 0 && !is_critical_can_tx_id(scanBuffer[i].getId())) {
+                            dropIndex = i;
+                        }
+                    }
+
+                    if (dropIndex < 0) {
+                        for (uint16_t i = 0; i < scanCount; i++) {
+                            rxBufferOut.push(scanBuffer[i]);
+                        }
+                        break;
+                    }
+
+                    for (uint16_t i = 0; i < scanCount; i++) {
+                        if (i != (uint16_t)dropIndex) {
+                            rxBufferOut.push(scanBuffer[i]);
+                        }
+                    }
+                }
+            }
+
+            uint16_t txProcessed = 0;
+            while (rxBufferOut.isAvailable() && txProcessed < MAX_TX_PACKETS_PER_CYCLE) {
+                uint16_t scanCount = min((uint16_t)availablePacketsOut(), TX_PRIORITY_SCAN_WINDOW);
+                CANPacket scanBuffer[TX_PRIORITY_SCAN_WINDOW];
+                int selectedIndex = -1;
+
+                for (uint16_t i = 0; i < scanCount; i++) {
+                    scanBuffer[i] = rxBufferOut.pop();
+                    if (selectedIndex < 0 && is_critical_can_tx_id(scanBuffer[i].getId())) {
+                        selectedIndex = i;
+                    }
+                }
+
+                if (selectedIndex < 0) {
+                    selectedIndex = 0;
+                }
+
+                write_rx_packet(scanBuffer[selectedIndex]);
+
+                for (uint16_t i = 0; i < scanCount; i++) {
+                    if (i != (uint16_t)selectedIndex) {
+                        rxBufferOut.push(scanBuffer[i]);
+                    }
+                }
+
+                txProcessed++;
+                if ((txProcessed % 8) == 0) {
+                    vTaskDelay(1);
+                }
             }
 
             // if(verboseModeCanOutNative) console << "CAN 3: " << (uint)(esp_timer_get_time() - bench) << NL;

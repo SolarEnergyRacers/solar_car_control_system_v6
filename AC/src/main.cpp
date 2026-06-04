@@ -13,8 +13,8 @@
 #include <sdkconfig.h>
 
 // definitions
-#include <global_definitions.h>
 #include "../lib/definitions.h"
+#include <global_definitions.h>
 // standard libraries
 #include <Streaming.h>
 #include <fmt/core.h>
@@ -104,7 +104,7 @@ void app_main(void) {
 
   // init console IO and radio console
   // msg = uart.init();
-  msg = uart.init_t(1, 60, 1000, base_offset_suspend + 100);
+  msg = uart.init_t(1, 20, 1000, base_offset_suspend + 100);
   console << NL << msg << NL;
   delay(1000);
   console << NL << "------------------------------------------------------------" << NL;
@@ -149,7 +149,7 @@ void app_main(void) {
 
   //------------------------------------------------------------
   // CAN Bus
-  msg = canBus.init_t(0, 22, 10000, base_offset_suspend + 10);
+  msg = canBus.init_t(0, 24, 10000, base_offset_suspend + 0);
   console << msg << NL;
   canBus.verboseModeCanIn = false;
   canBus.verboseModeCanInNative = false;

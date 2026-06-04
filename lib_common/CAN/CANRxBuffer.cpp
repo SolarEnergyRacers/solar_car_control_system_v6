@@ -18,7 +18,7 @@ CANRxBuffer::CANRxBuffer() {
 void CANRxBuffer::push(const CANPacket& packet) {
   CANPacket trashcan;  // using nullptr for receive causes segfault
   if(xPortInIsrContext()){
-    if (uxQueueMessagesWaiting(queue) >= CAN_RX_BUFFER_SIZE) {
+    if (uxQueueMessagesWaitingFromISR(queue) >= CAN_RX_BUFFER_SIZE) {
       xQueueReceiveFromISR(queue, &trashcan, 0); // discard item 
     }
     xQueueSendFromISR(queue, &packet, 0);
