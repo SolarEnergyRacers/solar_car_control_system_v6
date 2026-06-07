@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <string>
 
-#include <CAN.h>
 #include <Wire.h> // I2C
 
 #include <CANBus.h>

@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <string>
 
-#include <CAN.h>
 #include <Wire.h> // I2C
 
 #include <ADC_SER.h>
@@ -171,6 +170,7 @@ void CarControl::switch_break_light() {
 }
 
 void CarControl::task(void *pvParams) {
+  uint8_t dcPacketSeq = 0;
   while (1) {
     if (SystemInited) {
       bool force = false;
@@ -210,7 +210,7 @@ void CarControl::task(void *pvParams) {
                          (uint16_t)carState.TargetSpeed,          // Target Speed [float as value\*1000]
                          (uint16_t)(carState.TargetPower * 1000), // Target Power [float as value\*1000]
                          carState.AccelerationDisplay,            // Display Acceleration
-                         0,                                       // empty
+                         dcPacketSeq,                             // sequence for loss detection
                          carState.Speed,                          // Display Speed
                          driveDirection,                          // Fwd [1] / Bwd [0]
                          carState.BreakPedal,                     // Button Lvl Brake Pedal
@@ -222,6 +222,7 @@ void CarControl::task(void *pvParams) {
                          false,                                   // empty
                          force                                    // force or not
       );
+                  dcPacketSeq++;
 
       // vTaskDelay(10);
 

@@ -18,8 +18,6 @@
 #include <list>
 
 #include <Arduino.h>
-#include <CAN.h>
-
 #include <CANBus.h>
 #include <CarState.h>
 #include <CarStateRadio.h>

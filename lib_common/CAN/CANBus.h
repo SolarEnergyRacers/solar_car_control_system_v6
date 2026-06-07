@@ -101,6 +101,11 @@ private:
 
   CANRxBuffer rxBufferIn;
   CANRxBuffer rxBufferOut;
+  CANRxBuffer rxBufferOutCritical;
+  std::map<uint16_t, uint8_t> criticalTxRetries;
+  std::map<uint16_t, bool> criticalStaleActive;
+  std::map<uint16_t, uint16_t> criticalLastSeq;
+  std::map<uint16_t, bool> criticalSeqSeen;
   std::map<uint16_t, int32_t> max_ages;
   std::map<uint16_t, int32_t> ages;
 
@@ -120,6 +125,18 @@ public:
 
   int counterI;
   int counterI_notAvail;
+  int counterRxOverwrite = 0;
+  int counterTxOverwrite = 0;
+  int counterCriticalTxDrop = 0;
+  int counterCriticalTxFail = 0;
+  int counterCriticalStale = 0;
+  int counterCriticalSeqGap = 0;
+
+  bool is_critical_control_id(uint16_t packetId) const {
+    return packetId == (AC_BASE_ADDR | 0x00) ||
+           packetId == (DC_BASE_ADDR | 0x00) ||
+           packetId == (DC_BASE_ADDR | 0x01);
+  }
   
 
   CANPacket writePacket(uint16_t adr, uint16_t data_u16_0, uint16_t data_u16_1, int8_t data_i8_4, uint8_t data_u8_5, uint8_t data_u8_6,
@@ -131,11 +148,19 @@ public:
   CANPacket writePacket(uint16_t adr, CANPacket packet, bool force = false);
 
   void pushIn(CANPacket packet) {
-    rxBufferIn.push(packet);
+    if (rxBufferIn.push(packet)) {
+      counterRxOverwrite++;
+    }
     counterMaxPacketsIn = max(counterMaxPacketsIn, availablePacketsIn());
   }
   void pushOut(CANPacket packet) {
-    rxBufferOut.push(packet);
+    CANRxBuffer& targetBuffer = is_critical_control_id(packet.getId()) ? rxBufferOutCritical : rxBufferOut;
+    if (targetBuffer.push(packet)) {
+      counterTxOverwrite++;
+      if (is_critical_control_id(packet.getId())) {
+        counterCriticalTxDrop++;
+      }
+    }
     counterMaxPacketsOut = max(counterMaxPacketsOut, availablePacketsOut());
   }
 
@@ -143,7 +168,9 @@ public:
   void setPacketTimeStamp(uint16_t packetId, int32_t millis);
 
   int availablePacketsIn() { return rxBufferIn.getSize(); }
-  int availablePacketsOut() { return rxBufferOut.getSize(); }
+  int availablePacketsOut() { return rxBufferOutCritical.getSize() + rxBufferOut.getSize(); }
+  int availablePacketsOutCritical() { return rxBufferOutCritical.getSize(); }
+  int availablePacketsOutTelemetry() { return rxBufferOut.getSize(); }
   int getMaxPacketsBufferInUsage() { return counterMaxPacketsIn; };
   int getMaxPacketsBufferOutUsage() { return counterMaxPacketsOut; };
 

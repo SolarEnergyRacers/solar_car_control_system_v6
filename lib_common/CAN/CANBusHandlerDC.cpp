@@ -14,8 +14,6 @@
 #include <freertos/semphr.h>
 
 #include <Arduino.h>
-#include <CAN.h>
-
 #include <CANBus.h>
 #include <CarState.h>
 #include <Console.h>
