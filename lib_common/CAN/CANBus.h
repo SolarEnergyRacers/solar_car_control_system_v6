@@ -101,7 +101,7 @@ private:
 
   CANRxBuffer rxBufferIn;
   CANRxBuffer rxBufferOut;
-  CANRxBuffer rxBufferOutCritical;
+  CANRxBuffer* rxBufferOutCritical = nullptr;
   std::map<uint16_t, uint8_t> criticalTxRetries;
   std::map<uint16_t, bool> criticalStaleActive;
   std::map<uint16_t, uint16_t> criticalLastSeq;
@@ -154,8 +154,11 @@ public:
     counterMaxPacketsIn = max(counterMaxPacketsIn, availablePacketsIn());
   }
   void pushOut(CANPacket packet) {
-    CANRxBuffer& targetBuffer = is_critical_control_id(packet.getId()) ? rxBufferOutCritical : rxBufferOut;
-    if (targetBuffer.push(packet)) {
+    CANRxBuffer* targetBuffer =
+        (is_critical_control_id(packet.getId()) && rxBufferOutCritical != nullptr)
+            ? rxBufferOutCritical
+            : &rxBufferOut;
+    if (targetBuffer->push(packet)) {
       counterTxOverwrite++;
       if (is_critical_control_id(packet.getId())) {
         counterCriticalTxDrop++;
@@ -168,8 +171,13 @@ public:
   void setPacketTimeStamp(uint16_t packetId, int32_t millis);
 
   int availablePacketsIn() { return rxBufferIn.getSize(); }
-  int availablePacketsOut() { return rxBufferOutCritical.getSize() + rxBufferOut.getSize(); }
-  int availablePacketsOutCritical() { return rxBufferOutCritical.getSize(); }
+  int availablePacketsOut() {
+    int criticalSize = rxBufferOutCritical != nullptr ? rxBufferOutCritical->getSize() : 0;
+    return criticalSize + rxBufferOut.getSize();
+  }
+  int availablePacketsOutCritical() {
+    return rxBufferOutCritical != nullptr ? rxBufferOutCritical->getSize() : 0;
+  }
   int availablePacketsOutTelemetry() { return rxBufferOut.getSize(); }
   int getMaxPacketsBufferInUsage() { return counterMaxPacketsIn; };
   int getMaxPacketsBufferOutUsage() { return counterMaxPacketsOut; };

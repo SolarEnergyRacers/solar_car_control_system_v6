@@ -13,7 +13,12 @@
 // #define CAN_SPEED 500E3 // CAN Speed 500 kb/s
 #define CAN_RX_BUFFER_SIZE 4000
 #define CAN_TASK_WAIT 50
-#define CRITICAL_CAN_STALE_TIMEOUT_MS 500
+// CRITICAL_CAN_STALE_TIMEOUT_MS must be greater then the expected interval between 
+// packets of critical CAN IDs, otherwise stale warnings will be triggered during 
+// normal operation. Minimal CAN packet frequncy is determined by LIFESIGN_FREQUENCY_MS,
+// which is e.g. 500ms, so CRITICAL_CAN_STALE_TIMEOUT_MS should be >500ms to avoid false positives.
+#define CRITICAL_CAN_STALE_TIMEOUT_MS 700
+#define LIFESIGN_FREQUENCY_MS 500
 
 // #define MC_BASE_ADDR 0x500
 #define BMS_BASE_ADDR 0x700

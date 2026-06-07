@@ -10,6 +10,7 @@
 #include <System.h>
 #include <driver/twai.h>
 #include <esp_err.h>
+#include <esp_intr_alloc.h>
 #include <fmt/core.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
@@ -132,8 +133,8 @@ string CANBus::re_init() {
     twai_stop();
     twai_driver_uninstall();
     vTaskDelay(50 / portTICK_PERIOD_MS);
-    while (rxBufferOutCritical.isAvailable()) {
-        rxBufferOutCritical.pop();
+    while (rxBufferOutCritical != nullptr && rxBufferOutCritical->isAvailable()) {
+        rxBufferOutCritical->pop();
     }
     while (rxBufferOut.isAvailable()) {
         rxBufferOut.pop();
@@ -170,10 +171,21 @@ string CANBus::init() {
     mutex_out = xSemaphoreCreateBinary();
     xSemaphoreGive(mutex_out);
 
+    if (rxBufferOutCritical == nullptr) {
+        rxBufferOutCritical = new CANRxBuffer();
+    }
+    if (rxBufferOutCritical == nullptr) {
+        hasError = true;
+        console << "     ERROR: Critical CAN queue allocation failed. Falling back to shared TX queue.\n";
+    }
+
     twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(
         static_cast<gpio_num_t>(CAN_TX), static_cast<gpio_num_t>(CAN_RX), TWAI_MODE_NORMAL);
     g_config.tx_queue_len = 64;
     g_config.rx_queue_len = 64;
+    // Use a shared low/medium priority interrupt to reduce allocation failures
+    // on systems with many peripherals already reserving dedicated interrupt lines.
+    g_config.intr_flags = ESP_INTR_FLAG_LOWMED | ESP_INTR_FLAG_SHARED;
     g_config.alerts_enabled = TWAI_ALERT_TX_FAILED | TWAI_ALERT_BUS_OFF |
                               TWAI_ALERT_BUS_RECOVERED | TWAI_ALERT_ERR_PASS;
 
@@ -559,8 +571,6 @@ void CANBus::task(void* pvParams) {
                 if ((rxProcessed % 16) == 0) {
                     vTaskDelay(1);
                 }
-                // deadCounter = max((uint64_t)deadCounter, millis());
-                // // only ever increment (prevent override of grace period at startup)
             }
 
             uint32_t now = millis();
@@ -608,8 +618,9 @@ void CANBus::task(void* pvParams) {
             }
 
             uint16_t txProcessed = 0;
-            while (rxBufferOutCritical.isAvailable() && txProcessed < MAX_TX_PACKETS_PER_CYCLE) {
-                write_rx_packet(rxBufferOutCritical.pop());
+            while (rxBufferOutCritical != nullptr && rxBufferOutCritical->isAvailable() &&
+                   txProcessed < MAX_TX_PACKETS_PER_CYCLE) {
+                write_rx_packet(rxBufferOutCritical->pop());
                 txProcessed++;
             }
 

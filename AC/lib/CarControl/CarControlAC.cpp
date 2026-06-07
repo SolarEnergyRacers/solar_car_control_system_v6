@@ -157,7 +157,7 @@ void CarControl::task(void *pvParams) {
 
       bool force = false;
       if (millis() > millisNextCanSend || carStateLifeSignLast != carState.LifeSign) {
-        millisNextCanSend = millis() + 1000;
+        millisNextCanSend = millis() + LIFESIGN_FREQUENCY_MS;
         force = true;
         carStateLifeSignLast = carState.LifeSign;
       }
