@@ -33,8 +33,10 @@ extern CANBus canBus;
 unsigned long ConfirmClearTime = 0;
 
 bool CANBus::is_to_ignore_packet(uint16_t packetId) {
-  return packetId != (DC_BASE_ADDR | 0x00) && packetId != (DC_BASE_ADDR |
-  0x01) && !canBus.isPacketToRenew(packetId);
+  // allow only AC life sign and the two DC packets (0x660, 0x661)
+  return !(packetId == (AC_BASE_ADDR | 0x00) ||
+           packetId == (DC_BASE_ADDR | 0x00) ||
+           packetId == (DC_BASE_ADDR | 0x01));
 }
 
 std::map<uint16_t, uint16_t> can_address_map = {{0x950, 0x509},

@@ -73,9 +73,6 @@ void onReceive(int packetSize) {
     }
 
     uint64_t rxData = 0l;
-    // for (int i = 0; i < packetSize && i < 8; i++) {
-    //     rxData = rxData | (((uint64_t)CAN.read()) << (i * 8));
-    // }
     for (int i = 0; i < packetSize; i++) {
         int byte = CAN.read();
         if (byte < 0) {
@@ -83,7 +80,6 @@ void onReceive(int packetSize) {
         }
         rxData |= ((uint64_t)byte << (i * 8));
     }
-    // xSemaphoreGiveFromISR(canBus.mutex_in, &xHigherPriorityTaskWoken);
 
     canBus.pushIn(CANPacket(packetId, rxData));
     canBus.counterI++;

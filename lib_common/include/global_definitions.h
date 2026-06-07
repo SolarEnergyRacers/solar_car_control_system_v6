@@ -11,7 +11,7 @@
 
 #define CAN_SPEED 125E3 // CAN Speed 125 kb/s
 // #define CAN_SPEED 500E3 // CAN Speed 500 kb/s
-#define CAN_RX_BUFFER_SIZE 400
+#define CAN_RX_BUFFER_SIZE 4000
 #define CAN_TASK_WAIT 50
 
 // #define MC_BASE_ADDR 0x500
