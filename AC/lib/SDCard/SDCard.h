@@ -28,6 +28,8 @@ public:
   void write_log(const string msg);
   // prints the directory tree of the card
   void directory();
+  // release SD VFS resources (call when card is physically removed)
+  void end();
   // mount the card
   bool mount();
   // prepare log

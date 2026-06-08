@@ -794,11 +794,18 @@ bool sdcard_mount(uint8_t pdrv, const char* path, uint8_t max_files, bool format
     FATFS* fs;
     char drv[3] = {(char)('0' + pdrv), ':', 0};
     esp_err_t err = esp_vfs_fat_register(path, drv, max_files, &fs);
+    if (err != ESP_OK) {
+        // Registration failed. A stale VFS context from a previous mount may
+        // still be occupying the slot (e.g. after physical card removal without
+        // calling SD.end()). Unregister the stale entry and retry once.
+        esp_vfs_fat_unregister_path(path);
+        err = esp_vfs_fat_register(path, drv, max_files, &fs);
+    }
     if (err == ESP_ERR_INVALID_STATE) {
-        log_e("esp_vfs_fat_register failed 0x(%x): SD is registered.", err);
+        log_e("sdcard_mount(): esp_vfs_fat_register failed 0x(%x): SD is registered.", err);
         return false;
     } else if (err != ESP_OK) {
-        log_e("esp_vfs_fat_register failed 0x(%x)", err);
+        log_e("sdcard_mount(): esp_vfs_fat_register failed 0x(%x)", err);
         return false;
     }
 

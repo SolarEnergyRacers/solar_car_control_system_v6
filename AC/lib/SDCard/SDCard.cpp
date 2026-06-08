@@ -55,8 +55,15 @@ string SDCard::init() {
 // https://github.com/espressif/arduino-esp32/blob/master/libraries/SPI/examples/SPI_Multiple_Buses/SPI_Multiple_Buses.ino
 
 bool SDCard::update_sd_card_detect() {
-  carState.SdCardDetect = !(bool)digitalRead(ESP32_AC_SD_DETECT_GPIO35);
+  carState.SdCardDetect = (bool)digitalRead(ESP32_AC_SD_DETECT_GPIO35);
   return carState.SdCardDetect;
+}
+
+void SDCard::end() {
+  // Release SD VFS resources so esp_vfs_fat_register can succeed on the next mount.
+  // Must be called with spiBus.mutex held.
+  SD.end();
+  mounted = false;
 }
 
 bool SDCard::isMounted() { return update_sd_card_detect() && mounted; }
@@ -89,7 +96,9 @@ bool SDCard::mount() {
     // failed SD.begin(), preventing esp_vfs_fat_register failed 0x(101).
     SD.end();
     while (!mounted_temp && attempts++ < 3) {
-      mounted_temp = SD.begin(SPI_CS_SDCARD, spiBus.spi);
+      // max_files=1: only 1 log file open at a time. Keeps FAT VFS context
+      // allocation ~1 KB instead of ~26 KB, preventing heap fragmentation failures.
+      mounted_temp = SD.begin(SPI_CS_SDCARD, spiBus.spi, 4000000, "/sd", 1);
       if (!mounted_temp) {
         SD.end();
         vTaskDelay(10);

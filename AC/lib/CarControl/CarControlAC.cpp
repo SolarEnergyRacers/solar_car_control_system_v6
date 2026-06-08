@@ -20,6 +20,7 @@
 #include <Helper.h>
 #include <I2CBus.h>
 #include <SDCard.h>
+#include <SPIBus.h>
 
 #include <System.h>
 
@@ -30,6 +31,7 @@ extern CarStateRadio carStateRadio;
 extern Console console;
 extern I2CBus i2cBus;
 extern SDCard sdCard;
+extern SPIBus spiBus;
 
 extern bool SystemInited;
 
@@ -95,6 +97,12 @@ bool CarControl::read_sd_card_detect() {
   } else if (!carState.SdCardDetect && sdCardDetectOld) {
     carState.EngineerInfo = "SD card removed.";
     console << "     " << carState.EngineerInfo << NL;
+    // Free SD VFS resources immediately so the next mount attempt can allocate a
+    // fresh context. Without this, esp_vfs_fat_register fails with ESP_ERR_NO_MEM
+    // (no free FAT VFS slots) when the card is re-inserted.
+    xSemaphoreTakeT(spiBus.mutex);
+    sdCard.end();
+    xSemaphoreGive(spiBus.mutex);
   }
 
   return carState.SdCardDetect;
