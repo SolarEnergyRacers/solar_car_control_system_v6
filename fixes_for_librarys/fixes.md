@@ -200,23 +200,44 @@ Please call `idf.py menuconfig` then go to Component config -> mbedTLS -> TLS Ke
 
 ## AC only
 ### SD card: fix memory access after free (RAII DTOR):
-in .platformio/packages/framework-arduinoespressif32/libraries/SD/src/sd_diskio.cpp:715 ff
+in `.platformio/packages/framework-arduinoespressif32/libraries/SD/src/sd_diskio.cpp` function `sdcard_uninit()`
+
+**Patched file stored at:** `fixes_for_librarys/sd_diskio.cpp`
+
+**To apply:** copy `fixes_for_librarys/sd_diskio.cpp` to
+`.platformio/packages/framework-arduinoespressif32/libraries/SD/src/sd_diskio.cpp`
+
+#### Root cause
+
+`AcquireSPI` is a RAII lock that stores a raw `card*` pointer. In the original
+code the lock was in scope until the end of `sdcard_uninit()`, but `free(card)`
+was called before that closing `}`. When the destructor fired it called
+`card->spi->endTransaction()` on already-freed memory → `LoadProhibited` panic.
+
+#### Fix
+
+Scope the lock into a nested block so its destructor runs before `free(card)`:
 
 ```c++
+// BEFORE — destructor fires after free(card):
 AcquireSPI lock(card);
 sdTransaction(pdrv, GO_IDLE_STATE, 0, NULL);
 ff_diskio_register(pdrv, NULL);
+s_cards[pdrv] = NULL;
+// ... free(card->base_path); free(card);  ← card already used by dtor above
 ```
 
-to ->
-
 ```c++
+// AFTER — destructor fires inside block, card still valid:
 {AcquireSPI lock(card);
   sdTransaction(pdrv, GO_IDLE_STATE, 0, NULL);
 }
 ff_diskio_register(pdrv, NULL);
+s_cards[pdrv] = NULL;
+// ... free(card->base_path); free(card);  ← safe
 ```
-(This is done already in main branch of repo, but not published in a release)
+
+(Fix is present in the upstream main branch but not yet in a published release.)
 
 ## AC + DC
 

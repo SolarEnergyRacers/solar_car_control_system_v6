@@ -89,16 +89,9 @@ bool CarControl::read_sd_card_detect() {
 
   bool sdCardDetectOld = carState.SdCardDetect;
   if (sdCard.update_sd_card_detect() && !sdCardDetectOld) {
-    // carState.EngineerInfo = "SD card detected, try to start logging...";
     carState.EngineerInfo = "SD card detected. Not mounted yet.";
     console << "     " << carState.EngineerInfo << NL;
-    // Do not mount automatically
-    // string msg = sdCard.init();
-    // console << msg << NL;
-    // if (sdCard.check_log_file()) {
-    //   string state = carState.csv("Recent State", true); // with header
-    //   sdCard.write_log(state + NL);
-    // }
+    // Do not mount automatically!
   } else if (!carState.SdCardDetect && sdCardDetectOld) {
     carState.EngineerInfo = "SD card removed.";
     console << "     " << carState.EngineerInfo << NL;

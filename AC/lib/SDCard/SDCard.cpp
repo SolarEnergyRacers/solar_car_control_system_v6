@@ -55,10 +55,7 @@ string SDCard::init() {
 // https://github.com/espressif/arduino-esp32/blob/master/libraries/SPI/examples/SPI_Multiple_Buses/SPI_Multiple_Buses.ino
 
 bool SDCard::update_sd_card_detect() {
-  carState.SdCardDetect = (bool)digitalRead(ESP32_AC_SD_DETECT_GPIO35);
-  if (!carState.SdCardDetect) {
-    mounted = false;
-  }
+  carState.SdCardDetect = !(bool)digitalRead(ESP32_AC_SD_DETECT_GPIO35);
   return carState.SdCardDetect;
 }
 
@@ -88,9 +85,15 @@ bool SDCard::mount() {
     bool mounted_temp = false;
     xSemaphoreTakeT(spiBus.mutex);
     hasSemaphore = true;
-    while (!mounted && attempts++ < 3) {
+    // Unconditional SD.end() to unregister any stale FAT VFS state from a previous
+    // failed SD.begin(), preventing esp_vfs_fat_register failed 0x(101).
+    SD.end();
+    while (!mounted_temp && attempts++ < 3) {
       mounted_temp = SD.begin(SPI_CS_SDCARD, spiBus.spi);
-      vTaskDelay(10);
+      if (!mounted_temp) {
+        SD.end();
+        vTaskDelay(10);
+      }
     }
     xSemaphoreGive(spiBus.mutex);
     hasSemaphore = false;
