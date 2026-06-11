@@ -22,6 +22,7 @@
 #include <Helper.h>
 #include <SDCard.h>
 #include <SPIBus.h>
+#include <vector>
 
 extern Console console;
 extern SPIBus spiBus;
@@ -180,6 +181,58 @@ bool SDCard::open_log_file() {
   if (dataFile != 0)
     return true;
   return false;
+}
+
+bool SDCard::printFile(string filename, int tailLines) {
+  if (!isMounted()) {
+    console << "  SD card not mounted (printFile failed)" << NL;
+    return false;
+  }
+  xSemaphoreTakeT(spiBus.mutex);
+  File file = SD.open(filename.c_str());
+  if (!file) {
+    console << "     Failed to open file: " << filename << NL;
+    xSemaphoreGive(spiBus.mutex);
+    return false;
+  }
+  console << "     Content of '" << filename << "':" << NL;
+  if (tailLines > 0) {
+    // circular buffer to collect last tailLines lines
+    vector<string> lines(tailLines);
+    int writeIdx = 0;
+    int totalLines = 0;
+    string line = "";
+    while (file.available()) {
+      char c = (char)file.read();
+      if (c == '\n') {
+        lines[writeIdx] = line;
+        writeIdx = (writeIdx + 1) % tailLines;
+        totalLines++;
+        line = "";
+      } else {
+        line += c;
+      }
+    }
+    // handle last line without trailing newline
+    if (!line.empty()) {
+      lines[writeIdx] = line;
+      writeIdx = (writeIdx + 1) % tailLines;
+      totalLines++;
+    }
+    int printCount = min(totalLines, tailLines);
+    int startIdx = (totalLines > tailLines) ? writeIdx : 0;
+    for (int i = 0; i < printCount; i++) {
+      console << lines[(startIdx + i) % tailLines] << "\n";
+    }
+  } else {
+    while (file.available()) {
+      console << (char)file.read();
+    }
+  }
+  console << "     ~~~~~~~~~~~~~~~~" << NL;
+  file.close();
+  xSemaphoreGive(spiBus.mutex);
+  return true;
 }
 
 bool SDCard::check_log_file() {

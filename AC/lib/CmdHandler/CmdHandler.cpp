@@ -144,9 +144,20 @@ void CmdHandler::task(void *pvParams) {
         case 'M':
           sdCard.mount();
           break;
-        case 'P':
-          sdCard.directory();
-          break;
+        case 'P': {
+          string arr[6];
+          int count = splitString(arr, &input[1]);
+          if (count == 0) {
+            sdCard.directory();
+          } else {
+            string filename = arr[0].c_str();
+            int tailLines = 10;
+            if (count > 1) {
+              tailLines = atoi(arr[1].c_str());
+            }
+            sdCard.printFile(filename, tailLines);
+          }
+        } break;
         case 'U':
           sdCard.unmount();
           break;
@@ -368,6 +379,6 @@ string CmdHandler::printSystemValues() {
   ss << fmt::format("DAC: POT-0 (accel)= {:4d}, POT-1 (recup)= {:4d}\n", dac.get_pot(DAC::pot_chan::POT_CHAN0),
                     dac.get_pot(DAC::pot_chan::POT_CHAN1));
 #endif
-  
+
   return ss.str();
 }
