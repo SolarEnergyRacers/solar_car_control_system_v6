@@ -41,7 +41,24 @@ AC/sdkconfig.esp32dev.old
 
 # local tools settings
 **/.vscode
-AC/.pio/**
+
+AC/.pio/build/
+DC/.pio/build/
+
+AC/.pio/libdeps/esp32dev-linux/**
+!AC/.pio/libdeps/esp32dev-linux/fmt/
+!AC/.pio/libdeps/esp32dev-linux/fmt/include/
+!AC/.pio/libdeps/esp32dev-linux/fmt/include/fmt/
+!AC/.pio/libdeps/esp32dev-linux/fmt/include/fmt/core.h
+
+DC/.pio/libdeps/esp32dev-linux/**
+!DC/.pio/libdeps/esp32dev-linux/fmt/
+!DC/.pio/libdeps/esp32dev-linux/fmt/include/
+!DC/.pio/libdeps/esp32dev-linux/fmt/include/fmt/
+!DC/.pio/libdeps/esp32dev-linux/fmt/include/fmt/core.h
+
+AC/.pio/libdeps/esp32dev-windows/*
+DC/.pio/libdeps/esp32dev-windows/*
 
 # console log files
 tio-USB*.log
