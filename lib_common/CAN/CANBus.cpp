@@ -2,13 +2,15 @@
 // CAN Bus
 //
 #include <Arduino.h>
-#include <CAN.h>
 #include <CANBus.h>
 #include <CarState.h>
 #include <Console.h>
 #include <Helper.h>
 #include <I2CBus.h>
 #include <System.h>
+#include <driver/twai.h>
+#include <esp_err.h>
+#include <esp_intr_alloc.h>
 #include <fmt/core.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
@@ -22,62 +24,120 @@ extern bool SystemInited;
 
 using namespace std;
 
-BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-void onReceive(int packetSize) {
-    if (!SystemInited)
-        return;
-
-    if (packetSize <= 0 || packetSize > 8) {
-        console << fmt::format("     ERROR: CANBus received packet with invalid size {}.\n", packetSize);
-        return;
+static inline bool is_relevant_can_id(uint16_t packetId) {
+    if (packetId == (AC_BASE_ADDR | 0x00) ||
+        packetId == (DC_BASE_ADDR | 0x00) ||
+        packetId == (DC_BASE_ADDR | 0x01)) {
+        return true;
     }
 
-    if (!CAN.available()) {
-        console << fmt::format("     ERROR: CANBus received packet with size {}, but no packet available.\n", packetSize);
-        return;
+    if (packetId == BMS_BASE_ADDR ||
+        packetId == (BMS_BASE_ADDR | 0xF7) ||
+        packetId == (BMS_BASE_ADDR | 0xF8) ||
+        packetId == (BMS_BASE_ADDR | 0xF9) ||
+        packetId == (BMS_BASE_ADDR | 0xFA) ||
+        packetId == (BMS_BASE_ADDR | 0xFD)) {
+        return true;
     }
 
-    uint16_t packetId = CAN.packetId();
-    if (canBus.is_to_ignore_packet(packetId)) {
-        console << fmt::format("     INFO: CANBus received packet with id {}, but ignored due to max age setting.\n", packetId);
-        return;
+    if (packetId == (MPPT1_BASE_ADDR | 0x01) || packetId == (MPPT1_BASE_ADDR | 0x02) ||
+        packetId == (MPPT2_BASE_ADDR | 0x01) || packetId == (MPPT2_BASE_ADDR | 0x02) ||
+        packetId == (MPPT3_BASE_ADDR | 0x01) || packetId == (MPPT3_BASE_ADDR | 0x02)) {
+        return true;
     }
 
-    uint64_t rxData = 0l;
-    // for (int i = 0; i < packetSize && i < 8; i++) {
-    //     rxData = rxData | (((uint64_t)CAN.read()) << (i * 8));
-    // }
-    for (int i = 0; i < packetSize; i++) {
-        int byte = CAN.read();
-        if (byte < 0) {
-            console << fmt::format("     ERROR: CANBus received packet with size {}, but failed to read byte {}.\n", packetSize, i);
-            return;
-        }
-        rxData |= ((uint64_t)byte << (i * 8));
-    }
-    // xSemaphoreGiveFromISR(canBus.mutex_in, &xHigherPriorityTaskWoken);
+    return false;
+}
 
-    canBus.pushIn(CANPacket(packetId, rxData));
-    canBus.counterI++;
-    canBus.counterI_notAvail = 0;
-    canBus.setPacketTimeStamp(packetId, millis());
+static inline bool is_critical_can_tx_id(uint16_t packetId) {
+    // Only the 0x661 packet carries a dedicated sequence byte in data byte 5.
+    // The 0x650/0x660 life-sign packets use the first 16 bits as a heartbeat
+    // value, so they should not trigger sequence-gap warnings.
+    return packetId == (DC_BASE_ADDR | 0x01);
+}
+
+static bool extract_critical_sequence(uint16_t packetId, CANPacket& packet,
+                                      uint16_t& sequence, uint8_t& bitWidth) {
+    switch (packetId) {
+        case (DC_BASE_ADDR | 0x01):
+            sequence = packet.getData_u8(5);
+            bitWidth = 8;
+            return true;
+        default:
+            return false;
+    }
+}
+
+static bool read_can_packet(CANPacket& outPacket) {
+    twai_message_t message = {};
+    esp_err_t err = twai_receive(&message, 0);
+    if (err != ESP_OK) {
+        return false;
+    }
+
+    if (message.extd || message.rtr || message.data_length_code > 8) {
+        return false;
+    }
+
+    uint16_t packetId = static_cast<uint16_t>(message.identifier & 0x7FF);
+    if (!is_relevant_can_id(packetId)) {
+        return false;
+    }
+
+    uint64_t rxData = 0UL;
+    for (uint8_t i = 0; i < message.data_length_code; i++) {
+        rxData |= (static_cast<uint64_t>(message.data[i]) << (i * 8));
+    }
+
+    outPacket = CANPacket(packetId, rxData);
+    return true;
 }
 
 bool CANBus::isPacketToRenew(uint16_t packetId) {
-    return max_ages[packetId] == 0 ||
-           (max_ages[packetId] != -1 &&
-            millis() - ages[packetId] > max_ages[packetId]);
+    auto maxAgeIt = max_ages.find(packetId);
+    if (maxAgeIt == max_ages.end()) {
+        return false;
+    }
+
+    int32_t maxAge = maxAgeIt->second;
+    if (maxAge == -1) {
+        return false;
+    }
+    if (maxAge == 0) {
+        return true;
+    }
+
+    auto ageIt = ages.find(packetId);
+    if (ageIt == ages.end() || ageIt->second == INT32_MAX) {
+        return true;
+    }
+
+    return millis() - ageIt->second > maxAge;
 }
 
 void CANBus::setPacketTimeStamp(uint16_t packetId, int32_t millis) {
-    ages[packetId] = millis;
+    auto ageIt = ages.find(packetId);
+    if (ageIt != ages.end()) {
+        ageIt->second = millis;
+    }
 }
 
 CANBus::CANBus() { init_ages(); }
 
 string CANBus::re_init() {
-    CAN.end();
+    lastReinitMs = millis();
+    twai_stop();
+    twai_driver_uninstall();
     vTaskDelay(50 / portTICK_PERIOD_MS);
+    while (rxBufferOutCritical != nullptr && rxBufferOutCritical->isAvailable()) {
+        rxBufferOutCritical->pop();
+    }
+    while (rxBufferOut.isAvailable()) {
+        rxBufferOut.pop();
+    }
+    while (rxBufferIn.isAvailable()) {
+        rxBufferIn.pop();
+    }
     return CANBus::init();
 }
 
@@ -89,38 +149,70 @@ string CANBus::init() {
     counterI_notAvail = 0;
     counterR_notAvail = 0;
     counterW_notAvail = 0;
+    counterRxOverwrite = 0;
+    counterTxOverwrite = 0;
+    counterCriticalTxDrop = 0;
+    counterCriticalTxFail = 0;
+    counterCriticalStale = 0;
+    counterCriticalSeqGap = 0;
+    criticalTxRetries.clear();
+    criticalStaleActive.clear();
+    criticalLastSeq.clear();
+    criticalSeqSeen.clear();
+    txFailStreak = 0;
 
     counterMaxPacketsIn = 0;
     counterMaxPacketsOut = 0;
 
     mutex_out = xSemaphoreCreateBinary();
     xSemaphoreGive(mutex_out);
-    // mutex_in = xSemaphoreCreateBinary();
-    CAN.setPins(CAN_RX, CAN_TX);
-    if (!CAN.begin(CAN_SPEED)) {
-        CAN.setTimeout(400);
-        // xSemaphoreGive(mutex_in);
+
+    if (rxBufferOutCritical == nullptr) {
+        rxBufferOutCritical = new CANRxBuffer();
+    }
+    if (rxBufferOutCritical == nullptr) {
+        hasError = true;
+        console << "     ERROR: Critical CAN queue allocation failed. Falling back to shared TX queue.\n";
+    }
+
+    twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(
+        static_cast<gpio_num_t>(CAN_TX), static_cast<gpio_num_t>(CAN_RX), TWAI_MODE_NORMAL);
+    g_config.tx_queue_len = 64;
+    g_config.rx_queue_len = 64;
+    // Use a shared low/medium priority interrupt to reduce allocation failures
+    // on systems with many peripherals already reserving dedicated interrupt lines.
+    g_config.intr_flags = ESP_INTR_FLAG_LOWMED | ESP_INTR_FLAG_SHARED;
+    g_config.alerts_enabled = TWAI_ALERT_TX_FAILED | TWAI_ALERT_BUS_OFF |
+                              TWAI_ALERT_BUS_RECOVERED | TWAI_ALERT_ERR_PASS;
+
+    twai_timing_config_t t_config = TWAI_TIMING_CONFIG_125KBITS();
+    twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
+
+    esp_err_t installErr = twai_driver_install(&g_config, &t_config, &f_config);
+    esp_err_t startErr = installErr == ESP_OK ? twai_start() : installErr;
+
+    if (installErr != ESP_OK || startErr != ESP_OK) {
         hasError = true;
         console << fmt::format(
-            "     ERROR: CANBus with rx={}, tx={} NOT, speed={} inited.\n", CAN_RX,
-            CAN_TX, CAN_SPEED);
+            "     ERROR: TWAI init failed with rx={}, tx={}, speed={} (install={}, start={}).\n",
+            CAN_RX, CAN_TX, CAN_SPEED, static_cast<int>(installErr), static_cast<int>(startErr));
     } else {
-        CAN.onReceive(onReceive);
-        // xSemaphoreGive(mutex_in);
-        console << fmt::format("     CANBus with rx={}, tx={}, speed={} inited.\n",
+        console << fmt::format("     TWAI with rx={}, tx={}, speed={} inited.\n",
                                CAN_RX, CAN_TX, CAN_SPEED);
     }
     return fmt::format("[{}] CANBus initialized.", hasError ? "--" : "ok");
 }
 
 void CANBus::exit() {
-    // Exit needs to be implemented for Task, here or in AbstractTask
-    // xSemaphoreTakeT(mutex_in);
-    CAN.end();
-    // xSemaphoreGive(mutex_in);
+    twai_stop();
+    twai_driver_uninstall();
 }
 
 void CANBus::init_ages() {
+    max_ages[AC_BASE_ADDR | 0x00] = CRITICAL_CAN_STALE_TIMEOUT_MS;
+    max_ages[DC_BASE_ADDR | 0x00] = CRITICAL_CAN_STALE_TIMEOUT_MS;
+    max_ages[DC_BASE_ADDR | 0x01] = CRITICAL_CAN_STALE_TIMEOUT_MS;
+
     // init max ages
     max_ages[BMS_BASE_ADDR] = MAXAGE_BMU_HEARTBEAT;
     max_ages[BMS_BASE_ADDR | 0x1] = MAXAGE_CMU_TEMP;      // CMU1
@@ -168,6 +260,10 @@ void CANBus::init_ages() {
     max_ages[MPPT3_BASE_ADDR | 0x6] = MAXAGE_MPPT_POWER_CONN;
 
     // init ages
+    ages[AC_BASE_ADDR | 0x00] = INT32_MAX;
+    ages[DC_BASE_ADDR | 0x00] = INT32_MAX;
+    ages[DC_BASE_ADDR | 0x01] = INT32_MAX;
+
     ages[BMS_BASE_ADDR] = INT32_MAX;
     ages[BMS_BASE_ADDR | 0x1] = INT32_MAX;  // CMU1
     ages[BMS_BASE_ADDR | 0x2] = INT32_MAX;  // CMU1
@@ -294,10 +390,28 @@ CANPacket CANBus::writePacket(uint16_t adr, CANPacket packet, bool force) {
 }
 
 void CANBus::write_rx_packet(CANPacket packet) {
+        static constexpr uint8_t CRITICAL_TX_MAX_RETRY = 3;
+
+        auto retry_critical_packet = [&](uint16_t packetId) {
+            if (!is_critical_control_id(packetId)) {
+                return;
+            }
+            uint8_t& retries = criticalTxRetries[packetId];
+            if (retries < CRITICAL_TX_MAX_RETRY) {
+                retries++;
+                pushOut(packet);
+            }
+        };
+
     uint16_t adr = 0;
     try {
         if (xSemaphoreTake(mutex_out, (TickType_t)32) != pdTRUE) {
-          console << fmt::format("\nFAIL on Package [{:x}] write,  counterW_notAvail={}\n", adr, counterW_notAvail); counterW_notAvail++;
+                    counterW_notAvail++;
+                    txFailStreak++;
+                    if (is_critical_control_id(packet.getId())) {
+                        counterCriticalTxFail++;
+                    }
+                    retry_critical_packet(packet.getId());
           return;
         }
         adr = packet.getId();
@@ -309,34 +423,42 @@ void CANBus::write_rx_packet(CANPacket packet) {
         counterW++;
         if (verboseModeCanOutNative)
             console << print_raw_packet("W", packet) << NL;
-  
-        spinlock_t foo;
-        spinlock_initialize(&foo);
-        taskENTER_CRITICAL(&foo);
-        CAN.beginPacket(adr);
-        CAN.write(packet.getData_i8(0));
-        CAN.write(packet.getData_i8(1));
-        CAN.write(packet.getData_i8(2));
-        CAN.write(packet.getData_i8(3));
-        CAN.write(packet.getData_i8(4));
-        CAN.write(packet.getData_i8(5));
-        CAN.write(packet.getData_i8(6));
-        CAN.write(packet.getData_i8(7));
-        bool ok = CAN.endPacket();
-        taskEXIT_CRITICAL(&foo);
-        yield();  // try to make up for busy wait in CRITICAL
+
+        twai_message_t message = {};
+        message.identifier = adr;
+        message.extd = 0;
+        message.rtr = 0;
+        message.data_length_code = 8;
+        for (uint8_t i = 0; i < 8; i++) {
+            message.data[i] = static_cast<uint8_t>(packet.getData_u8(i));
+        }
+
+        bool ok = twai_transmit(&message, pdMS_TO_TICKS(5)) == ESP_OK;
         xSemaphoreGive(mutex_out);
         if (!ok) {
             counterW_notAvail++;
-            if (counterW_notAvail > 4) {
-                console << "CAN transmit failed, forcing reinit\n";
-                canBus.re_init();
+                        if (is_critical_control_id(adr)) {
+                            counterCriticalTxFail++;
+                        }
+                        retry_critical_packet(adr);
+            if ((counterW_notAvail % 100) == 0) {
+                console << fmt::format("CAN transmit timeout/fail (W_notAvail={})\n", counterW_notAvail);
             }
         } else {
             counterW_notAvail = 0;
+            txFailStreak = 0;
+                        if (is_critical_control_id(adr)) {
+                            criticalTxRetries[adr] = 0;
+                        }
         }
     } catch (exception& ex) {
         xSemaphoreGive(mutex_out);
+        txFailStreak++;
+                uint16_t packetId = adr > 0 ? adr : packet.getId();
+                if (is_critical_control_id(packetId)) {
+                    counterCriticalTxFail++;
+                }
+                retry_critical_packet(packetId);
         console << "ERROR: Couldn not send uint64_t data to address " << adr
                 << ", ex: " << ex.what() << NL;
     }
@@ -357,10 +479,11 @@ string CANBus::print_raw_packet(const string msg, CANPacket packet) {
 
 void CANBus::task(void* pvParams) {
     deadCounter = 0;
-
-    // reset CAN controller
-    *((volatile uint32_t*)(0x3ff6b000 + 0x00 * 4)) |= 0x01;
-    *((volatile uint32_t*)(0x3ff6b000 + 0x00 * 4)) &= 0xFE;
+    static constexpr uint16_t MAX_RX_PACKETS_PER_CYCLE = 48;
+    static constexpr uint16_t MAX_TX_PACKETS_PER_CYCLE = 4;
+    static constexpr uint16_t TX_PRIORITY_SCAN_WINDOW = 16;
+    static constexpr uint16_t REINIT_FAIL_THRESHOLD = 200;
+    static constexpr uint32_t REINIT_COOLDOWN_MS = 8000;
 
     while (1) {
         report_task_stack(this);
@@ -368,30 +491,141 @@ void CANBus::task(void* pvParams) {
             if (deadCounter == 0) {
                 deadCounter = millis() + 15e3;  // on boot: do not terminate for some time
             }
-            if (counterR_notAvail > 8 || counterI_notAvail > 8 ||
-                counterW_notAvail > 8) {
+                if ((counterR_notAvail > REINIT_FAIL_THRESHOLD || counterI_notAvail > REINIT_FAIL_THRESHOLD ||
+                 txFailStreak > REINIT_FAIL_THRESHOLD) &&
+                (millis() - lastReinitMs > REINIT_COOLDOWN_MS)) {
                 console << NL
-                        << fmt::format("CANBus REINIT trigger: I{}|{}, R{}|{}, W{}|{}",
+                           << fmt::format("CANBus REINIT trigger: I{}|{}, R{}|{}, W{}|{}, txFailStreak={}, rxOv={}, txOv={}, critTxDrop={}, critTxFail={}, critStale={}, critSeqGap={}, qCrit={}, qTel={}",
                                        counterI_notAvail, counterI, counterR_notAvail,
-                                       counterR, counterW_notAvail, counterW)
+                               counterR, counterW_notAvail, counterW, txFailStreak,
+                               counterRxOverwrite, counterTxOverwrite,
+                               counterCriticalTxDrop, counterCriticalTxFail,
+                               counterCriticalStale, counterCriticalSeqGap,
+                               availablePacketsOutCritical(), availablePacketsOutTelemetry())
                         << NL;
                 canBus.re_init();
             }
 
             // if(verboseModeCanOutNative) console << "CAN 1" << NL;
 
-            while (rxBufferIn.isAvailable()) {
-                handle_rx_packet(rxBufferIn.pop());
+            uint16_t rxIngested = 0;
+            while (rxIngested < MAX_RX_PACKETS_PER_CYCLE) {
+                CANPacket packet;
+                if (!read_can_packet(packet)) {
+                    break;
+                }
+                canBus.pushIn(packet);
+                canBus.counterI++;
+                canBus.counterI_notAvail = 0;
+                rxIngested++;
+            }
+
+            uint16_t rxProcessed = 0;
+            while (rxBufferIn.isAvailable() && rxProcessed < MAX_RX_PACKETS_PER_CYCLE) {
+                CANPacket packet = rxBufferIn.pop();
+                uint16_t packetId = packet.getId();
+                if (packetId == 0 || is_to_ignore_packet(packetId)) {
+                    rxProcessed++;
+                    continue;
+                }
+
+                setPacketTimeStamp(packetId, millis());
+
+                if (is_critical_can_tx_id(packetId)) {
+                    uint16_t sequence = 0;
+                    uint8_t bitWidth = 0;
+                    if (extract_critical_sequence(packetId, packet, sequence, bitWidth)) {
+                        if (criticalSeqSeen[packetId]) {
+                            uint16_t prev = criticalLastSeq[packetId];
+                            uint16_t delta = 0;
+                            if (bitWidth == 8) {
+                                delta = static_cast<uint8_t>(sequence) - static_cast<uint8_t>(prev);
+                                if (delta > 1 && delta < 128) {
+                                    counterCriticalSeqGap += (delta - 1);
+                                    console << fmt::format(
+                                        "WARN: Critical CAN sequence gap on 0x{:03x}, missed {} packet(s).\n",
+                                        packetId, delta - 1);
+                                }
+                            } else {
+                                delta = static_cast<uint16_t>(sequence - prev);
+                                if (delta > 1 && delta < 0x8000) {
+                                    counterCriticalSeqGap += (delta - 1);
+                                    console << fmt::format(
+                                        "WARN: Critical CAN sequence gap on 0x{:03x}, missed {} packet(s).\n",
+                                        packetId, delta - 1);
+                                }
+                            }
+                        }
+                        criticalLastSeq[packetId] = sequence;
+                        criticalSeqSeen[packetId] = true;
+                    }
+                }
+
+                handle_rx_packet(packet);
                 deadCounter = millis();
-                // deadCounter = max((uint64_t)deadCounter, millis());
-                // // only ever increment (prevent override of grace period at startup)
+                rxProcessed++;
+                if ((rxProcessed % 16) == 0) {
+                    vTaskDelay(1);
+                }
+            }
+
+            uint32_t now = millis();
+            const uint16_t criticalIds[] = {
+                static_cast<uint16_t>(AC_BASE_ADDR | 0x00),
+                static_cast<uint16_t>(DC_BASE_ADDR | 0x00),
+                static_cast<uint16_t>(DC_BASE_ADDR | 0x01)};
+
+            for (uint16_t packetId : criticalIds) {
+                bool stale = false;
+                auto ageIt = ages.find(packetId);
+                if (ageIt != ages.end() && ageIt->second != INT32_MAX) {
+                    stale = (now - static_cast<uint32_t>(ageIt->second)) >
+                            static_cast<uint32_t>(CRITICAL_CAN_STALE_TIMEOUT_MS);
+                }
+
+                bool wasStale = criticalStaleActive[packetId];
+                if (stale && !wasStale) {
+                    criticalStaleActive[packetId] = true;
+                    counterCriticalStale++;
+                    console << fmt::format(
+                        "WARN: Critical CAN packet 0x{:03x} stale for >{}ms.\n",
+                        packetId, CRITICAL_CAN_STALE_TIMEOUT_MS);
+                } else if (!stale && wasStale) {
+                    criticalStaleActive[packetId] = false;
+                    console << fmt::format(
+                        "INFO: Critical CAN packet 0x{:03x} recovered.\n", packetId);
+                }
             }
 
             // if(verboseModeCanOutNative) console << "CAN 2" << NL;
 
             // uint bench = esp_timer_get_time(); // this might be an unacceptably long time to disable all and any context switches / ISR? -> log time (~80us -> ok?)
-            while (rxBufferOut.isAvailable()) {
+            if (counterW_notAvail > 40 && availablePacketsOutTelemetry() > 8) {
+                while (rxBufferOut.isAvailable() && availablePacketsOutTelemetry() > 4) {
+                    uint16_t scanCount = min((uint16_t)availablePacketsOutTelemetry(), TX_PRIORITY_SCAN_WINDOW);
+                    CANPacket scanBuffer[TX_PRIORITY_SCAN_WINDOW];
+                    for (uint16_t i = 0; i < scanCount; i++) {
+                        scanBuffer[i] = rxBufferOut.pop();
+                        if (i != 0) {
+                            rxBufferOut.push(scanBuffer[i]);
+                        }
+                    }
+                }
+            }
+
+            uint16_t txProcessed = 0;
+            while (rxBufferOutCritical != nullptr && rxBufferOutCritical->isAvailable() &&
+                   txProcessed < MAX_TX_PACKETS_PER_CYCLE) {
+                write_rx_packet(rxBufferOutCritical->pop());
+                txProcessed++;
+            }
+
+            while (rxBufferOut.isAvailable() && txProcessed < MAX_TX_PACKETS_PER_CYCLE) {
                 write_rx_packet(rxBufferOut.pop());
+                txProcessed++;
+                if ((txProcessed % 8) == 0) {
+                    vTaskDelay(1);
+                }
             }
 
             // if(verboseModeCanOutNative) console << "CAN 3: " << (uint)(esp_timer_get_time() - bench) << NL;
@@ -400,19 +634,12 @@ void CANBus::task(void* pvParams) {
             //   console << "CAN presumed dead. Rebooting..." << NL;
             //   ESP.restart();
             // }
-#ifdef CAN_STATUS_AVAILABLE
-            uint32_t status = CAN.status();  // or CAN.error()
-            if ((status & CAN_ERROR_BUSOFF) || (status & CAN_ERROR_PASSIVE)) {
-                canBusErrorCount++;
-                if (canBusErrorCount > 2) {
-                    console << "CAN bus error state, reinit\n";
-                    canBus.re_init();
-                    canBusErrorCount = 0;
-                }
-            } else {
-                canBusErrorCount = 0;
+            twai_status_info_t statusInfo = {};
+            if (twai_get_status_info(&statusInfo) == ESP_OK &&
+                statusInfo.state == TWAI_STATE_BUS_OFF) {
+                console << "WARN: TWAI bus-off detected, initiating recovery.\n";
+                twai_initiate_recovery();
             }
-#endif
         }
         taskSuspend();
     }

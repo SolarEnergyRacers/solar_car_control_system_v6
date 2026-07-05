@@ -28,8 +28,8 @@ string GPInputOutput::init() {
   // Init GPIO pins for CS of SD-card and TFT
   pinMode(ESP32_AC_SD_DETECT_GPIO35, INPUT);
 
-  // pinMode(SPI_CS_SDCARD, OUTPUT);
-  // digitalWrite(SPI_CS_SDCARD, HIGH);
+  pinMode(SPI_CS_SDCARD, OUTPUT);
+  digitalWrite(SPI_CS_SDCARD, HIGH);
 
   pinMode(SPI_CS_TFT, OUTPUT);
   digitalWrite(SPI_CS_TFT, HIGH);

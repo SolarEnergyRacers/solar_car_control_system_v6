@@ -81,19 +81,28 @@ void CmdHandler::task(void *pvParams) {
   while (1) {
     try {
       report_task_stack(this);
-      while (SystemInited && (Serial.available()
 #if SERIAL_RADIO_CMD_ON
-                              || Serial2.available()
+      while (SystemInited && (Serial.available() || Serial2.available())) {
+#else
+      while (SystemInited && Serial.available()) {
 #endif
-                                  )) {
+
         // read the incoming chars:
         String input = "";
         if (Serial.available()) {
           input = Serial.readString();
+          // if (!isValidString(input)) {
+          //   console << "ERR (" << input.length()  << fmt::format(" 0x{:08x}", input[0]) << ") Serial input: " << input[0] << NL;
+          //   break;
+          // }
           Serial.flush();
 #if SERIAL_RADIO_CMD_ON
         } else if (Serial2.available()) {
           input = Serial2.readString();
+          // if (!isValidString(input)) {
+          //   console << "ERR (" << input.length() << fmt::format(" 0x{:08x}", input[0]) << ") Serial2 input: " << input[0] << NL;
+          //   break;
+          // }
           Serial2.flush();
 #endif
         }
@@ -144,9 +153,20 @@ void CmdHandler::task(void *pvParams) {
         case 'M':
           sdCard.mount();
           break;
-        case 'P':
-          sdCard.directory();
-          break;
+        case 'P': {
+          string arr[6];
+          int count = splitString(arr, &input[1]);
+          if (count == 0) {
+            sdCard.directory();
+          } else {
+            string filename = arr[0].c_str();
+            int tailLines = 10;
+            if (count > 1) {
+              tailLines = atoi(arr[1].c_str());
+            }
+            sdCard.printFile(filename, tailLines);
+          }
+        } break;
         case 'U':
           sdCard.unmount();
           break;
@@ -174,7 +194,7 @@ void CmdHandler::task(void *pvParams) {
           break;
         case 'B':
           if (input[1] == '\0') {
-            console << "Serial2 baudrate=" << carState.Serial2Baudrate << NL;
+            // console << "Serial2 baudrate=" << carState.Serial2Baudrate << NL;
           } else if (input[1] == 'v') {
             carStateRadio.verboseModeRadioSend = !carStateRadio.verboseModeRadioSend;
             console << "set verboseModeRadioSend: " << carStateRadio.verboseModeRadioSend << NL;
@@ -190,7 +210,7 @@ void CmdHandler::task(void *pvParams) {
             Serial2.begin(carState.Serial2Baudrate, SERIAL_8N1, SERIAL2_RX, SERIAL2_TX);
           }
           console << "Serial2(radio) baudrate=" << carState.Serial2Baudrate << ", send mode: " << SEND_MODE_str[(int)carStateRadio.mode]
-                  << NL;
+                  << ", SERIAL_RADIO_CMD_ON: " << SERIAL_RADIO_CMD_ON << NL;
           break;
         case 'I':
           if (input[1] == 's') {
@@ -339,9 +359,16 @@ void CmdHandler::task(void *pvParams) {
                   << NL;
           break;
         default:
-          if (isalpha(input[0])) {
-            console << "unknown command, ? for help" << NL;
+          console << "ERR: Unknown command, type '?' for help. (" << input.length()
+                  << ")chars: "; // << fmt::format(" [{}]", stringToHex(input, 8));
+          for (char c : input) {
+            if (isprint(c))
+              console << fmt::format(" '{}'", c);
+            else
+              console << fmt::format("[0x{:02x}]", (uint8_t)c);
           }
+          console << NL;
+
           break;
         // -------- Command Help -----------------
         case 'h':
@@ -368,6 +395,6 @@ string CmdHandler::printSystemValues() {
   ss << fmt::format("DAC: POT-0 (accel)= {:4d}, POT-1 (recup)= {:4d}\n", dac.get_pot(DAC::pot_chan::POT_CHAN0),
                     dac.get_pot(DAC::pot_chan::POT_CHAN1));
 #endif
-  
+
   return ss.str();
 }

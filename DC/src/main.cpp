@@ -147,7 +147,7 @@ void app_main(void) {
   // Engineer Display
   // NOT available on DC
   // CAN Bus
-  msg = canBus.init_t(0, 20, 10000, base_offset_suspend + 10);
+  msg = canBus.init_t(0, 24, 10000, base_offset_suspend + 0);
   console << msg << NL;
   canBus.verboseModeCanIn = false;
   canBus.verboseModeCanInNative = false;
@@ -184,8 +184,8 @@ void app_main(void) {
   // vTaskDelay(10);
 #endif
 
-  // Car Control AC
-  msg = carControl.init_t(1, 25, 10000, base_offset_suspend + 10);
+  // Car Control DC
+  msg = carControl.init_t(1, 24, 10000, base_offset_suspend + 10);
   console << msg << NL;
   carControl.verboseMode = false;
   carControl.verboseModeDebug = false;
@@ -227,7 +227,7 @@ void app_main(void) {
   // vTaskDelay(10);
 
   // ADC (increased priority and sampling rate to reduce paddle lag)
-  msg = adc.init_t(1, 21, 10000, base_offset_suspend + 10);
+  msg = adc.init_t(1, 20, 10000, base_offset_suspend + 10);
   console << msg << NL;
   adc.verboseModeADC = false;
   adc.verboseModeADCDebug = false;

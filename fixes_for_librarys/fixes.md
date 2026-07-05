@@ -200,22 +200,88 @@ Please call `idf.py menuconfig` then go to Component config -> mbedTLS -> TLS Ke
 
 ## AC only
 ### SD card: fix memory access after free (RAII DTOR):
-in .platformio/packages/framework-arduinoespressif32/libraries/SD/src/sd_diskio.cpp:715 ff
+in `.platformio/packages/framework-arduinoespressif32/libraries/SD/src/sd_diskio.cpp` function `sdcard_uninit()`
+
+**Patched file stored at:** `fixes_for_librarys/sd_diskio.cpp`
+
+**To apply:** copy `fixes_for_librarys/sd_diskio.cpp` to
+`.platformio/packages/framework-arduinoespressif32/libraries/SD/src/sd_diskio.cpp`
+
+#### Root cause
+
+`AcquireSPI` is a RAII lock that stores a raw `card*` pointer. In the original
+code the lock was in scope until the end of `sdcard_uninit()`, but `free(card)`
+was called before that closing `}`. When the destructor fired it called
+`card->spi->endTransaction()` on already-freed memory → `LoadProhibited` panic.
+
+#### Fix
+
+Scope the lock into a nested block so its destructor runs before `free(card)`:
 
 ```c++
+// BEFORE — destructor fires after free(card):
 AcquireSPI lock(card);
 sdTransaction(pdrv, GO_IDLE_STATE, 0, NULL);
 ff_diskio_register(pdrv, NULL);
+s_cards[pdrv] = NULL;
+// ... free(card->base_path); free(card);  ← card already used by dtor above
 ```
 
-to ->
-
 ```c++
+// AFTER — destructor fires inside block, card still valid:
 {AcquireSPI lock(card);
   sdTransaction(pdrv, GO_IDLE_STATE, 0, NULL);
 }
 ff_diskio_register(pdrv, NULL);
+s_cards[pdrv] = NULL;
+// ... free(card->base_path); free(card);  ← safe
 ```
-(This is done already in main branch of repo, but not published in a release)
+
+(Fix is present in the upstream main branch but not yet in a published release.)
+
+## AC + DC
+
+### CAN task watchdog during TX wait
+
+#### Symptom
+
+- Task watchdog triggers while CAN task is running and stack trace points to `ESP32SJA1000Class::endPacket()`.
+
+#### Root cause
+
+- In the CAN library for ESP32, `endPacket()` waits in loops using `yield()` while TX buffer is busy / TX completion is pending.
+- With a high-priority CAN task, this can starve idle tasks on the same core and trigger task watchdog.
+
+#### FIX
+
+Patch `yield()` to `delay(1)` in both wait loops inside:
+
+- Linux:
+  - `AC/.pio/libdeps/esp32dev-linux/CAN/src/ESP32SJA1000.cpp`
+  - `DC/.pio/libdeps/esp32dev-linux/CAN/src/ESP32SJA1000.cpp`
+- Windows:
+  - `AC/.pio/libdeps/esp32dev-windows/CAN/src/ESP32SJA1000.cpp`
+
+Patched sections:
+
+```c++
+// wait for TX buffer to free
+while ((readRegister(REG_SR) & 0x04) != 0x04) {
+  delay(1);
+}
+
+// wait for TX complete
+while ((readRegister(REG_SR) & 0x08) != 0x08) {
+  if (readRegister(REG_ECC) == 0xd9) {
+    modifyRegister(REG_CMR, 0x1f, 0x02); // error, abort
+    return 0;
+  }
+  delay(1);
+}
+```
+
+Additional robustness fix (recommended): add a TX timeout to both wait loops,
+abort TX on timeout, and clear error/irq latches so the task cannot stall
+forever waiting for TX completion.
 
 ## DC only

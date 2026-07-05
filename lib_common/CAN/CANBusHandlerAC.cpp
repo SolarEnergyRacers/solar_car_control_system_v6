@@ -18,8 +18,6 @@
 #include <list>
 
 #include <Arduino.h>
-#include <CAN.h>
-
 #include <CANBus.h>
 #include <CarState.h>
 #include <CarStateRadio.h>
@@ -33,8 +31,10 @@ extern CANBus canBus;
 unsigned long ConfirmClearTime = 0;
 
 bool CANBus::is_to_ignore_packet(uint16_t packetId) {
-  return packetId != (DC_BASE_ADDR | 0x00) && packetId != (DC_BASE_ADDR |
-  0x01) && !canBus.isPacketToRenew(packetId);
+  // allow only AC life sign and the two DC packets (0x660, 0x661)
+  return !(packetId == (AC_BASE_ADDR | 0x00) ||
+           packetId == (DC_BASE_ADDR | 0x00) ||
+           packetId == (DC_BASE_ADDR | 0x01));
 }
 
 std::map<uint16_t, uint16_t> can_address_map = {{0x950, 0x509},
@@ -303,32 +303,32 @@ void CANBus::handle_rx_packet(CANPacket packet) {
       console << "T3=" << carState.T3 << NL;
     }
     break;
-  case MC_BASE_ADDR | 0x09: // ERPM, Current, Duty Cycle
-    if (verboseModeCanIn) {
-    }
-    break;
-  case MC_BASE_ADDR | 0x0e: // Ah Used, Ah Charged
-    if (verboseModeCanIn) {
-    }
-    break;
-  case MC_BASE_ADDR | 0x0f: // Wh Used, Wh Charged
-    if (verboseModeCanIn) {
-    }
-    break;
-  case MC_BASE_ADDR | 0x10: // Temp Fet, Temp Motor, Current In, PID position
-    carState.MotorCurrent = packet.getData_u16(2) / 10.;
-    if (verboseModeCanIn) {
-      console << "------------------------- McCurrent=" << carState.MotorCurrent
-              << " (" << packet.getData_u16(2) << ") "
-              << (carState.MotorCurrent > 0 ? "==============="
-                                            : "------------")
-              << NL;
-    }
-    break;
-  case MC_BASE_ADDR | 0x1b: // Tachometer, Voltage In
-    if (verboseModeCanIn) {
-    }
-    break;
+  // case MC_BASE_ADDR | 0x09: // ERPM, Current, Duty Cycle
+  //   if (verboseModeCanIn) {
+  //   }
+  //   break;
+  // case MC_BASE_ADDR | 0x0e: // Ah Used, Ah Charged
+  //   if (verboseModeCanIn) {
+  //   }
+  //   break;
+  // case MC_BASE_ADDR | 0x0f: // Wh Used, Wh Charged
+  //   if (verboseModeCanIn) {
+  //   }
+  //   break;
+  // case MC_BASE_ADDR | 0x10: // Temp Fet, Temp Motor, Current In, PID position
+  //   carState.MotorCurrent = packet.getData_u16(2) / 10.;
+  //   if (verboseModeCanIn) {
+  //     console << "------------------------- McCurrent=" << carState.MotorCurrent
+  //             << " (" << packet.getData_u16(2) << ") "
+  //             << (carState.MotorCurrent > 0 ? "==============="
+  //                                           : "------------")
+  //             << NL;
+  //   }
+  //   break;
+  // case MC_BASE_ADDR | 0x1b: // Tachometer, Voltage In
+  //   if (verboseModeCanIn) {
+  //   }
+  //   break;
   }
 }
 

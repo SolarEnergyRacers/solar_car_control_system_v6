@@ -240,9 +240,8 @@ public:
   // [Communication]
   int CarDataSendPeriod = 1000;           // [ms]
   unsigned long Serial1Baudrate = 115200; // baud
-#if SERIAL_RADIO_ON || SERIAL_RADIO_CMD_ON
   unsigned long Serial2Baudrate = 115200; // baud
-#endif
+
   // [Telemetry]
   int SendInterval;     // Radio send interval in [ms]
   int MaxCachedRecords; // number of telemetry records hold in cache in case of trasmit errors

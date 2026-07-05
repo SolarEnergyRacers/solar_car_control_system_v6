@@ -15,11 +15,13 @@ CANRxBuffer::CANRxBuffer() {
   );
 }
 
-void CANRxBuffer::push(const CANPacket& packet) {
+bool CANRxBuffer::push(const CANPacket& packet) {
+  bool dropped = false;
   CANPacket trashcan;  // using nullptr for receive causes segfault
   if(xPortInIsrContext()){
-    if (uxQueueMessagesWaiting(queue) >= CAN_RX_BUFFER_SIZE) {
+    if (uxQueueMessagesWaitingFromISR(queue) >= CAN_RX_BUFFER_SIZE) {
       xQueueReceiveFromISR(queue, &trashcan, 0); // discard item 
+      dropped = true;
     }
     xQueueSendFromISR(queue, &packet, 0);
     // if (!xQueueSendFromISR(queue, &packet, 0)) { // try push
@@ -38,8 +40,10 @@ void CANRxBuffer::push(const CANPacket& packet) {
     if (!xQueueSend(queue, &packet, 0)) {
       xQueueReceive(queue, &trashcan, 0);
       xQueueSend(queue, &packet, 0);
+      dropped = true;
     }
   }
+  return dropped;
 }
 
 CANPacket CANRxBuffer::pop() {

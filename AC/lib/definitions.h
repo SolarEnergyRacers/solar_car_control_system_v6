@@ -17,9 +17,9 @@
 /*
  * ESP32 IOs.
  */
-DEFINE_CONST(ESP32_AC_BUTTON_NEXT_SCREEN_GPIO27, 27)    // Next Screen
-DEFINE_CONST(ESP32_AC_BUTTON_CONST_MODE_GPIO02, 2) // switch constant mode (Speed, Power)
-DEFINE_CONST(ESP32_AC_SD_DETECT_GPIO35, 35)         // SD card detect
+DEFINE_CONST(ESP32_AC_BUTTON_NEXT_SCREEN_GPIO27, 27) // Next Screen
+DEFINE_CONST(ESP32_AC_BUTTON_CONST_MODE_GPIO02, 2)   // switch constant mode (Speed, Power)
+DEFINE_CONST(ESP32_AC_SD_DETECT_GPIO35, 35)          // SD card detect
 
 /* Non free selectable addresses:
  *

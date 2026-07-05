@@ -18,6 +18,7 @@
 #include <Helper.h>
 #include <RTC_SER.h>
 #include <SDCard.h>
+#include <CarStateRadio.h>
 
 using namespace std;
 
@@ -25,6 +26,8 @@ extern CarState carState;
 extern Console console;
 extern GlobalTime globalTime;
 extern SDCard sdCard;
+extern CarStateRadio carStateRadio;
+
 // extern IOExt ioExt;
 // extern RTC rtc;
 // extern ESP32Time esp32time;
@@ -80,7 +83,7 @@ bool CarState::initalize_config(const string &configFile) {
     Kd = cf.get("PID", "Kd", 1);
     // [Communication]
     CarDataSendPeriod = cf.get("Communication", "CarDataSendPeriod", 1000);
-    Serial1Baudrate = cf.get("Communication", "Serail1Baudrate", 115200);
+    Serial1Baudrate = cf.get("Communication", "Serial1Baudrate", 115200);
     Serial2Baudrate = cf.get("Communication", "Serial2Baudrate", 115200);
     // [Telemetry]
     SendInterval = cf.get("Telemetry", "", 1000);
@@ -157,6 +160,7 @@ const string CarState::print(string msg, bool withColors) {
   // [Communication]
   ss << "Serial 1 baud rate .... " << Serial1Baudrate << NL;
   ss << "Serial 2 baud rate .... " << Serial2Baudrate << NL;
+  ss << "Serial 2 mode ......... " << SEND_MODE_str[(int)(carStateRadio.mode)] << "\n";
   ss << "Car data send period .. " << CarDataSendPeriod << "ms"<< NL;
 
   // [Telemetry]

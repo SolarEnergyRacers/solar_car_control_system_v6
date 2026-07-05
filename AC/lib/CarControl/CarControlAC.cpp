@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <string>
 
-#include <CAN.h>
 #include <Wire.h> // I2C
 
 #include <CANBus.h>
@@ -21,6 +20,7 @@
 #include <Helper.h>
 #include <I2CBus.h>
 #include <SDCard.h>
+#include <SPIBus.h>
 
 #include <System.h>
 
@@ -31,6 +31,7 @@ extern CarStateRadio carStateRadio;
 extern Console console;
 extern I2CBus i2cBus;
 extern SDCard sdCard;
+extern SPIBus spiBus;
 
 extern bool SystemInited;
 
@@ -90,19 +91,18 @@ bool CarControl::read_sd_card_detect() {
 
   bool sdCardDetectOld = carState.SdCardDetect;
   if (sdCard.update_sd_card_detect() && !sdCardDetectOld) {
-    // carState.EngineerInfo = "SD card detected, try to start logging...";
     carState.EngineerInfo = "SD card detected. Not mounted yet.";
     console << "     " << carState.EngineerInfo << NL;
-    // Do not mount automatically
-    // string msg = sdCard.init();
-    // console << msg << NL;
-    // if (sdCard.check_log_file()) {
-    //   string state = carState.csv("Recent State", true); // with header
-    //   sdCard.write_log(state + NL);
-    // }
+    // Do not mount automatically!
   } else if (!carState.SdCardDetect && sdCardDetectOld) {
     carState.EngineerInfo = "SD card removed.";
     console << "     " << carState.EngineerInfo << NL;
+    // Free SD VFS resources immediately so the next mount attempt can allocate a
+    // fresh context. Without this, esp_vfs_fat_register fails with ESP_ERR_NO_MEM
+    // (no free FAT VFS slots) when the card is re-inserted.
+    xSemaphoreTakeT(spiBus.mutex);
+    sdCard.end();
+    xSemaphoreGive(spiBus.mutex);
   }
 
   return carState.SdCardDetect;
@@ -158,7 +158,7 @@ void CarControl::task(void *pvParams) {
 
       bool force = false;
       if (millis() > millisNextCanSend || carStateLifeSignLast != carState.LifeSign) {
-        millisNextCanSend = millis() + 1000;
+        millisNextCanSend = millis() + LIFESIGN_FREQUENCY_MS;
         force = true;
         carStateLifeSignLast = carState.LifeSign;
       }

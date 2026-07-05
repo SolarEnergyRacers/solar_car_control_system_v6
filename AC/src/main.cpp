@@ -13,8 +13,8 @@
 #include <sdkconfig.h>
 
 // definitions
-#include <global_definitions.h>
 #include "../lib/definitions.h"
+#include <global_definitions.h>
 // standard libraries
 #include <Streaming.h>
 #include <fmt/core.h>
@@ -104,7 +104,7 @@ void app_main(void) {
 
   // init console IO and radio console
   // msg = uart.init();
-  msg = uart.init_t(1, 60, 1000, base_offset_suspend + 100);
+  msg = uart.init_t(1, 20, 1000, base_offset_suspend + 100);
   console << NL << msg << NL;
   delay(1000);
   console << NL << "------------------------------------------------------------" << NL;
@@ -149,7 +149,7 @@ void app_main(void) {
 
   //------------------------------------------------------------
   // CAN Bus
-  msg = canBus.init_t(0, 22, 10000, base_offset_suspend + 10);
+  msg = canBus.init_t(0, 24, 10000, base_offset_suspend + 0);
   console << msg << NL;
   canBus.verboseModeCanIn = false;
   canBus.verboseModeCanInNative = false;
@@ -241,17 +241,18 @@ void app_main(void) {
   display.print(msg + NL);
   // vTaskDelay(10);
 
-  // //------------------------------------------------------------
-  // // SC card
-  // msg = sdCard.init();
-  // console << msg << NL;
-  // display.print(msg + NL);
-  // sdCard.mount();
-  // //--- SD card available
-  // carState.initalize_config();
-  // console << carState.print("State after reading SER4CNFG.INI") << NL;
-  // sdCard.check_log_file();
-  // //------from now config ini values can be used
+  SystemInited = true;
+  //------------------------------------------------------------
+  // SC card (needs SystemInited == true)
+  msg = sdCard.init();
+  console << msg << NL;
+  display.print(msg + NL);
+  sdCard.mount();
+  //--- SD card available
+  carState.initalize_config();
+  console << carState.print("State after reading SER4CNFG.INI") << NL;
+  sdCard.check_log_file();
+  //------from now config ini values can be used
 
   stringstream ss;
   ss << NL;
@@ -284,7 +285,6 @@ void app_main(void) {
   console << NL;
   display.print("start\n");
   display.set_DisplayStatus(DISPLAY_STATUS::DRIVER_SETUP);
-  SystemInited = true;
   //------------------------------------------------------------
   // SC card
   msg = sdCard.init();

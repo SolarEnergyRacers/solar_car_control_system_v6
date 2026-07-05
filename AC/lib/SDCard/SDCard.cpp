@@ -22,6 +22,7 @@
 #include <Helper.h>
 #include <SDCard.h>
 #include <SPIBus.h>
+#include <vector>
 
 extern Console console;
 extern SPIBus spiBus;
@@ -46,7 +47,6 @@ string SDCard::init() {
   } catch (exception &ex) {
     console << "ERROR initializing SD card: " << ex.what() << NL;
     return fmt::format("[{}] SDCard           initialized.", hasError ? "!!" : "ok");
-    ;
   }
   return fmt::format("[{}] SDCard           initialized.", hasError ? "--" : "ok");
 }
@@ -56,10 +56,14 @@ string SDCard::init() {
 
 bool SDCard::update_sd_card_detect() {
   carState.SdCardDetect = (bool)digitalRead(ESP32_AC_SD_DETECT_GPIO35);
-  if (!carState.SdCardDetect) {
-    mounted = false;
-  }
   return carState.SdCardDetect;
+}
+
+void SDCard::end() {
+  // Release SD VFS resources so esp_vfs_fat_register can succeed on the next mount.
+  // Must be called with spiBus.mutex held.
+  SD.end();
+  mounted = false;
 }
 
 bool SDCard::isMounted() { return update_sd_card_detect() && mounted; }
@@ -88,9 +92,17 @@ bool SDCard::mount() {
     bool mounted_temp = false;
     xSemaphoreTakeT(spiBus.mutex);
     hasSemaphore = true;
-    while (!mounted && attempts++ < 3) {
-      mounted_temp = SD.begin(SPI_CS_SDCARD, spiBus.spi);
-      vTaskDelay(10);
+    // Unconditional SD.end() to unregister any stale FAT VFS state from a previous
+    // failed SD.begin(), preventing esp_vfs_fat_register failed 0x(101).
+    SD.end();
+    while (!mounted_temp && attempts++ < 3) {
+      // max_files=1: only 1 log file open at a time. Keeps FAT VFS context
+      // allocation ~1 KB instead of ~26 KB, preventing heap fragmentation failures.
+      mounted_temp = SD.begin(SPI_CS_SDCARD, spiBus.spi, 4000000, "/sd", 1);
+      if (!mounted_temp) {
+        SD.end();
+        vTaskDelay(10);
+      }
     }
     xSemaphoreGive(spiBus.mutex);
     hasSemaphore = false;
@@ -168,6 +180,58 @@ bool SDCard::open_log_file() {
   if (dataFile != 0)
     return true;
   return false;
+}
+
+bool SDCard::printFile(string filename, int tailLines) {
+  if (!isMounted()) {
+    console << "  SD card not mounted (printFile failed)" << NL;
+    return false;
+  }
+  xSemaphoreTakeT(spiBus.mutex);
+  File file = SD.open(filename.c_str());
+  if (!file) {
+    console << "     Failed to open file: " << filename << NL;
+    xSemaphoreGive(spiBus.mutex);
+    return false;
+  }
+  console << "     Content of '" << filename << "':" << NL;
+  if (tailLines > 0) {
+    // circular buffer to collect last tailLines lines
+    vector<string> lines(tailLines);
+    int writeIdx = 0;
+    int totalLines = 0;
+    string line = "";
+    while (file.available()) {
+      char c = (char)file.read();
+      if (c == '\n') {
+        lines[writeIdx] = line;
+        writeIdx = (writeIdx + 1) % tailLines;
+        totalLines++;
+        line = "";
+      } else {
+        line += c;
+      }
+    }
+    // handle last line without trailing newline
+    if (!line.empty()) {
+      lines[writeIdx] = line;
+      writeIdx = (writeIdx + 1) % tailLines;
+      totalLines++;
+    }
+    int printCount = min(totalLines, tailLines);
+    int startIdx = (totalLines > tailLines) ? writeIdx : 0;
+    for (int i = 0; i < printCount; i++) {
+      console << lines[(startIdx + i) % tailLines] << "\n";
+    }
+  } else {
+    while (file.available()) {
+      console << (char)file.read();
+    }
+  }
+  console << "     ~~~~~~~~~~~~~~~~" << NL;
+  file.close();
+  xSemaphoreGive(spiBus.mutex);
+  return true;
 }
 
 bool SDCard::check_log_file() {

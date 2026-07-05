@@ -14,8 +14,6 @@
 #include <freertos/semphr.h>
 
 #include <Arduino.h>
-#include <CAN.h>
-
 #include <CANBus.h>
 #include <CarState.h>
 #include <Console.h>
@@ -26,10 +24,10 @@ extern Console console;
 extern CANBus canBus;
 
 bool CANBus::is_to_ignore_packet(uint16_t packetId) {
-  return packetId != (DC_BASE_ADDR | 0x00) && 
-         packetId != (DC_BASE_ADDR | 0x01) && 
-         max_ages.find(packetId) == max_ages.end() &&
-         !canBus.isPacketToRenew(packetId);
+  // allow only AC life sign and the two DC packets (0x660, 0x661)
+  return !(packetId == (AC_BASE_ADDR | 0x00) ||
+           packetId == (DC_BASE_ADDR | 0x00) ||
+           packetId == (DC_BASE_ADDR | 0x01));
 }
 
 void CANBus::handle_rx_packet(CANPacket packet) {

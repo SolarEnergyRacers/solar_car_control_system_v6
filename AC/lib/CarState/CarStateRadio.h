@@ -66,11 +66,11 @@ private:
       (uint16_t)BmsBase0xF9,   //
       (uint16_t)BmsBase0xFA,   //
       (uint16_t)BmsBase0xFD,   //
-      (uint16_t)McBase0x09,    //
-      (uint16_t)McBase0x0e,    //
-      (uint16_t)McBase0x0f,    //
-      (uint16_t)McBase0x10,    //
-      (uint16_t)McBase0x1b,    //
+      // (uint16_t)McBase0x09,    //
+      // (uint16_t)McBase0x0e,    //
+      // (uint16_t)McBase0x0f,    //
+      // (uint16_t)McBase0x10,    //
+      // (uint16_t)McBase0x1b,    //
       // nice to have
       (uint16_t)Mppt1Base0x00, //
       (uint16_t)Mppt1Base0x02, //

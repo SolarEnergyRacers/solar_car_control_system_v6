@@ -16,7 +16,7 @@ private:
 public:
   CANRxBuffer();
 
-  void push(const CANPacket& packet);
+  bool push(const CANPacket& packet);
   CANPacket pop();
   bool isAvailable();
   uint16_t getSize();
