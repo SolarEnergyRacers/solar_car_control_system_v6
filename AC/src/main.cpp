@@ -241,8 +241,9 @@ void app_main(void) {
   display.print(msg + NL);
   // vTaskDelay(10);
 
+  SystemInited = true;
   //------------------------------------------------------------
-  // SC card
+  // SC card (needs SystemInited == true)
   msg = sdCard.init();
   console << msg << NL;
   display.print(msg + NL);
@@ -284,7 +285,6 @@ void app_main(void) {
   console << NL;
   display.print("start\n");
   display.set_DisplayStatus(DISPLAY_STATUS::DRIVER_SETUP);
-  SystemInited = true;
   //------------------------------------------------------------
   // SC card
   msg = sdCard.init();

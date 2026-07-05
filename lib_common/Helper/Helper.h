@@ -5,17 +5,16 @@
 #ifndef SOLAR_CAR_CONTROL_SYSTEM_HELPER_H
 #define SOLAR_CAR_CONTROL_SYSTEM_HELPER_H
 
-#include <list>
-
 #include <Console.h>
 #include <freertos/FreeRTOS.h>
-#include <freertos/semphr.h> // semaphore
+#include <freertos/semphr.h>  // semaphore
+
 #include <iostream>
 #include <iterator>
 #include <limits>
+#include <list>
 #include <sstream>
 #include <string>
-
 
 extern Console console;
 
@@ -26,29 +25,31 @@ extern Console console;
 
 using namespace std;
 
-char *fgets_stdio_blocking(char *str, int n);
+char* fgets_stdio_blocking(char* str, int n);
 void xSemaphoreTakeT(xQueueHandle mutex);
 // string formatDateTime(RtcDateTime now);
-string getDateTime();  // use globalTime.strTime("%F %R") instead
-string getTime();  // use globalTime.strTime("%R") instead
+string getDateTime();   // use globalTime.strTime("%F %R") instead
+string getTime();       // use globalTime.strTime("%R") instead
 string getTimeStamp();  // use globalTime.getUptime() instead
 uint16_t normalize_0_UINT16(uint16_t minOriginValue, uint16_t maxOriginValue, uint16_t value);
 int transformArea(int minViewValue, int maxViewValue, int minOriginValue, int maxOriginValue, int value);
 void vTaskDelay(int delay_ms, string msg);
 
-template <size_t N> int splitString(string (&arr)[N], string str) {
-  int n = 0;
-  istringstream iss(str);
-  for (auto it = istream_iterator<string>(iss); it != istream_iterator<string>() && n < N; ++it, ++n)
-    arr[n] = *it;
-  return n;
+template <size_t N>
+int splitString(string (&arr)[N], string str) {
+    int n = 0;
+    istringstream iss(str);
+    for (auto it = istream_iterator<string>(iss); it != istream_iterator<string>() && n < N; ++it, ++n)
+        arr[n] = *it;
+    return n;
 }
 
-template <typename any_in, typename any_out> any_out normalize_0(any_in minOriginValue, any_in maxOriginValue, any_in value) {
-  float k = static_cast<float>(std::numeric_limits<any_out>::max()) / (maxOriginValue - minOriginValue);
-  value = value < minOriginValue ? minOriginValue : value;
-  value = value > maxOriginValue ? maxOriginValue : value; // - 0.500001;
-  return static_cast<any_out>(round((value - minOriginValue) * k));
+template <typename any_in, typename any_out>
+any_out normalize_0(any_in minOriginValue, any_in maxOriginValue, any_in value) {
+    float k = static_cast<float>(std::numeric_limits<any_out>::max()) / (maxOriginValue - minOriginValue);
+    value = value < minOriginValue ? minOriginValue : value;
+    value = value > maxOriginValue ? maxOriginValue : value;  // - 0.500001;
+    return static_cast<any_out>(round((value - minOriginValue) * k));
 }
 
 #define countof(a) (sizeof(a) / sizeof(a[0]))
@@ -57,7 +58,6 @@ template <typename any_in, typename any_out> any_out normalize_0(any_in minOrigi
 // {
 //     return N;
 // }
-
 
 /**
  * @brief try to take mux within timeout.
@@ -69,30 +69,47 @@ template <typename any_in, typename any_out> any_out normalize_0(any_in minOrigi
  * @throw runtime_error("mux") if fails to acquire within timeout
  */
 class RAII_mux {
-private:
-  SemaphoreHandle_t mux;
-  // bool _ok;
-public:
-  RAII_mux(SemaphoreHandle_t mux, TickType_t timeout) : mux(mux) {
-    // _ok = xSemaphoreTake(mux, timeout);
-    if (!xSemaphoreTake(mux, timeout)) {
-      console << "mux '" << mux << "' not acquired within timeout\n";
-      throw std::runtime_error("mux");
+   private:
+    SemaphoreHandle_t mux;
+    // bool _ok;
+   public:
+    RAII_mux(SemaphoreHandle_t mux, TickType_t timeout) : mux(mux) {
+        // _ok = xSemaphoreTake(mux, timeout);
+        if (!xSemaphoreTake(mux, timeout)) {
+            console << "mux '" << mux << "' not acquired within timeout\n";
+            throw std::runtime_error("mux");
+        }
     }
-  }
-  ~RAII_mux() { xSemaphoreGive(mux); }
-  // bool ok() {return _ok;}
+    ~RAII_mux() { xSemaphoreGive(mux); }
+    // bool ok() {return _ok;}
 };
 
 /*
  * Generic function to find if an element of any type exists in list
  */
-template <typename T> bool contains(std::list<T> &listOfElements, const T &element) {
-  // Find the iterator if element in list
-  auto it = std::find(listOfElements.begin(), listOfElements.end(), element);
-  // return if iterator points to end or not. It points to end then it means element
-  //  does not exists in list
-  return it != listOfElements.end();
+template <typename T>
+bool contains(std::list<T>& listOfElements, const T& element) {
+    // Find the iterator if element in list
+    auto it = std::find(listOfElements.begin(), listOfElements.end(), element);
+    // return if iterator points to end or not. It points to end then it means element
+    //  does not exists in list
+    return it != listOfElements.end();
 }
 
-#endif // SOLAR_CAR_CONTROL_SYSTEM_HELPER_H
+bool isValidString(const String& s);
+
+bool isValidString(const std::string& s);
+
+bool isBlank(const std::string& s);
+
+bool isBlank(const String& s);
+
+/**
+ * @brief Convert string to hex output formatted in blocks
+ * @param input The input string to convert
+ * @param radix Bits per hex unit: 4 (nibble), 8 (byte), or 16 (word)
+ * @return Formatted hex string with 8-unit blocks separated by newlines
+ */
+std::string stringToHex(const std::string& input, int radix = 8);
+std::string stringToHex(const String& input, int radix = 8);
+#endif  // SOLAR_CAR_CONTROL_SYSTEM_HELPER_H

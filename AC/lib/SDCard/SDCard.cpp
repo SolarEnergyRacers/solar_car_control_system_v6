@@ -47,7 +47,6 @@ string SDCard::init() {
   } catch (exception &ex) {
     console << "ERROR initializing SD card: " << ex.what() << NL;
     return fmt::format("[{}] SDCard           initialized.", hasError ? "!!" : "ok");
-    ;
   }
   return fmt::format("[{}] SDCard           initialized.", hasError ? "--" : "ok");
 }

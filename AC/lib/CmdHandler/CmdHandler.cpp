@@ -91,14 +91,18 @@ void CmdHandler::task(void *pvParams) {
         String input = "";
         if (Serial.available()) {
           input = Serial.readString();
-          if (input.length() > 0)
-            console << "(" << input.length() << ") Serial input: " << input[0] << NL;
+          // if (!isValidString(input)) {
+          //   console << "ERR (" << input.length()  << fmt::format(" 0x{:08x}", input[0]) << ") Serial input: " << input[0] << NL;
+          //   break;
+          // }
           Serial.flush();
 #if SERIAL_RADIO_CMD_ON
         } else if (Serial2.available()) {
           input = Serial2.readString();
-          if (input.length() > 0)
-            console << "(" << input.length() << ") Serial2 input: " << input[0] << NL;
+          // if (!isValidString(input)) {
+          //   console << "ERR (" << input.length() << fmt::format(" 0x{:08x}", input[0]) << ") Serial2 input: " << input[0] << NL;
+          //   break;
+          // }
           Serial2.flush();
 #endif
         }
@@ -206,7 +210,7 @@ void CmdHandler::task(void *pvParams) {
             Serial2.begin(carState.Serial2Baudrate, SERIAL_8N1, SERIAL2_RX, SERIAL2_TX);
           }
           console << "Serial2(radio) baudrate=" << carState.Serial2Baudrate << ", send mode: " << SEND_MODE_str[(int)carStateRadio.mode]
-                  << ", radio cmd: " << SERIAL_RADIO_CMD_ON << NL;
+                  << ", SERIAL_RADIO_CMD_ON: " << SERIAL_RADIO_CMD_ON << NL;
           break;
         case 'I':
           if (input[1] == 's') {
@@ -355,9 +359,16 @@ void CmdHandler::task(void *pvParams) {
                   << NL;
           break;
         default:
-          if (isalpha(input[0])) {
-            console << "unknown command, ? for help" << NL;
+          console << "ERR: Unknown command, type '?' for help. (" << input.length()
+                  << ")chars: "; // << fmt::format(" [{}]", stringToHex(input, 8));
+          for (char c : input) {
+            if (isprint(c))
+              console << fmt::format(" '{}'", c);
+            else
+              console << fmt::format("[0x{:02x}]", (uint8_t)c);
           }
+          console << NL;
+
           break;
         // -------- Command Help -----------------
         case 'h':

@@ -28,7 +28,7 @@ public:
                     "\tS _ _ _ _ _ _ _ _ _ _ print status\n"
                     "\t  [a]                   - print status and all values\n"
                     "\tV [|+]  _ _ _ _ _ _ _ write_log to sdcard | with header (+)\n"
-                    "\tM _ _ _ _ _ _ _ _ _ _ mount sdcard and eneable logging\n"
+                    "\tM _ _ _ _ _ _ _ _ _ _ mount sdcard and enable logging\n"
                     "\tU _ _ _ _ _ _ _ _ _ _ unmount sdcard and disable logging\n"
                     "\tH _ _ _ _ _ _ _ _ _ _ memory_info\n"
                     "\tB [v|m|<rate>]  _ _ _ show or set baud rate of Serial2, v-verbose mode\n"

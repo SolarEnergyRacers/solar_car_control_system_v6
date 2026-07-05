@@ -50,19 +50,15 @@ static inline bool is_relevant_can_id(uint16_t packetId) {
 }
 
 static inline bool is_critical_can_tx_id(uint16_t packetId) {
-    return packetId == (AC_BASE_ADDR | 0x00) ||
-           packetId == (DC_BASE_ADDR | 0x00) ||
-           packetId == (DC_BASE_ADDR | 0x01);
+    // Only the 0x661 packet carries a dedicated sequence byte in data byte 5.
+    // The 0x650/0x660 life-sign packets use the first 16 bits as a heartbeat
+    // value, so they should not trigger sequence-gap warnings.
+    return packetId == (DC_BASE_ADDR | 0x01);
 }
 
 static bool extract_critical_sequence(uint16_t packetId, CANPacket& packet,
                                       uint16_t& sequence, uint8_t& bitWidth) {
     switch (packetId) {
-        case (AC_BASE_ADDR | 0x00):
-        case (DC_BASE_ADDR | 0x00):
-            sequence = packet.getData_u16(0);
-            bitWidth = 16;
-            return true;
         case (DC_BASE_ADDR | 0x01):
             sequence = packet.getData_u8(5);
             bitWidth = 8;
