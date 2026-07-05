@@ -42,14 +42,14 @@ private:
   DisplayValue<int> StepSize = DisplayValue<int>(10, 200, "", "%s", "", ILI9341_YELLOW, ILI9341_BLACK, 1);
   // DisplayValue<string> DateTimeStamp = DisplayValue<string>(10, 168, "", "%s", "", ILI9341_YELLOW, ILI9341_BLACK, 1);
   // this format will be changed dynamically in IOExt event handler in dependency of CONSTANT_MODE:
-  DisplayValue<float> TargetSpeedPower = DisplayValue<float>(240, 130, " ", "%5.0f", "", ILI9341_WHITE, ILI9341_BLACK, 2);
+  DisplayValue<float> TargetSpeedPower = DisplayValue<float>(240, 66, " ", "%5.0f", "", ILI9341_WHITE, ILI9341_BLACK, 2);
 
-  DisplayValue<float> MotorCurrent = DisplayValue<float>(10, 180, "Motor:", "%5.1f", "A", ILI9341_ORANGE, ILI9341_BLACK);
-  DisplayValue<bool> MotorOn = DisplayValue<bool>(160, 180, "-", "%3s", "", ILI9341_MAROON, ILI9341_BLACK);
-  DisplayValue<float> BatteryVoltage = DisplayValue<float>(10, 200, "Bat  :", "%5.1f", "V", ILI9341_ORANGE, ILI9341_BLACK);
-  // DisplayValue<bool> BatteryOn = DisplayValue<bool>(160, 200, "-", "%3s", "", ILI9341_MAROON, ILI9341_BLACK);
-  DisplayValue<float> PhotoVoltaicCurrent = DisplayValue<float>(10, 220, "PV   :", "%5.1f", "A", ILI9341_ORANGE, ILI9341_BLACK);
-  DisplayValue<bool> PhotoVoltaicOn = DisplayValue<bool>(160, 220, "-", "%3s", "", ILI9341_MAROON, ILI9341_BLACK);
+  DisplayValue<float> MotorCurrent = DisplayValue<float>(10, 110, "Motor:", "%5.1f", "A", ILI9341_ORANGE, ILI9341_BLACK);
+  DisplayValue<bool> MotorOn = DisplayValue<bool>(160, 110, "-", "%3s", "", ILI9341_MAROON, ILI9341_BLACK);
+  DisplayValue<float> BatteryVoltage = DisplayValue<float>(10, 130, "Bat  :", "%5.1f", "V", ILI9341_ORANGE, ILI9341_BLACK);
+  // DisplayValue<bool> BatteryOn = DisplayValue<bool>(160, 130, "-", "%3s", "", ILI9341_MAROON, ILI9341_BLACK);
+  DisplayValue<float> PhotoVoltaicCurrent = DisplayValue<float>(10, 150, "PV   :", "%5.1f", "A", ILI9341_ORANGE, ILI9341_BLACK);
+  DisplayValue<bool> PhotoVoltaicOn = DisplayValue<bool>(160, 150, "-", "%3s", "", ILI9341_MAROON, ILI9341_BLACK);
 
   //==== display cache =====================
   // ... to avoid flickering
@@ -62,35 +62,35 @@ private:
   //==== Driver Display definitions ==== START
   // display formats and sizes
   const int infoFrameX = 0;
-  const int infoFrameY = 0;
-  int infoFrameSizeX = -1; // full tft width, calculated beow
-  const int infoFrameSizeY = 64;
+  int infoFrameY = -1; // calculated at runtime: display.height - infoFrameSizeY
+  int infoFrameSizeX = -1; // full tft width, calculated below
+  const int infoFrameSizeY = 64-2;
   const int infoTextSize = 3;
 
   // frame around value display (exclude text message lines)
-  const int mainFrameX = infoFrameSizeY;
+  const int mainFrameY = 0; // main content starts at top
 
   // speed display
   int speedFrameX = -1; // get calculated later: (sizeX - speedFrameCx) / 2;
-  const int speedFrameY = 80;
+  const int speedFrameY = 16;
   const int speedFrameSizeX = 156;
   const int speedFrameSizeY = 76;
   const int speedTextSize = 8;
   int speedUnitX = 0; // get claculated later
-  const int speedUnitAccelY = 108;
-  const int speedUnitSpeedY = 72;
+  const int speedUnitAccelY = 44;
+  const int speedUnitSpeedY = 8;
   const int speedUnitTextSize = 1;
 
   // target speed/power display
   int targetValueFrameX = -1; // get calculated later: (speedFrameX + speedFrameSizeX + 1;
-  const int targetValueFrameY = 118;
+  const int targetValueFrameY = 54;
   int targetValueFrameSizeX = 40; // get recalculated later
   const int targetValueFrameSizeY = 38;
   const int targetValueTextSize = 4;
 
   // acceleration display
   const int accFrameX = 2;
-  const int accFrameY = 118;    // speedFrameY + speedFrameSizeY / 2
+  const int accFrameY = 54;    // speedFrameY + speedFrameSizeY / 2
   int accFrameSizeX = -1;       // get calculated later: speedFrameX - 4
   const int accFrameSizeY = 38; // speedFrameSizeY / 2
   const int accTextSize = 4;    // speedTextSize / 2
@@ -100,42 +100,42 @@ private:
 
   // battery voltage display
   const int batFrameX = 10;
-  const int batFrameY = 180;
+  const int batFrameY = 140;
   const int batTextSize = 2;
   const int lightTextSize = 2;
 
   // photovoltaics voltage display
   const int pvFrameX = 10;
-  const int pvFrameY = 200;
+  const int pvFrameY = 150;
   const int pvTextSize = 2;
 
   // motor current display
   const int motorFrameX = 10;
-  const int motorFrameY = 220;
+  const int motorFrameY = 130;
   const int motorTextSize = 2;
   // ---- voltage and current displays ---- END
 
   // constant mode speed or power display
   const int constantModeX = 242;
-  const int constantModeY = 169;
+  const int constantModeY = 105;
   const int constantModeTextSize = 1;
 
   // step width for constant mode display
   const int controlModeStepX = 242;
-  const int controlModeStepY = 158;
+  const int controlModeStepY = 94;
   const int controlModeStepTextSize = 1;
 
   // drive direction display
   const int driveDirectionX = 220;
-  const int driveDirectionY = 180;
+  const int driveDirectionY = 116;
   const int driveDirectionTextSize = 2;
 
   const int lightX = 252;
-  const int lightY = 198;
+  const int lightY = 134;
 
   // eco/pwr mode display
   const int ecoPwrModeX = 242;
-  const int ecoPwrModeY = 218;
+  const int ecoPwrModeY = 154;
   const int ecoPwrModeTextSize = 2;
 
   //==== Driver Display definition ==== END

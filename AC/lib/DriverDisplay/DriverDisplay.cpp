@@ -4,8 +4,8 @@
  *
  ***/
 
-#include <global_definitions.h>
 #include "../definitions.h"
+#include <global_definitions.h>
 
 // standard libraries
 #include <fmt/core.h>
@@ -14,8 +14,8 @@
 #include <stdio.h>
 #include <string>
 
-#include <AbstractTask.h>
 #include "../LocalFunctionsAndDevices.h"
+#include <AbstractTask.h>
 
 // #include <ADC.h>
 #include <CarState.h>
@@ -45,7 +45,7 @@ extern Display display;
 // extern Adafruit_ILI9341 tft;
 
 DriverDisplay::DriverDisplay() { display.bgColor = ILI9341_BLACK; };
-DriverDisplay::~DriverDisplay(){};
+DriverDisplay::~DriverDisplay() {};
 
 string DriverDisplay::init() {
   console << "     Init '" << getName() << "'..." << NL;
@@ -99,7 +99,7 @@ void DriverDisplay::speedCheck(int speed) {
 // write color of the border of the main display
 void DriverDisplay::draw_display_border(int color) {
   xSemaphoreTakeT(spiBus.mutex);
-  display.tft->drawRoundRect(0, mainFrameX, display.tft->width(), display.tft->height() - mainFrameX, 8, color);
+  display.tft->drawRoundRect(0, mainFrameY, display.tft->width(), display.tft->height() - mainFrameY - infoFrameSizeY - 2, 8, color);
   xSemaphoreGive(spiBus.mutex);
 }
 
@@ -146,6 +146,7 @@ void DriverDisplay::draw_display_background() {
   // infoFrameSizeX = display.tft->width();
   // xSemaphoreGive(spiBus.mutex);
   infoFrameSizeX = display.width;
+  infoFrameY = display.height - infoFrameSizeY; // position infoframe at bottom
   speedFrameX = (infoFrameSizeX - speedFrameSizeX) / 2;
 
   draw_display_border(ILI9341_GREEN);
