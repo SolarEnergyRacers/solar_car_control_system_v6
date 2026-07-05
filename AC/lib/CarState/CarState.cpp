@@ -80,7 +80,7 @@ bool CarState::initalize_config(const string &configFile) {
     Kd = cf.get("PID", "Kd", 1);
     // [Communication]
     CarDataSendPeriod = cf.get("Communication", "CarDataSendPeriod", 1000);
-    Serial1Baudrate = cf.get("Communication", "Serail1Baudrate", 115200);
+    Serial1Baudrate = cf.get("Communication", "Serial1Baudrate", 115200);
     Serial2Baudrate = cf.get("Communication", "Serial2Baudrate", 115200);
     // [Telemetry]
     SendInterval = cf.get("Telemetry", "", 1000);

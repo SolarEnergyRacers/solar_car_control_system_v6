@@ -184,7 +184,7 @@ void app_main(void) {
   // vTaskDelay(10);
 #endif
 
-  // Car Control AC
+  // Car Control DC
   msg = carControl.init_t(1, 24, 10000, base_offset_suspend + 10);
   console << msg << NL;
   carControl.verboseMode = false;

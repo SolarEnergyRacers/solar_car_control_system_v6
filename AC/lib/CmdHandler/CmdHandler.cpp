@@ -81,19 +81,24 @@ void CmdHandler::task(void *pvParams) {
   while (1) {
     try {
       report_task_stack(this);
-      while (SystemInited && (Serial.available()
 #if SERIAL_RADIO_CMD_ON
-                              || Serial2.available()
+      while (SystemInited && (Serial.available() || Serial2.available())) {
+#else
+      while (SystemInited && Serial.available()) {
 #endif
-                                  )) {
+
         // read the incoming chars:
         String input = "";
         if (Serial.available()) {
           input = Serial.readString();
+          if (input.length() > 0)
+            console << "(" << input.length() << ") Serial input: " << input[0] << NL;
           Serial.flush();
 #if SERIAL_RADIO_CMD_ON
         } else if (Serial2.available()) {
           input = Serial2.readString();
+          if (input.length() > 0)
+            console << "(" << input.length() << ") Serial2 input: " << input[0] << NL;
           Serial2.flush();
 #endif
         }
@@ -185,7 +190,7 @@ void CmdHandler::task(void *pvParams) {
           break;
         case 'B':
           if (input[1] == '\0') {
-            console << "Serial2 baudrate=" << carState.Serial2Baudrate << NL;
+            // console << "Serial2 baudrate=" << carState.Serial2Baudrate << NL;
           } else if (input[1] == 'v') {
             carStateRadio.verboseModeRadioSend = !carStateRadio.verboseModeRadioSend;
             console << "set verboseModeRadioSend: " << carStateRadio.verboseModeRadioSend << NL;
@@ -201,7 +206,7 @@ void CmdHandler::task(void *pvParams) {
             Serial2.begin(carState.Serial2Baudrate, SERIAL_8N1, SERIAL2_RX, SERIAL2_TX);
           }
           console << "Serial2(radio) baudrate=" << carState.Serial2Baudrate << ", send mode: " << SEND_MODE_str[(int)carStateRadio.mode]
-                  << NL;
+                  << ", radio cmd: " << SERIAL_RADIO_CMD_ON << NL;
           break;
         case 'I':
           if (input[1] == 's') {
