@@ -172,8 +172,8 @@ const string CarState::print(string msg, bool withColors) {
   ss << "Telemetry cache records " << MaxCachedRecords << NL;
 
   ss << NL;
-  ss << "Driver Display Info Frame Offset Y .... " << DriverDisplayInfoFrameY << NL;
-  ss << "Driver Display Content Frame Offset Y . " << DriverDisplayDataFrameY << NL;
+  ss << "Driver Display Info Frame Offset Y ... " << DriverDisplayInfoFrameY << NL;
+  ss << "Driver Display Data Frame Offset Y ... " << DriverDisplayDataFrameY << NL;
   ss << "========================================================================" << NL;
   return ss.str();
 }

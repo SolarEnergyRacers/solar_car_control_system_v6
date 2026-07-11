@@ -34,9 +34,6 @@ static const char *CONSTANT_MODE_str[] = {"SPEED", "POWER"};
 enum class DRIVE_DIRECTION { FORWARD, BACKWARD };
 static const char *DRIVE_DIRECTION_str[] = {"fwd", "bwd"};
 
-enum class LIGHT { OFF, L1, L2 };
-static const char *LIGHT_str[] = {"OFF", "L1", "L2"};
-
 enum class DISPLAY_STATUS {
   DRIVER_HALTED,
   DRIVER_SETUP,
@@ -129,7 +126,6 @@ public:
     (void)SPEED_ARROW_str;
     (void)CONSTANT_MODE_str;
     (void)DRIVE_DIRECTION_str;
-    (void)LIGHT_str;
     (void)DISPLAY_STATUS_str;
     (void)PRECHARGE_STATE_str;
     (void)BATTERY_ERROR_str;
@@ -158,7 +154,7 @@ public:
   int8_t AccelerationDisplay; // Display Value (-99...+99)
   // #SAFETY-END#
 
-  // bool BatteryOn;      // IO-In
+  bool BatteryOn;      // IO-In
   bool PhotoVoltaicOn; // IO-in
   bool MotorOn;        // IO-In
   bool EcoOn;          // IO-In

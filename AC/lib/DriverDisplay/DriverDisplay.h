@@ -1,10 +1,10 @@
 //
 // DriverDisplay
 //
-// The DriverDisplay consists from three parts:  DataFrame (acceleration, speed target speed/power, 
-// motor, battery, PV, speed up and speed down arrows, drive direction, ...; additional Units) and 
-// InfoFrame (box to display texta for the driver) and LifeSign. 
-// There are two steps: the background is drawn once and then the values are updated in the loop.  
+// The DriverDisplay consists from three parts:  DataFrame (acceleration, speed target speed/power,
+// motor, battery, PV, speed up and speed down arrows, drive direction, ...; additional Units) and
+// InfoFrame (box to display texta for the driver) and LifeSign.
+// There are two steps: the background is drawn once and then the values are updated in the loop.
 // The background is drawn in the init() function and the values are updated in the task() function.
 // The DataFrame and InfoFrame can be moved up and down by the user via the config file SER4CNFG.INI
 
@@ -13,10 +13,10 @@
 
 #include <Adafruit_ILI9341.h>
 
+#include "../LocalFunctionsAndDevices.h"
 #include <CarState.h>
 #include <Display.h>
 #include <DisplayValue.h>
-#include "../LocalFunctionsAndDevices.h"
 
 using namespace std;
 
@@ -27,7 +27,7 @@ public:
   // RTOS task
   string init(void);
   string re_init(void);
-  void exit(void){};
+  void exit(void) {};
   void task(void *pvParams);
 
   string getName(void) { return "DriverDisplay"; };
@@ -46,16 +46,16 @@ private:
   DisplayValue<int> Speed = DisplayValue<int>(40, 0, "", "%d", "", ILI9341_WHITE, ILI9341_BLACK);
   DisplayValue<int> Acceleration = DisplayValue<int>(0, -1, "", "%d", "", ILI9341_WHITE, ILI9341_BLACK);
   DisplayValue<int> StepSize = DisplayValue<int>(10, 200, "", "%s", "", ILI9341_YELLOW, ILI9341_BLACK, 1);
-  DisplayValue<string> DateTimeStamp = DisplayValue<string>(10, 168, "", "%s", "", ILI9341_YELLOW, ILI9341_BLACK, 1);
+  DisplayValue<string> DateTimeStamp = DisplayValue<string>(205, 220, "", "%8s", "", ILI9341_OLIVE, ILI9341_BLACK, 2);
   // this format will be changed dynamically in IOExt event handler in dependency of CONSTANT_MODE:
   DisplayValue<float> TargetSpeedPower = DisplayValue<float>(240, 66, " ", "%5.0f", "", ILI9341_WHITE, ILI9341_BLACK, 2);
 
   DisplayValue<float> MotorCurrent = DisplayValue<float>(10, 110, "Motor:", "%5.1f", "A", ILI9341_ORANGE, ILI9341_BLACK);
-  DisplayValue<bool> MotorOn = DisplayValue<bool>(160, 110, "-", "%3s", "", ILI9341_MAROON, ILI9341_BLACK);
+  DisplayValue<bool> MotorOn = DisplayValue<bool>(160, 110, " ", "%3s", "", ILI9341_OLIVE, ILI9341_BLACK);
   DisplayValue<float> BatteryVoltage = DisplayValue<float>(10, 130, "Bat  :", "%5.1f", "V", ILI9341_ORANGE, ILI9341_BLACK);
-  DisplayValue<bool> BatteryOn = DisplayValue<bool>(160, 130, "-", "%3s", "", ILI9341_MAROON, ILI9341_BLACK);
+  DisplayValue<bool> BatteryOn = DisplayValue<bool>(160, 130, " ", "%3s", "", ILI9341_OLIVE, ILI9341_BLACK);
   DisplayValue<float> PhotoVoltaicCurrent = DisplayValue<float>(10, 150, "PV   :", "%5.1f", "A", ILI9341_ORANGE, ILI9341_BLACK);
-  DisplayValue<bool> PhotoVoltaicOn = DisplayValue<bool>(160, 150, "-", "%3s", "", ILI9341_MAROON, ILI9341_BLACK);
+  DisplayValue<bool> PhotoVoltaicOn = DisplayValue<bool>(160, 150, " ", "%3s", "", ILI9341_OLIVE, ILI9341_BLACK);
 
   //==== display cache =====================
   // ... to avoid flickering
@@ -68,8 +68,8 @@ private:
   //==== Driver Display definitions ==== START
   // display formats and sizes
   const int infoFrameX = 0;
-  int infoFrameY = -1;            // calculated at runtime: display.height - infoFrameSizeY + offset
-  int infoFrameSizeX = -1;        // full tft width, calculated below
+  int infoFrameY = -1;     // calculated at runtime: display.height - infoFrameSizeY + offset
+  int infoFrameSizeX = -1; // full tft width, calculated below
   const int infoFrameSizeY = 64 - 2;
   const int infoTextSize = 3;
 
@@ -77,18 +77,18 @@ private:
   int dataFrameY = 0;
 
   // speed display
-  int speedFrameX = -1;           // get calculated later: (sizeX - speedFrameCx) / 2;
+  int speedFrameX = -1; // get calculated later: (sizeX - speedFrameCx) / 2;
   int speedFrameY = 16;
   const int speedFrameSizeX = 156;
   const int speedFrameSizeY = 76;
   const int speedTextSize = 8;
-  int speedUnitX = 0;             // get claculated later
+  int speedUnitX = 0; // get claculated later
   const int speedUnitAccelY = 44;
   const int speedUnitSpeedY = 8;
   const int speedUnitTextSize = 1;
 
   // target speed/power display
-  int targetValueFrameX = -1;     // get calculated later: (speedFrameX + speedFrameSizeX + 1;
+  int targetValueFrameX = -1; // get calculated later: (speedFrameX + speedFrameSizeX + 1;
   int targetValueFrameY = 54;
   int targetValueFrameSizeX = 40; // get recalculated later
   const int targetValueFrameSizeY = 38;
@@ -96,19 +96,18 @@ private:
 
   // acceleration display
   const int accFrameX = 2;
-  int accFrameY = 54;             // speedFrameY + speedFrameSizeY / 2
-  int accFrameSizeX = -1;         // get calculated later: speedFrameX - 4
-  const int accFrameSizeY = 38;   // speedFrameSizeY / 2
-  const int accTextSize = 4;      // speedTextSize / 2
+  int accFrameY = 54;           // speedFrameY + speedFrameSizeY / 2
+  int accFrameSizeX = -1;       // get calculated later: speedFrameX - 4
+  const int accFrameSizeY = 38; // speedFrameSizeY / 2
+  const int accTextSize = 4;    // speedTextSize / 2
 
   // ---- voltage and current displays ---- START
-  const int labelLen = 9;         // label length for all 3 voltage/current displays
+  const int labelLen = 9; // label length for all 3 voltage/current displays
 
   // battery voltage display
   const int batFrameX = 10;
   int batFrameY = 140;
   const int batTextSize = 2;
-  const int lightTextSize = 2;
 
   // photovoltaics voltage display
   const int pvFrameX = 10;
@@ -132,12 +131,9 @@ private:
   const int controlModeStepTextSize = 1;
 
   // drive direction display
-  const int driveDirectionX = 220;
-  int driveDirectionY = 116;
+  const int driveDirectionX = 250;
+  int driveDirectionY = -1;
   const int driveDirectionTextSize = 2;
-
-  const int lightX = 252;
-  int lightY = 134;
 
   // eco/pwr mode display
   const int ecoPwrModeX = 242;
@@ -152,9 +148,6 @@ public:
 
   void _arrow_increase(int color);
   void _arrow_decrease(int color);
-  void _hide_light();
-  void _turn_Left(int color);
-  void _turn_Right(int color);
 
   bool init_driver_display(void);
   void draw_display_border(int color);
@@ -172,8 +165,6 @@ public:
   void write_speed();
   void write_acceleration();
   void write_target_value();
-
-  void show_light();
 
   void speedCheck(int speed);
   void arrow(SPEED_ARROW incDecOff);

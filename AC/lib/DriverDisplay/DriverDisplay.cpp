@@ -23,6 +23,7 @@
 #include <Display.h>
 #include <DriverDisplay.h>
 #include <Helper.h>
+#include <RTC_SER.h>
 
 #include <Adafruit_GFX.h>     // graphics library
 #include <Adafruit_ILI9341.h> // display
@@ -42,7 +43,7 @@ extern Console console;
 extern SPIBus spiBus;
 extern CarState carState;
 extern Display display;
-// extern Adafruit_ILI9341 tft;
+extern GlobalTime globalTime;
 
 DriverDisplay::DriverDisplay() { display.bgColor = ILI9341_BLACK; };
 DriverDisplay::~DriverDisplay() {};
@@ -155,8 +156,7 @@ void DriverDisplay::draw_display_background() {
   motorFrameY = 130 + dataFrameY;
   constantModeY = 105 + dataFrameY;
   controlModeStepY = 94 + dataFrameY;
-  driveDirectionY = 116 + dataFrameY;
-  lightY = 134 + dataFrameY;
+  driveDirectionY = 24 + dataFrameY;
   ecoPwrModeY = 154 + dataFrameY;
 
   draw_display_border(ILI9341_GREEN);
@@ -262,8 +262,8 @@ void DriverDisplay::step_width_show() {
   xSemaphoreGive(spiBus.mutex);
 }
 
-#define FORWARD_STRING ""
-#define BACKWARD_STRING "Backward"
+#define FORWARD_STRING " fw"
+#define BACKWARD_STRING "BACK!"
 void DriverDisplay::write_drive_direction() {
   DRIVE_DIRECTION direction = DriveDirection.get_recent_overtake_last();
   int width = display.getPixelWidthOfTexts(driveDirectionTextSize, FORWARD_STRING, BACKWARD_STRING) + 4;
@@ -273,7 +273,7 @@ void DriverDisplay::write_drive_direction() {
   display.tft->setTextSize(driveDirectionTextSize);
   display.tft->setCursor(driveDirectionX, driveDirectionY);
   if (direction == DRIVE_DIRECTION::FORWARD) {
-    display.tft->setTextColor(ILI9341_YELLOW);
+    display.tft->setTextColor(ILI9341_OLIVE);
     display.tft->print(FORWARD_STRING);
   } else {
     display.tft->setTextColor(ILI9341_RED);
@@ -347,7 +347,7 @@ void DriverDisplay::task(void *pvParams) {
       draw_display_background();
       BatteryVoltage.showLabel(display.tft);
       BatteryVoltage.set_epsilon(0.1);
-      // BatteryOn.showLabel(tft);
+      BatteryOn.showLabel(display.tft);
       PhotoVoltaicCurrent.showLabel(display.tft);
       PhotoVoltaicCurrent.set_epsilon(0.1);
       PhotoVoltaicOn.showLabel(display.tft);
@@ -355,7 +355,7 @@ void DriverDisplay::task(void *pvParams) {
       MotorCurrent.set_epsilon(0.1);
       MotorOn.showLabel(display.tft);
       TargetSpeedPower.showLabel(display.tft);
-      // DateTimeStamp.showLabel(display.tft);
+      DateTimeStamp.showLabel(display.tft);
       set_sleep_polling(600);
       carState.displayStatus = DISPLAY_STATUS::DRIVER_RUNNING;
       break;
@@ -428,10 +428,10 @@ void DriverDisplay::task(void *pvParams) {
       if (BatteryVoltage.is_changed() || justInited) {
         BatteryVoltage.showValue(display.tft);
       }
-      // BatteryOn.Value = carState.BatteryOn;
-      // if (BatteryOn.is_changed() || justInited) {
-      //   BatteryOn.showValue(tft);
-      // }
+      BatteryOn.Value = carState.BatteryOn;
+      if (BatteryOn.is_changed() || justInited) {
+        BatteryOn.showValue(display.tft);
+      }
       // TODO: PhotoVoltaicCurrent.Value = carState.Mppt1Current + carState.Mppt2Current + carState.Mppt3Current;
       PhotoVoltaicCurrent.Value = carState.PhotoVoltaicCurrent;
       if (PhotoVoltaicCurrent.is_changed() || justInited) {
@@ -449,8 +449,10 @@ void DriverDisplay::task(void *pvParams) {
       if (MotorOn.is_changed() || justInited) {
         MotorOn.showValue(display.tft);
       }
-      // DateTimeStamp.Value = getTime();
-      // DateTimeStamp.showValue(tft);
+      DateTimeStamp.Value = globalTime.strTime("%H:%M:%S"); // %Y-%m-%d (%a)");
+      if (DateTimeStamp.get_last() != DateTimeStamp.Value || justInited) {
+        DateTimeStamp.showValue(display.tft, true);
+      }
       justInited = false;
       break;
 
