@@ -24,6 +24,12 @@ extern bool SystemInited;
 
 using namespace std;
 
+constexpr uint16_t CANBus::MAX_RX_PACKETS_PER_CYCLE;
+constexpr uint16_t CANBus::MAX_TX_PACKETS_PER_CYCLE;
+constexpr uint16_t CANBus::TX_PRIORITY_SCAN_WINDOW;
+constexpr uint16_t CANBus::REINIT_FAIL_THRESHOLD;
+constexpr uint32_t CANBus::REINIT_COOLDOWN_MS;
+
 static inline bool is_relevant_can_id(uint16_t packetId) {
     if (packetId == (AC_BASE_ADDR | 0x00) ||
         packetId == (DC_BASE_ADDR | 0x00) ||
@@ -391,6 +397,7 @@ CANPacket CANBus::writePacket(uint16_t adr, CANPacket packet, bool force) {
 
 void CANBus::write_rx_packet(CANPacket packet) {
         static constexpr uint8_t CRITICAL_TX_MAX_RETRY = 3;
+        static constexpr uint16_t TX_FAIL_RECOVERY_THRESHOLD = 50;
 
         auto retry_critical_packet = [&](uint16_t packetId) {
             if (!is_critical_control_id(packetId)) {
@@ -412,6 +419,16 @@ void CANBus::write_rx_packet(CANPacket packet) {
                         counterCriticalTxFail++;
                     }
                     retry_critical_packet(packet.getId());
+                    if (counterW_notAvail > TX_FAIL_RECOVERY_THRESHOLD && (millis() - lastReinitMs) > (REINIT_COOLDOWN_MS / 2)) {
+                        twai_status_info_t statusInfo = {};
+                        if (twai_get_status_info(&statusInfo) == ESP_OK && statusInfo.state == TWAI_STATE_BUS_OFF) {
+                            console << "WARN: TWAI bus-off detected during transmit failure, initiating recovery." << NL;
+                            twai_initiate_recovery();
+                        } else {
+                            console << "WARN: Reinitializing CAN after repeated transmit failure without bus-off." << NL;
+                            re_init();
+                        }
+                    }
           return;
         }
         adr = packet.getId();
@@ -443,6 +460,16 @@ void CANBus::write_rx_packet(CANPacket packet) {
                         retry_critical_packet(adr);
             if ((counterW_notAvail % 100) == 0) {
                 console << fmt::format("CAN transmit timeout/fail (W_notAvail={})\n", counterW_notAvail);
+            }
+            if (counterW_notAvail > TX_FAIL_RECOVERY_THRESHOLD && (millis() - lastReinitMs) > (REINIT_COOLDOWN_MS / 2)) {
+                twai_status_info_t statusInfo = {};
+                if (twai_get_status_info(&statusInfo) == ESP_OK && statusInfo.state == TWAI_STATE_BUS_OFF) {
+                    console << "WARN: TWAI bus-off detected during transmit error, initiating recovery." << NL;
+                    twai_initiate_recovery();
+                } else {
+                    console << "WARN: Reinitializing CAN after repeated transmit errors without bus-off." << NL;
+                    re_init();
+                }
             }
         } else {
             counterW_notAvail = 0;
@@ -479,11 +506,11 @@ string CANBus::print_raw_packet(const string msg, CANPacket packet) {
 
 void CANBus::task(void* pvParams) {
     deadCounter = 0;
-    static constexpr uint16_t MAX_RX_PACKETS_PER_CYCLE = 48;
-    static constexpr uint16_t MAX_TX_PACKETS_PER_CYCLE = 4;
-    static constexpr uint16_t TX_PRIORITY_SCAN_WINDOW = 16;
-    static constexpr uint16_t REINIT_FAIL_THRESHOLD = 200;
-    static constexpr uint32_t REINIT_COOLDOWN_MS = 8000;
+    // static constexpr uint16_t MAX_RX_PACKETS_PER_CYCLE = 48;
+    // static constexpr uint16_t MAX_TX_PACKETS_PER_CYCLE = 4;
+    // static constexpr uint16_t TX_PRIORITY_SCAN_WINDOW = 16;
+    // static constexpr uint16_t REINIT_FAIL_THRESHOLD = 200;
+    // static constexpr uint32_t REINIT_COOLDOWN_MS = 8000;
 
     while (1) {
         report_task_stack(this);

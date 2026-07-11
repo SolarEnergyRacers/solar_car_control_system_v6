@@ -11,8 +11,8 @@
 #include <sstream>
 #include <string>
 
-#include <global_definitions.h>
 #include "../definitions.h"
+#include <global_definitions.h>
 
 #include <CANPacket.h>
 #include <CarStatePin.h>
@@ -135,7 +135,7 @@ public:
     (void)BATTERY_ERROR_str;
     // BEGIN prevent stupid compiler warnings "defined but not used"
   }
-  ~CarState(){};
+  ~CarState() {};
   void init_values();
   bool initalize_config();
   bool initalize_config(const string &configFile);
@@ -208,7 +208,6 @@ public:
   INFO_TYPE DriverInfoType;
   bool GreenLight;
 
-
   // All IO pins
   static CarStatePin pins[IOExtPINCOUNT];
   int getIdx(const string pinName);
@@ -245,6 +244,10 @@ public:
   // [Telemetry]
   int SendInterval;     // Radio send interval in [ms]
   int MaxCachedRecords; // number of telemetry records hold in cache in case of trasmit errors
+
+  // Driver display layout offsets
+  int DriverDisplayDataFrameY;
+  int DriverDisplayInfoFrameY;
 
   // tools
   const string print(const string msg = "", bool withColors = true);

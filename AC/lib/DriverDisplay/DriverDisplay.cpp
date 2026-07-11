@@ -99,7 +99,7 @@ void DriverDisplay::speedCheck(int speed) {
 // write color of the border of the main display
 void DriverDisplay::draw_display_border(int color) {
   xSemaphoreTakeT(spiBus.mutex);
-  display.tft->drawRoundRect(0, mainFrameY, display.tft->width(), display.tft->height() - mainFrameY - infoFrameSizeY - 2, 8, color);
+  display.tft->drawRoundRect(0, dataFrameY, display.tft->width(), display.tft->height() - dataFrameY - infoFrameSizeY - 2, 8, color);
   xSemaphoreGive(spiBus.mutex);
 }
 
@@ -142,12 +142,22 @@ void DriverDisplay::draw_target_value_border(int color) {
 }
 
 void DriverDisplay::draw_display_background() {
-  // xSemaphoreTakeT(spiBus.mutex);
-  // infoFrameSizeX = display.tft->width();
-  // xSemaphoreGive(spiBus.mutex);
   infoFrameSizeX = display.width;
-  infoFrameY = display.height - infoFrameSizeY; // position infoframe at bottom
+  infoFrameY = carState.DriverDisplayInfoFrameY;
+  dataFrameY = carState.DriverDisplayDataFrameY;
+  dataFrameY = dataFrameY;
   speedFrameX = (infoFrameSizeX - speedFrameSizeX) / 2;
+  speedFrameY = 16 + dataFrameY;
+  targetValueFrameY = 54 + dataFrameY;
+  accFrameY = 54 + dataFrameY;
+  batFrameY = 140 + dataFrameY;
+  pvFrameY = 150 + dataFrameY;
+  motorFrameY = 130 + dataFrameY;
+  constantModeY = 105 + dataFrameY;
+  controlModeStepY = 94 + dataFrameY;
+  driveDirectionY = 116 + dataFrameY;
+  lightY = 134 + dataFrameY;
+  ecoPwrModeY = 154 + dataFrameY;
 
   draw_display_border(ILI9341_GREEN);
   draw_speed_border(ILI9341_YELLOW);
@@ -156,7 +166,7 @@ void DriverDisplay::draw_display_background() {
 }
 
 void DriverDisplay::_arrow_increase(int color) {
-  int x = speedFrameX;
+  int x = speedFrameX + 4;
   int y = speedFrameY - 3;
 
   xSemaphoreTakeT(spiBus.mutex);
@@ -165,8 +175,8 @@ void DriverDisplay::_arrow_increase(int color) {
 }
 
 void DriverDisplay::_arrow_decrease(int color) {
-  int x = speedFrameX;
-  int y = speedFrameY + speedFrameSizeY + 3;
+  int x = speedFrameX + 4;
+  int y = speedFrameY + speedFrameSizeY + 2;
 
   xSemaphoreTakeT(spiBus.mutex);
   display.tft->fillTriangle(x, y, x + speedFrameSizeX / 2, y, x + speedFrameSizeX / 4, y + 10, color);

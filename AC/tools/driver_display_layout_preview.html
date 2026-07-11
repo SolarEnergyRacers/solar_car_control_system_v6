@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='utf-8' />
+  <meta name='viewport' content='width=device-width, initial-scale=1' />
+  <title>Driver Display Layout Preview</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #111827; color: #f3f4f6; }
+    .page { display: grid; grid-template-columns: 360px 1fr; gap: 24px; padding: 20px; }
+    .panel { background: #1f2937; border: 1px solid #374151; border-radius: 12px; padding: 16px; }
+    h1 { margin-top: 0; font-size: 1.2rem; }
+    .form { display: grid; gap: 10px; max-height: 80vh; overflow: auto; }
+    .field { display: grid; grid-template-columns: 1fr 90px; gap: 8px; align-items: center; font-size: 0.9rem; }
+    .field input { width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #6b7280; background: #111827; color: #f9fafb; }
+    .preview { display: flex; justify-content: center; align-items: flex-start; }
+    canvas { border: 2px solid #9ca3af; border-radius: 12px; background: #000; max-width: 100%; }
+    .hint { font-size: 0.85rem; color: #9ca3af; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class='page'>
+    <div class='panel'>
+      <h1>DriverDisplay layout</h1>
+      <div class='form'>
+        <label class='field'><span>info   Frame  Y</span><input type='number' data-name='infoFrameY' value='0' /></label><label class='field'><span>info   Frame  Size Y</span><input type='number' data-name='infoFrameSizeY' value='62' /></label><label class='field'><span>info   Text  Size</span><input type='number' data-name='infoTextSize' value='3' /></label><label class='field'><span>data  Frame  Y</span><input type='number' data-name='dataFrameY' value='0' /></label><label class='field'><span>speed  Frame  X</span><input type='number' data-name='speedFrameX' value='82' /></label><label class='field'><span>speed  Frame  Y</span><input type='number' data-name='speedFrameY' value='16' /></label><label class='field'><span>speed  Frame  Size X</span><input type='number' data-name='speedFrameSizeX' value='156' /></label><label class='field'><span>speed  Frame  Size Y</span><input type='number' data-name='speedFrameSizeY' value='76' /></label><label class='field'><span>speed  Text  Size</span><input type='number' data-name='speedTextSize' value='8' /></label><label class='field'><span>acc  Frame  X</span><input type='number' data-name='accFrameX' value='2' /></label><label class='field'><span>acc  Frame  Y</span><input type='number' data-name='accFrameY' value='54' /></label><label class='field'><span>acc  Frame  Size X</span><input type='number' data-name='accFrameSizeX' value='-4' /></label><label class='field'><span>acc  Frame  Size Y</span><input type='number' data-name='accFrameSizeY' value='38' /></label><label class='field'><span>acc  Text  Size</span><input type='number' data-name='accTextSize' value='4' /></label><label class='field'><span>bat  Frame  Y</span><input type='number' data-name='batFrameY' value='140' /></label><label class='field'><span>pv  Frame  Y</span><input type='number' data-name='pvFrameY' value='150' /></label><label class='field'><span>motor  Frame  Y</span><input type='number' data-name='motorFrameY' value='130' /></label><label class='field'><span>life Sign Radius</span><input type='number' data-name='lifeSignRadius' value='4' /></label><label class='field'><span>width</span><input type='number' data-name='width' value='320' /></label><label class='field'><span>height</span><input type='number' data-name='height' value='240' /></label><label class='field'><span>bat  Frame  X</span><input type='number' data-name='batFrameX' value='10' /></label><label class='field'><span>bat  Text  Size</span><input type='number' data-name='batTextSize' value='2' /></label><label class='field'><span>constant Mode  Text  Size</span><input type='number' data-name='constantModeTextSize' value='1' /></label><label class='field'><span>control Mode Step  Text  Size</span><input type='number' data-name='controlModeStepTextSize' value='1' /></label><label class='field'><span>digit Height</span><input type='number' data-name='digitHeight' value='8' /></label><label class='field'><span>digit Width</span><input type='number' data-name='digitWidth' value='6' /></label><label class='field'><span>drive Direction  Text  Size</span><input type='number' data-name='driveDirectionTextSize' value='2' /></label><label class='field'><span>eco Pwr Mode  Text  Size</span><input type='number' data-name='ecoPwrModeTextSize' value='2' /></label><label class='field'><span>info   Frame  Size X</span><input type='number' data-name='infoFrameSizeX' value='320' /></label><label class='field'><span>info   Frame  X</span><input type='number' data-name='infoFrameX' value='0' /></label><label class='field'><span>life Sign X</span><input type='number' data-name='lifeSignX' value='312' /></label><label class='field'><span>life Sign Y</span><input type='number' data-name='lifeSignY' value='232' /></label><label class='field'><span>light  Text  Size</span><input type='number' data-name='lightTextSize' value='2' /></label><label class='field'><span>motor  Frame  X</span><input type='number' data-name='motorFrameX' value='10' /></label><label class='field'><span>motor  Text  Size</span><input type='number' data-name='motorTextSize' value='2' /></label><label class='field'><span>pv  Frame  X</span><input type='number' data-name='pvFrameX' value='10' /></label><label class='field'><span>pv  Text  Size</span><input type='number' data-name='pvTextSize' value='2' /></label><label class='field'><span>speed Unit  Text  Size</span><input type='number' data-name='speedUnitTextSize' value='1' /></label><label class='field'><span>text Size</span><input type='number' data-name='textSize' value='1' /></label>
+      </div>
+      <div class='hint'>Edit the values and the preview updates instantly. The defaults are parsed from the C++ sources in this workspace.</div>
+    </div>
+    <div class='panel preview'>
+      <canvas id='preview' width='320' height='240'></canvas>
+    </div>
+  </div>
+  <script>
+    const canvas = document.getElementById('preview');
+    const ctx = canvas.getContext('2d');
+    const inputs = Array.from(document.querySelectorAll('input[data-name]'));
+
+    const defaults = {
+  "infoFrameY": 0.0,
+  "infoFrameSizeY": 62.0,
+  "infoTextSize": 3.0,
+  "dataFrameY": 0.0,
+  "speedFrameX": 82.0,
+  "speedFrameY": 16.0,
+  "speedFrameSizeX": 156.0,
+  "speedFrameSizeY": 76.0,
+  "speedTextSize": 8.0,
+  "accFrameX": 2.0,
+  "accFrameY": 54.0,
+  "accFrameSizeX": -4.0,
+  "accFrameSizeY": 38.0,
+  "accTextSize": 4.0,
+  "batFrameY": 140.0,
+  "pvFrameY": 150.0,
+  "motorFrameY": 130.0,
+  "lifeSignRadius": 4.0,
+  "width": 320.0,
+  "height": 240.0,
+  "batFrameX": 10.0,
+  "batTextSize": 2.0,
+  "constantModeTextSize": 1.0,
+  "controlModeStepTextSize": 1.0,
+  "digitHeight": 8.0,
+  "digitWidth": 6.0,
+  "driveDirectionTextSize": 2.0,
+  "ecoPwrModeTextSize": 2.0,
+  "infoFrameSizeX": 320.0,
+  "infoFrameX": 0.0,
+  "lifeSignX": 312.0,
+  "lifeSignY": 232.0,
+  "lightTextSize": 2.0,
+  "motorFrameX": 10.0,
+  "motorTextSize": 2.0,
+  "pvFrameX": 10.0,
+  "pvTextSize": 2.0,
+  "speedUnitTextSize": 1.0,
+  "textSize": 1.0
+};
+    const displayValues = [["DriverInfo", 0, 4], ["DriverInfoType", 0, 0], ["DriveDirection", 0, 0], ["ConstantMode", 0, 0], ["ConstantModeOn", 0, 0], ["EcoModeOn", 0, 0], ["Speed", 40, 0], ["Acceleration", 0, -1], ["StepSize", 10, 200], ["DateTimeStamp", 10, 168], ["TargetSpeedPower", 240, 66], ["MotorCurrent", 10, 110], ["MotorOn", 160, 110], ["BatteryVoltage", 10, 130], ["BatteryOn", 160, 130], ["PhotoVoltaicCurrent", 10, 150], ["PhotoVoltaicOn", 160, 150]];
+
+    function getValues() {
+      const result = {};
+      inputs.forEach((input) => { result[input.dataset.name] = Number(input.value); });
+      return result;
+    }
+
+    function draw(values) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const width = values.width || 320;
+      const height = values.height || 240;
+      const speedFrameX = values.speedFrameX >= 0 ? values.speedFrameX : Math.floor((width - (values.speedFrameSizeX || 156)) / 2);
+      const speedFrameY = values.speedFrameY || 16;
+      const speedFrameSizeX = values.speedFrameSizeX || 156;
+      const speedFrameSizeY = values.speedFrameSizeY || 76;
+      const accFrameSizeX = values.accFrameSizeX >= 0 ? values.accFrameSizeX : Math.max(8, speedFrameX - 3);
+      const accFrameY = values.accFrameY || 54;
+      const accFrameSizeY = values.accFrameSizeY || 38;
+      const targetValueFrameX = values.targetValueFrameX >= 0 ? values.targetValueFrameX : speedFrameX + speedFrameSizeX + 1;
+      const targetValueFrameY = values.targetValueFrameY || 54;
+      const targetValueFrameSizeX = values.targetValueFrameSizeX >= 0 ? values.targetValueFrameSizeX : width - accFrameSizeX - speedFrameSizeX - 6;
+      const targetValueFrameSizeY = values.targetValueFrameSizeY || 38;
+      const infoFrameY = values.infoFrameY >= 0 ? values.infoFrameY : height - (values.infoFrameSizeY || 64);
+      const infoFrameSizeY = values.infoFrameSizeY || 64;
+      const dataFrameY = values.dataFrameY || 0;
+      ctx.save();
+      ctx.scale(canvas.width / width, canvas.height / height);
+
+      // outer display frame
+      ctx.strokeStyle = '#00ff00';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(0, 0, width, height);
+
+      // main content frame
+      ctx.strokeStyle = '#22c55e';
+      ctx.strokeRect(0, dataFrameY, width, height - dataFrameY - infoFrameSizeY - 2);
+
+      // info frame
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(0, infoFrameY, width, infoFrameSizeY);
+      ctx.strokeStyle = '#38bdf8';
+      ctx.strokeRect(0, infoFrameY, width, infoFrameSizeY);
+
+      // speed frame
+      ctx.strokeStyle = '#facc15';
+      ctx.strokeRect(speedFrameX, speedFrameY, speedFrameSizeX, speedFrameSizeY);
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(speedFrameX, speedFrameY, 6, 6);
+
+      // acceleration frame
+      ctx.strokeStyle = '#f59e0b';
+      ctx.strokeRect(values.accFrameX || 2, accFrameY, accFrameSizeX, accFrameSizeY);
+
+      // target value frame
+      ctx.strokeStyle = '#f59e0b';
+      ctx.strokeRect(targetValueFrameX, targetValueFrameY, targetValueFrameSizeX, targetValueFrameSizeY);
+
+      // value displays from DriverDisplay.h
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '11px sans-serif';
+      displayValues.forEach((item) => {
+        const name = item[0];
+        const x = item[1];
+        const y = item[2];
+        const label = name === 'TargetSpeedPower' ? 'Target' :
+          name === 'Speed' ? 'Speed00' :
+          name === 'Acceleration99' ? 'Accel' :
+          name === 'MotorCurrent' ? 'MotorC:' :
+          name === 'MotorOn' ? 'MotorOn' :
+          name === 'BatteryVoltage' ? 'Bat :' :
+          name === 'BatteryOn' ? 'BatOn' :
+          name === 'PhotoVoltaicCurrent' ? 'PV :' :
+          name === 'PhotoVoltaicOn' ? 'PVOn' :
+          name === 'DriverInfo' ? 'Info' :
+          name === 'DateTimeStamp' ? 'Time' :
+          name === 'StepSize' ? 'Step' :
+          name;
+        const width = label.length * 6 + 8;
+        ctx.strokeStyle = '#60a5fa';
+        ctx.strokeRect(x, y, Math.max(56, width), 16);
+        ctx.fillText(label, x + 4, y + 12);
+      });
+
+      // status boxes
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '14px sans-serif';
+      ctx.fillText('Speed', 20, 40);
+      ctx.fillText('Target', 210, 40);
+      ctx.fillText('Motor', 12, 120);
+      ctx.fillText('Battery', 12, 140);
+      ctx.fillText('PV', 12, 160);
+
+      // life sign
+      ctx.fillStyle = '#16a34a';
+      ctx.beginPath();
+      ctx.arc(values.lifeSignX || (width - (values.lifeSignRadius || 4) - 4), values.lifeSignY || (height - (values.lifeSignRadius || 4) - 4), values.lifeSignRadius || 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    inputs.forEach((input) => input.addEventListener('input', () => draw(getValues())));
+    draw(defaults);
+  </script>
+</body>
+</html>

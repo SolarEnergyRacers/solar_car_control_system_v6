@@ -104,6 +104,11 @@ DEFINE_CONST(SPI_RST, 21)
 DEFINE_CONST(SPI_CS_TFT, 32)
 DEFINE_CONST(SPI_CS_SDCARD, 14)
 
+// Driver display layout offsets
+// Positive values move the display area down, negative values move it up.
+DEFINE_CONST(DRIVER_DISPLAY_INFO_FRAME_OFFSET_Y, 0)
+DEFINE_CONST(DRIVER_DISPLAY_CONTENT_FRAME_OFFSET_Y, 0)
+
 /*
  * ESP32 JTAG Debug Probe Wiring
  *

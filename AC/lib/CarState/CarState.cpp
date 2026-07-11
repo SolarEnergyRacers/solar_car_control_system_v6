@@ -89,6 +89,10 @@ bool CarState::initalize_config(const string &configFile) {
     SendInterval = cf.get("Telemetry", "", 1000);
     MaxCachedRecords = cf.get("Telemetry", "MaxCachedRecords", 100);
 
+    // [DriverDisplay]
+    DriverDisplayDataFrameY = cf.get("DriverDisplay", "DataFrame", 0);
+    DriverDisplayInfoFrameY = cf.get("DriverDisplay", "InfoFrame", 182);
+
   } catch (exception &ex) {
     console << "WARN: No config file: '" << FILENAME_SER4CONFIG << "' found or readable: " << ex.what() << NL;
     return false;
@@ -166,6 +170,10 @@ const string CarState::print(string msg, bool withColors) {
   // [Telemetry]
   ss << "Telemetry send interval " << SendInterval << "ms" << NL;
   ss << "Telemetry cache records " << MaxCachedRecords << NL;
+
+  ss << NL;
+  ss << "Driver Display Info Frame Offset Y .... " << DriverDisplayInfoFrameY << NL;
+  ss << "Driver Display Content Frame Offset Y . " << DriverDisplayDataFrameY << NL;
   ss << "========================================================================" << NL;
   return ss.str();
 }
