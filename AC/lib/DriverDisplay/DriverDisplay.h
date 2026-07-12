@@ -1,16 +1,22 @@
 //
 // DriverDisplay
 //
+// The DriverDisplay consists from three parts:  DataFrame (acceleration, speed target speed/power,
+// motor, battery, PV, speed up and speed down arrows, drive direction, ...; additional Units) and
+// InfoFrame (box to display texta for the driver) and LifeSign.
+// There are two steps: the background is drawn once and then the values are updated in the loop.
+// The background is drawn in the init() function and the values are updated in the task() function.
+// The DataFrame and InfoFrame can be moved up and down by the user via the config file SER4CNFG.INI
 
 #ifndef SER_DRIVER_DISPLAY_C_H
 #define SER_DRIVER_DISPLAY_C_H
 
 #include <Adafruit_ILI9341.h>
 
+#include "../LocalFunctionsAndDevices.h"
 #include <CarState.h>
 #include <Display.h>
 #include <DisplayValue.h>
-#include "../LocalFunctionsAndDevices.h"
 
 using namespace std;
 
@@ -21,7 +27,7 @@ public:
   // RTOS task
   string init(void);
   string re_init(void);
-  void exit(void){};
+  void exit(void) {};
   void task(void *pvParams);
 
   string getName(void) { return "DriverDisplay"; };
@@ -29,7 +35,7 @@ public:
 
 private:
   // int x, int y, string label, string format, string unit, int textColor, int bgColor, int textSize
-  DisplayValue<string> DriverInfo = DisplayValue<string>(0, 4, "", "%s", "");
+  DisplayValue<string> DriverInfo = DisplayValue<string>(0, 0, "", "%s", "");
   DisplayValue<INFO_TYPE> DriverInfoType = DisplayValue<INFO_TYPE>(0, 0, "", "%s", "");
   DisplayValue<DRIVE_DIRECTION> DriveDirection = DisplayValue<DRIVE_DIRECTION>(0, 0, "", "%s", "");
   DisplayValue<CONSTANT_MODE> ConstantMode = DisplayValue<CONSTANT_MODE>(0, 0, "", "%s", "");
@@ -37,19 +43,19 @@ private:
 
   DisplayValue<bool> EcoModeOn = DisplayValue<bool>(0, 0, "", "%s", "");
 
-  DisplayValue<int> Speed = DisplayValue<int>(0, 0, "", "%d", "", ILI9341_WHITE, ILI9341_BLACK);
+  DisplayValue<int> Speed = DisplayValue<int>(40, 0, "", "%d", "", ILI9341_WHITE, ILI9341_BLACK);
   DisplayValue<int> Acceleration = DisplayValue<int>(0, -1, "", "%d", "", ILI9341_WHITE, ILI9341_BLACK);
   DisplayValue<int> StepSize = DisplayValue<int>(10, 200, "", "%s", "", ILI9341_YELLOW, ILI9341_BLACK, 1);
-  // DisplayValue<string> DateTimeStamp = DisplayValue<string>(10, 168, "", "%s", "", ILI9341_YELLOW, ILI9341_BLACK, 1);
+  DisplayValue<string> DateTimeStamp = DisplayValue<string>(205, 220, "", "%8s", "", ILI9341_OLIVE, ILI9341_BLACK, 2);
   // this format will be changed dynamically in IOExt event handler in dependency of CONSTANT_MODE:
-  DisplayValue<float> TargetSpeedPower = DisplayValue<float>(240, 130, " ", "%5.0f", "", ILI9341_WHITE, ILI9341_BLACK, 2);
+  DisplayValue<float> TargetSpeedPower = DisplayValue<float>(240, 66, " ", "%5.0f", "", ILI9341_WHITE, ILI9341_BLACK, 2);
 
-  DisplayValue<float> MotorCurrent = DisplayValue<float>(10, 180, "Motor:", "%5.1f", "A", ILI9341_ORANGE, ILI9341_BLACK);
-  DisplayValue<bool> MotorOn = DisplayValue<bool>(160, 180, "-", "%3s", "", ILI9341_MAROON, ILI9341_BLACK);
-  DisplayValue<float> BatteryVoltage = DisplayValue<float>(10, 200, "Bat  :", "%5.1f", "V", ILI9341_ORANGE, ILI9341_BLACK);
-  // DisplayValue<bool> BatteryOn = DisplayValue<bool>(160, 200, "-", "%3s", "", ILI9341_MAROON, ILI9341_BLACK);
-  DisplayValue<float> PhotoVoltaicCurrent = DisplayValue<float>(10, 220, "PV   :", "%5.1f", "A", ILI9341_ORANGE, ILI9341_BLACK);
-  DisplayValue<bool> PhotoVoltaicOn = DisplayValue<bool>(160, 220, "-", "%3s", "", ILI9341_MAROON, ILI9341_BLACK);
+  DisplayValue<float> MotorCurrent = DisplayValue<float>(10, 110, "Motor:", "%5.1f", "A", ILI9341_ORANGE, ILI9341_BLACK);
+  DisplayValue<bool> MotorOn = DisplayValue<bool>(160, 110, " ", "%3s", "", ILI9341_OLIVE, ILI9341_BLACK);
+  DisplayValue<float> BatteryVoltage = DisplayValue<float>(10, 130, "Bat  :", "%5.1f", "V", ILI9341_ORANGE, ILI9341_BLACK);
+  DisplayValue<bool> BatteryOn = DisplayValue<bool>(160, 130, " ", "%3s", "", ILI9341_OLIVE, ILI9341_BLACK);
+  DisplayValue<float> PhotoVoltaicCurrent = DisplayValue<float>(10, 150, "PV   :", "%5.1f", "A", ILI9341_ORANGE, ILI9341_BLACK);
+  DisplayValue<bool> PhotoVoltaicOn = DisplayValue<bool>(160, 150, " ", "%3s", "", ILI9341_OLIVE, ILI9341_BLACK);
 
   //==== display cache =====================
   // ... to avoid flickering
@@ -62,35 +68,35 @@ private:
   //==== Driver Display definitions ==== START
   // display formats and sizes
   const int infoFrameX = 0;
-  const int infoFrameY = 0;
-  int infoFrameSizeX = -1; // full tft width, calculated beow
-  const int infoFrameSizeY = 64;
+  int infoFrameY = -1;     // calculated at runtime: display.height - infoFrameSizeY + offset
+  int infoFrameSizeX = -1; // full tft width, calculated below
+  const int infoFrameSizeY = 64 - 2;
   const int infoTextSize = 3;
 
-  // frame around value display (exclude text message lines)
-  const int mainFrameX = infoFrameSizeY;
+  // global offsets for DriverDisplay layout, frame around value display
+  int dataFrameY = 0;
 
   // speed display
   int speedFrameX = -1; // get calculated later: (sizeX - speedFrameCx) / 2;
-  const int speedFrameY = 80;
+  int speedFrameY = 16;
   const int speedFrameSizeX = 156;
   const int speedFrameSizeY = 76;
   const int speedTextSize = 8;
   int speedUnitX = 0; // get claculated later
-  const int speedUnitAccelY = 108;
-  const int speedUnitSpeedY = 72;
+  const int speedUnitAccelY = 44;
+  const int speedUnitSpeedY = 8;
   const int speedUnitTextSize = 1;
 
   // target speed/power display
   int targetValueFrameX = -1; // get calculated later: (speedFrameX + speedFrameSizeX + 1;
-  const int targetValueFrameY = 118;
+  int targetValueFrameY = 54;
   int targetValueFrameSizeX = 40; // get recalculated later
   const int targetValueFrameSizeY = 38;
   const int targetValueTextSize = 4;
 
   // acceleration display
   const int accFrameX = 2;
-  const int accFrameY = 118;    // speedFrameY + speedFrameSizeY / 2
+  int accFrameY = 54;           // speedFrameY + speedFrameSizeY / 2
   int accFrameSizeX = -1;       // get calculated later: speedFrameX - 4
   const int accFrameSizeY = 38; // speedFrameSizeY / 2
   const int accTextSize = 4;    // speedTextSize / 2
@@ -100,42 +106,38 @@ private:
 
   // battery voltage display
   const int batFrameX = 10;
-  const int batFrameY = 180;
+  int batFrameY = 140;
   const int batTextSize = 2;
-  const int lightTextSize = 2;
 
   // photovoltaics voltage display
   const int pvFrameX = 10;
-  const int pvFrameY = 200;
+  int pvFrameY = 150;
   const int pvTextSize = 2;
 
   // motor current display
   const int motorFrameX = 10;
-  const int motorFrameY = 220;
+  int motorFrameY = 130;
   const int motorTextSize = 2;
   // ---- voltage and current displays ---- END
 
   // constant mode speed or power display
   const int constantModeX = 242;
-  const int constantModeY = 169;
+  int constantModeY = 105;
   const int constantModeTextSize = 1;
 
   // step width for constant mode display
   const int controlModeStepX = 242;
-  const int controlModeStepY = 158;
+  int controlModeStepY = 94;
   const int controlModeStepTextSize = 1;
 
   // drive direction display
-  const int driveDirectionX = 220;
-  const int driveDirectionY = 180;
+  const int driveDirectionX = 250;
+  int driveDirectionY = -1;
   const int driveDirectionTextSize = 2;
-
-  const int lightX = 252;
-  const int lightY = 198;
 
   // eco/pwr mode display
   const int ecoPwrModeX = 242;
-  const int ecoPwrModeY = 218;
+  int ecoPwrModeY = 154;
   const int ecoPwrModeTextSize = 2;
 
   //==== Driver Display definition ==== END
@@ -146,9 +148,6 @@ public:
 
   void _arrow_increase(int color);
   void _arrow_decrease(int color);
-  void _hide_light();
-  void _turn_Left(int color);
-  void _turn_Right(int color);
 
   bool init_driver_display(void);
   void draw_display_border(int color);
@@ -166,8 +165,6 @@ public:
   void write_speed();
   void write_acceleration();
   void write_target_value();
-
-  void show_light();
 
   void speedCheck(int speed);
   void arrow(SPEED_ARROW incDecOff);

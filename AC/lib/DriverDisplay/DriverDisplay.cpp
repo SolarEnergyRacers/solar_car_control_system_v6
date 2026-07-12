@@ -4,8 +4,8 @@
  *
  ***/
 
-#include <global_definitions.h>
 #include "../definitions.h"
+#include <global_definitions.h>
 
 // standard libraries
 #include <fmt/core.h>
@@ -14,8 +14,8 @@
 #include <stdio.h>
 #include <string>
 
-#include <AbstractTask.h>
 #include "../LocalFunctionsAndDevices.h"
+#include <AbstractTask.h>
 
 // #include <ADC.h>
 #include <CarState.h>
@@ -23,6 +23,7 @@
 #include <Display.h>
 #include <DriverDisplay.h>
 #include <Helper.h>
+#include <RTC_SER.h>
 
 #include <Adafruit_GFX.h>     // graphics library
 #include <Adafruit_ILI9341.h> // display
@@ -42,10 +43,10 @@ extern Console console;
 extern SPIBus spiBus;
 extern CarState carState;
 extern Display display;
-// extern Adafruit_ILI9341 tft;
+extern GlobalTime globalTime;
 
 DriverDisplay::DriverDisplay() { display.bgColor = ILI9341_BLACK; };
-DriverDisplay::~DriverDisplay(){};
+DriverDisplay::~DriverDisplay() {};
 
 string DriverDisplay::init() {
   console << "     Init '" << getName() << "'..." << NL;
@@ -99,7 +100,7 @@ void DriverDisplay::speedCheck(int speed) {
 // write color of the border of the main display
 void DriverDisplay::draw_display_border(int color) {
   xSemaphoreTakeT(spiBus.mutex);
-  display.tft->drawRoundRect(0, mainFrameX, display.tft->width(), display.tft->height() - mainFrameX, 8, color);
+  display.tft->drawRoundRect(0, dataFrameY, display.tft->width(), display.tft->height() - dataFrameY - infoFrameSizeY - 2, 8, color);
   xSemaphoreGive(spiBus.mutex);
 }
 
@@ -142,11 +143,21 @@ void DriverDisplay::draw_target_value_border(int color) {
 }
 
 void DriverDisplay::draw_display_background() {
-  // xSemaphoreTakeT(spiBus.mutex);
-  // infoFrameSizeX = display.tft->width();
-  // xSemaphoreGive(spiBus.mutex);
   infoFrameSizeX = display.width;
+  infoFrameY = carState.DriverDisplayInfoFrameY;
+  dataFrameY = carState.DriverDisplayDataFrameY;
+  dataFrameY = dataFrameY;
   speedFrameX = (infoFrameSizeX - speedFrameSizeX) / 2;
+  speedFrameY = 16 + dataFrameY;
+  targetValueFrameY = 54 + dataFrameY;
+  accFrameY = 54 + dataFrameY;
+  batFrameY = 140 + dataFrameY;
+  pvFrameY = 150 + dataFrameY;
+  motorFrameY = 130 + dataFrameY;
+  constantModeY = 105 + dataFrameY;
+  controlModeStepY = 94 + dataFrameY;
+  driveDirectionY = 24 + dataFrameY;
+  ecoPwrModeY = 154 + dataFrameY;
 
   draw_display_border(ILI9341_GREEN);
   draw_speed_border(ILI9341_YELLOW);
@@ -155,7 +166,7 @@ void DriverDisplay::draw_display_background() {
 }
 
 void DriverDisplay::_arrow_increase(int color) {
-  int x = speedFrameX;
+  int x = speedFrameX + 4;
   int y = speedFrameY - 3;
 
   xSemaphoreTakeT(spiBus.mutex);
@@ -164,8 +175,8 @@ void DriverDisplay::_arrow_increase(int color) {
 }
 
 void DriverDisplay::_arrow_decrease(int color) {
-  int x = speedFrameX;
-  int y = speedFrameY + speedFrameSizeY + 3;
+  int x = speedFrameX + 4;
+  int y = speedFrameY + speedFrameSizeY + 2;
 
   xSemaphoreTakeT(spiBus.mutex);
   display.tft->fillTriangle(x, y, x + speedFrameSizeX / 2, y, x + speedFrameSizeX / 4, y + 10, color);
@@ -251,8 +262,8 @@ void DriverDisplay::step_width_show() {
   xSemaphoreGive(spiBus.mutex);
 }
 
-#define FORWARD_STRING ""
-#define BACKWARD_STRING "Backward"
+#define FORWARD_STRING " fw"
+#define BACKWARD_STRING "BACK!"
 void DriverDisplay::write_drive_direction() {
   DRIVE_DIRECTION direction = DriveDirection.get_recent_overtake_last();
   int width = display.getPixelWidthOfTexts(driveDirectionTextSize, FORWARD_STRING, BACKWARD_STRING) + 4;
@@ -262,7 +273,7 @@ void DriverDisplay::write_drive_direction() {
   display.tft->setTextSize(driveDirectionTextSize);
   display.tft->setCursor(driveDirectionX, driveDirectionY);
   if (direction == DRIVE_DIRECTION::FORWARD) {
-    display.tft->setTextColor(ILI9341_YELLOW);
+    display.tft->setTextColor(ILI9341_OLIVE);
     display.tft->print(FORWARD_STRING);
   } else {
     display.tft->setTextColor(ILI9341_RED);
@@ -336,7 +347,7 @@ void DriverDisplay::task(void *pvParams) {
       draw_display_background();
       BatteryVoltage.showLabel(display.tft);
       BatteryVoltage.set_epsilon(0.1);
-      // BatteryOn.showLabel(tft);
+      BatteryOn.showLabel(display.tft);
       PhotoVoltaicCurrent.showLabel(display.tft);
       PhotoVoltaicCurrent.set_epsilon(0.1);
       PhotoVoltaicOn.showLabel(display.tft);
@@ -344,7 +355,7 @@ void DriverDisplay::task(void *pvParams) {
       MotorCurrent.set_epsilon(0.1);
       MotorOn.showLabel(display.tft);
       TargetSpeedPower.showLabel(display.tft);
-      // DateTimeStamp.showLabel(display.tft);
+      DateTimeStamp.showLabel(display.tft);
       set_sleep_polling(600);
       carState.displayStatus = DISPLAY_STATUS::DRIVER_RUNNING;
       break;
@@ -417,10 +428,10 @@ void DriverDisplay::task(void *pvParams) {
       if (BatteryVoltage.is_changed() || justInited) {
         BatteryVoltage.showValue(display.tft);
       }
-      // BatteryOn.Value = carState.BatteryOn;
-      // if (BatteryOn.is_changed() || justInited) {
-      //   BatteryOn.showValue(tft);
-      // }
+      BatteryOn.Value = carState.BatteryOn;
+      if (BatteryOn.is_changed() || justInited) {
+        BatteryOn.showValue(display.tft);
+      }
       // TODO: PhotoVoltaicCurrent.Value = carState.Mppt1Current + carState.Mppt2Current + carState.Mppt3Current;
       PhotoVoltaicCurrent.Value = carState.PhotoVoltaicCurrent;
       if (PhotoVoltaicCurrent.is_changed() || justInited) {
@@ -438,8 +449,10 @@ void DriverDisplay::task(void *pvParams) {
       if (MotorOn.is_changed() || justInited) {
         MotorOn.showValue(display.tft);
       }
-      // DateTimeStamp.Value = getTime();
-      // DateTimeStamp.showValue(tft);
+      DateTimeStamp.Value = globalTime.strTime("%H:%M:%S"); // %Y-%m-%d (%a)");
+      if (DateTimeStamp.get_last() != DateTimeStamp.Value || justInited) {
+        DateTimeStamp.showValue(display.tft, true);
+      }
       justInited = false;
       break;
 

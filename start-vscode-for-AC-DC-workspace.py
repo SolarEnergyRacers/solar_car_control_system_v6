@@ -8,12 +8,44 @@ import os
 import sys
 import subprocess
 import time
+import shutil
 from screeninfo import get_monitors
 
 version = 'v6'
 CODE = '/usr/share/code/code'
 CODE = 'code'  # If code is in PATH, otherwise specify the full path to the code executable
 WORKSPACES = [f'AC/ser_{version}_AC.code-workspace', f'DC/ser_{version}_DC.code-workspace']
+
+
+def open_console_with_device_listing():
+    """Open a terminal, run device listing commands, and keep the terminal open."""
+    terminal = shutil.which('x-terminal-emulator') or shutil.which('gnome-terminal') or shutil.which('konsole')
+    if terminal is None:
+        print('Warning: no supported terminal emulator found (x-terminal-emulator/gnome-terminal/konsole).')
+        return
+
+    # bash_cmd = (
+    #     'ls -lisa /dev/ttyU* 2>/dev/null || true; '
+    #     'ls -lisa /dev/esp* 2>/dev/null || true; '
+    #     'ls -lisa /dev/ttyA* 2>/dev/null || true; '
+    #     'echo; echo "Terminal remains open. Close it when done."; '
+    #     'echo; echo "ll /dev/ttyU* ; ll /dev/esp* ; ll /dev/ttyA*"; '
+    #     'exec bash'
+    # )
+    bash_cmd = (
+        'ls -lisa /dev/ttyU* ; ls -lisa /dev/esp* ; ls -lisa /dev/ttyA* 2>/dev/null || true; '
+        'echo; echo "ll /dev/ttyU* ; ll /dev/esp* ; ll /dev/ttyA*"; '
+        'echo; echo "Terminal remains open. Close it when done."; '
+        'exec bash'
+    )
+
+    # Start a separate terminal window and return immediately to Python.
+    if os.path.basename(terminal) == 'gnome-terminal':
+        subprocess.Popen([terminal, '--', 'bash', '-lc', bash_cmd])
+    elif os.path.basename(terminal) == 'konsole':
+        subprocess.Popen([terminal, '-e', 'bash', '-lc', bash_cmd])
+    else:
+        subprocess.Popen([terminal, '-e', 'bash', '-lc', bash_cmd])
 
 
 def start_ac_dc(working_dir):
@@ -76,4 +108,5 @@ if __name__ == '__main__':
     pwd = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
 
     start_ac_dc(pwd)
-    input('Finish with Enter key...')
+    open_console_with_device_listing()
+    #input('Finish with Enter key...')

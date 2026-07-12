@@ -11,8 +11,8 @@
 #include <sstream>
 #include <string>
 
-#include <global_definitions.h>
 #include "../definitions.h"
+#include <global_definitions.h>
 
 #include <CANPacket.h>
 #include <CarStatePin.h>
@@ -33,9 +33,6 @@ static const char *CONSTANT_MODE_str[] = {"SPEED", "POWER"};
 
 enum class DRIVE_DIRECTION { FORWARD, BACKWARD };
 static const char *DRIVE_DIRECTION_str[] = {"fwd", "bwd"};
-
-enum class LIGHT { OFF, L1, L2 };
-static const char *LIGHT_str[] = {"OFF", "L1", "L2"};
 
 enum class DISPLAY_STATUS {
   DRIVER_HALTED,
@@ -129,13 +126,12 @@ public:
     (void)SPEED_ARROW_str;
     (void)CONSTANT_MODE_str;
     (void)DRIVE_DIRECTION_str;
-    (void)LIGHT_str;
     (void)DISPLAY_STATUS_str;
     (void)PRECHARGE_STATE_str;
     (void)BATTERY_ERROR_str;
     // BEGIN prevent stupid compiler warnings "defined but not used"
   }
-  ~CarState(){};
+  ~CarState() {};
   void init_values();
   bool initalize_config();
   bool initalize_config(const string &configFile);
@@ -158,7 +154,7 @@ public:
   int8_t AccelerationDisplay; // Display Value (-99...+99)
   // #SAFETY-END#
 
-  // bool BatteryOn;      // IO-In
+  bool BatteryOn;      // IO-In
   bool PhotoVoltaicOn; // IO-in
   bool MotorOn;        // IO-In
   bool EcoOn;          // IO-In
@@ -208,7 +204,6 @@ public:
   INFO_TYPE DriverInfoType;
   bool GreenLight;
 
-
   // All IO pins
   static CarStatePin pins[IOExtPINCOUNT];
   int getIdx(const string pinName);
@@ -245,6 +240,10 @@ public:
   // [Telemetry]
   int SendInterval;     // Radio send interval in [ms]
   int MaxCachedRecords; // number of telemetry records hold in cache in case of trasmit errors
+
+  // Driver display layout offsets
+  int DriverDisplayDataFrameY;
+  int DriverDisplayInfoFrameY;
 
   // tools
   const string print(const string msg = "", bool withColors = true);

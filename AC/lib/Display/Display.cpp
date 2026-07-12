@@ -105,7 +105,7 @@ string Display::_setup() {
   }
   lifeSignX = width - lifeSignRadius - 4;
   lifeSignY = height - lifeSignRadius - 4;
-  return fmt::format("[{}] Display initialized.  Screen 'ILI9341' {}x{}.     Status: {}", hasError ? "--" : "ok", height, width,
+  return fmt::format("[{}] Display initialized.  Screen 'ILI9341' {}x{}.     Status: {}", hasError ? "--" : "ok", width, height,
                      DISPLAY_STATUS_str[(int)carState.displayStatus]);
 }
 
