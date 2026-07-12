@@ -198,12 +198,10 @@ void CmdHandler::task(void *pvParams) {
           } else if (input[1] == 'v') {
             carStateRadio.verboseModeRadioSend = !carStateRadio.verboseModeRadioSend;
             console << "set verboseModeRadioSend: " << carStateRadio.verboseModeRadioSend << NL;
-          } else if (input[1] == 'm') {
-            if (carStateRadio.mode == SEND_MODE::ASCII)
-              carStateRadio.mode = SEND_MODE::BINARY;
-            else
+          } else if (input[1] == 't') {
               carStateRadio.mode = SEND_MODE::ASCII;
-            console << "set radio send: " << SEND_MODE_str[(int)carStateRadio.mode] << NL;
+          } else if (input[1] == 'b') {
+              carStateRadio.mode = SEND_MODE::BINARY;
           } else if (input[1] == 'r') {
             carState.Serial2Baudrate = atof(&input[2]);
             Serial2.end();
