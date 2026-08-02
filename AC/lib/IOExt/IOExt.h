@@ -17,7 +17,6 @@
 #include <CarStatePin.h>
 
 enum class PinHandleMode { NORMAL, FORCED };
-// extern OneWireBus oneWireBus;
 
 class IOExt : public AbstractTask {
 public:
@@ -33,16 +32,12 @@ public:
   void readAllPins();
   bool readAndHandlePins(PinHandleMode mode = PinHandleMode::NORMAL);
 
-  // static int getIdx(int devNr, int pin) { return devNr * 16 + pin; };
-  // static int getIdx(int port) { return (port >> 4) * 16 + (port & 0x0F); };
-
   bool verboseModeDIn = false;
   bool verboseModeDInHandler = false;
   bool verboseModeDOut = false;
 
 private:
-  // bool isInInterruptHandler = false;
   bool isInInputHandler = false;
-
 };
+
 #endif // SER_IOEXT_H

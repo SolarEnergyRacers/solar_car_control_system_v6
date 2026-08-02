@@ -32,10 +32,43 @@ extern CarStateRadio carStateRadio;
 // extern RTC rtc;
 // extern ESP32Time esp32time;
 
-// int CarState::getIdx(string pinName) { return idxOfPin.find(pinName)->second; }
-// CarStatePin *CarState::getPin(int devNr, int pinNr) { return &(carState.pins[IOExt::getIdx(devNr, pinNr)]); }
-// CarStatePin *CarState::getPin(int port) { return &(carState.pins[IOExt::getIdx(port)]); }
-// CarStatePin *CarState::getPin(string pinName) { return &(carState.pins[carState.getIdx(pinName)]); }
+int CarState::getIdx(const string pinName) {
+  auto it = idxOfPin.find(pinName);
+  if (it != idxOfPin.end())
+    return it->second;
+
+  for (int pinIdx = 0; pinIdx < IOExtPINCOUNT; ++pinIdx) {
+    if (carState.pins[pinIdx].name.compare(pinName) == 0)
+      return pinIdx;
+  }
+  return -1;
+}
+
+CarStatePin *CarState::getPin(int devNr, int pinNr) {
+  int idx = devNr * 16 + pinNr;
+  if (idx < 0 || idx >= IOExtPINCOUNT)
+    return NULL;
+  if (carState.pins[idx].name.length() == 0)
+    return NULL;
+  return &(carState.pins[idx]);
+}
+
+CarStatePin *CarState::getPin(int port) {
+  for (int pinIdx = 0; pinIdx < IOExtPINCOUNT; ++pinIdx) {
+    if (carState.pins[pinIdx].name.length() == 0)
+      continue;
+    if (carState.pins[pinIdx].gpio == port)
+      return &(carState.pins[pinIdx]);
+  }
+  return NULL;
+}
+
+CarStatePin *CarState::getPin(const string pinName) {
+  int idx = carState.getIdx(pinName);
+  if (idx < 0 || idx >= IOExtPINCOUNT)
+    return NULL;
+  return &(carState.pins[idx]);
+}
 
 void CarState::init_values() {
   // values read from sensors

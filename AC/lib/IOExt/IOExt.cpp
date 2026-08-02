@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <string>
 
-#include <Wire.h>     // I2C
+#include <Wire.h> // I2C
 
 #include <CarControl.h>
 #include <Console.h>
@@ -36,41 +36,53 @@ void IRAM_ATTR ioExt_interrupt_handler() { ioInterruptRequest = true; };
 
 string IOExt::re_init() { return init(); }
 
+static bool isDefinedPin(const CarStatePin &pin) {
+  return pin.name.length() > 0;
+}
+
 string IOExt::init() {
   bool hasError = false;
-  int defined_devices_count = sizeof(CarState::pins) / sizeof(CarState::pins[0]);
-  console << "[  ] Init IOExt "<< defined_devices_count<<" devices...\n";
+  int defined_devices_count = 0;
+  for (int pinNr = 0; pinNr < IOExtPINCOUNT; pinNr++) {
+    if (isDefinedPin(carState.pins[pinNr]))
+      ++defined_devices_count;
+  }
+  console << "[  ] Init IOExt " << defined_devices_count << " devices...\n";
 
   try {
-    for (int pinNr = 0; pinNr < defined_devices_count; pinNr++) {
-      CarStatePin *pin = carState.getPin(pinNr);
-      console << "Setup '" << pin->name <<"', mode:"<< pin->mode << ", continuousMode:" << pin->continuousMode << ", debounceTime_ms:" << pin->debounceTime_ms << NL;
+    carState.idxOfPin.clear();
+    for (int pinNr = 0; pinNr < IOExtPINCOUNT; pinNr++) {
+      CarStatePin *pin = &(carState.pins[pinNr]);
+      if (!isDefinedPin(*pin))
+        continue;
+
+      console << "Setup '" << pin->name << "', mode:" << pin->mode << ", continuousMode:" << pin->continuousMode << ", debounceTime_ms:" << pin->debounceTime_ms << NL;
       carState.idxOfPin.insert(pair<string, int>{pin->name, pinNr});
       pinMode(pin->gpio, pin->mode);
     }
     console << "     ok " << getName() << NL;
     // inital read the io pins
     readAllPins();
-  }
-  catch (exception &ex) {
+  } catch (exception &ex) {
     hasError = true;
     console << "ERROR: Couldn not init GPIOs, ex: " << ex.what() << NL;
   }
   // setup inerrupt handling
   ioInterruptRequest = false;
   isInInputHandler = false;
-  //pinMode(I2C_INTERRUPT, INPUT_PULLUP);
-  //attachInterrupt(digitalPinToInterrupt(I2C_INTERRUPT), ioExt_interrupt_handler, CHANGE);
   return fmt::format("[{}] IOExt initialized.", hasError ? "--" : "ok");
 }
 
 void IOExt::exit(void) {
   // TODO
 }
-// ------------------
 
 void IOExt::writeAllPins(PinHandleMode mode) {
-  for (auto &pin : carState.pins) {
+  for (int pinNr = 0; pinNr < IOExtPINCOUNT; pinNr++) {
+    CarStatePin &pin = carState.pins[pinNr];
+    if (!isDefinedPin(pin))
+      continue;
+
     if (pin.mode == OUTPUT && (pin.oldValue != pin.value || !pin.inited || mode == PinHandleMode::FORCED)) {
       digitalWrite(pin.gpio, pin.value);
       pin.oldValue = pin.value;
@@ -80,14 +92,17 @@ void IOExt::writeAllPins(PinHandleMode mode) {
 }
 
 void IOExt::readAllPins() {
-  for (CarStatePin &pin : carState.pins) {
+  for (int pinNr = 0; pinNr < IOExtPINCOUNT; pinNr++) {
+    CarStatePin &pin = carState.pins[pinNr];
+    if (!isDefinedPin(pin))
+      continue;
+
     if (pin.mode != OUTPUT) {
-        pin.value = digitalRead(pin.gpio);
+      pin.value = digitalRead(pin.gpio);
     }
   }
   if (verboseModeDIn) {
-    console << fmt::format("IOExt ({}ms)", millis())
-            << ", Car state: " << carState.printIOs("", true, false) << "\n";
+    console << fmt::format("IOExt ({}ms)", millis()) << ", Car state: " << carState.printIOs("", true, false) << "\n";
   }
 }
 
@@ -95,10 +110,16 @@ bool IOExt::readAndHandlePins(PinHandleMode mode) {
   if (isInInputHandler)
     return false;
   isInInputHandler = true;
+
   bool hasChanges = false;
   readAllPins();
   list<void (*)()> pinHandlerList;
-  for (CarStatePin &pin : carState.pins) {
+
+  for (int pinNr = 0; pinNr < IOExtPINCOUNT; pinNr++) {
+    CarStatePin &pin = carState.pins[pinNr];
+    if (!isDefinedPin(pin))
+      continue;
+
     if (pin.mode != OUTPUT && (pin.handlerFunction != NULL)) {
       unsigned long timestamp = millis();
       // button: debounced time and value == 0 --> activate Handler
@@ -120,15 +141,15 @@ bool IOExt::readAndHandlePins(PinHandleMode mode) {
         pin.oldValue = 1;
     }
   }
+
   // avoid multi registration:
   pinHandlerList.unique();
+
   // call all handlers for changed pins
   if (SystemInited) {
-    // xSemaphoreTakeT(i2cBus.mutex);
     for (void (*pinHandler)() : pinHandlerList) {
       pinHandler();
     }
-    // xSemaphoreGive(i2cBus.mutex);
   }
   pinHandlerList.clear();
   isInInputHandler = false;
@@ -138,7 +159,7 @@ bool IOExt::readAndHandlePins(PinHandleMode mode) {
 void IOExt::task(void *pvParams) {
   while (1) {
     if (SystemInited) {
-      readAndHandlePins(); // PinHandleMode::FORCED);
+      readAndHandlePins();
     }
     taskSuspend();
   }

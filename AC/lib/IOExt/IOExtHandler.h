@@ -7,23 +7,8 @@
 
 #include "../definitions.h"
 
-#include <list>
-#include <map>
-#include <string>
-
-#include <AbstractTask.h>
-
-#include <CarState.h>
-#include <CarStatePin.h>
-
-// known pin handler
-// the handler must its bit copy to oldValue
-// void buttonPlusHandler();
-// void buttonConfirmDriverInfoHandler();
-// void buttonSetHandler();
-// void buttonMinusHandler();
-// void breakPedalHandler();
-// void fwdBwdHandler();
-// void mcOnOffHandler();
+void nextScreenButtonHandler();
+void constModeOrMountRequestHandler();
+void sdCardDetectHandler();
 
 #endif // SER_IOEXT_HANDLER_H

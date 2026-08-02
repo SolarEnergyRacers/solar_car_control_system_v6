@@ -107,9 +107,6 @@ DEFINE_CONST(SPI_CLK, 5)
 DEFINE_CONST(SPI_DC, 4)
 DEFINE_CONST(SPI_RST, 21)
 
-DEFINE_CONST(SPI_CS_TFT, 32)
-DEFINE_CONST(SPI_CS_SDCARD, 14)
-
 // https://randomnerdtutorials.com/esp32-pinout-reference-gpios/
 // esp32 GIO pins: X in [Analog,Digital,Pwm], Y in [I,O]
 // DEFINE_CONST(XY_signalName_GPIO00, 0)

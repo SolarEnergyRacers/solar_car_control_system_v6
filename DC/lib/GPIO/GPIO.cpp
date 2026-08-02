@@ -25,20 +25,15 @@ string GPInputOutput::init() {
   bool hasError = false;
   console << "[  ] Init 'GPInputOutput' ...\n";
   // vPortCPUInitializeMutex(&mutex);
-  // Init GPIO pins for CS of SD-card and TFT
-  pinMode(SPI_CS_SDCARD, OUTPUT);
-  pinMode(SPI_CS_TFT, OUTPUT);
+  // Init GPIO pins
+ 
   pinMode(SPI_CLK, OUTPUT);
   pinMode(SPI_MOSI, OUTPUT);
   pinMode(SPI_MISO, INPUT);
-  pinMode(SPI_CS_TFT, OUTPUT);
   pinMode(SPI_RST, OUTPUT);
 
-  digitalWrite(SPI_CS_TFT, HIGH);
-  digitalWrite(SPI_CS_SDCARD, HIGH);
-
   console << "done.\n";
-  return fmt::format("[{}] Set SPI_CS_TFT={} and SPI_CS_SDCARD={}, GPIO initialized.", hasError ? "--" : "ok", SPI_CS_TFT, SPI_CS_SDCARD);
+  return fmt::format("[{}] GPIO initialized.", hasError ? "--" : "ok");
 }
 
 void GPInputOutput::exit() {
