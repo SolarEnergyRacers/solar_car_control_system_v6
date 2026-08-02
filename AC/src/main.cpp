@@ -245,8 +245,25 @@ void app_main(void) {
   // vTaskDelay(10);
 
   //------------------------------------------------------------
+  // SC card
+  msg = sdCard.init();
+  console << msg << NL;
+  display.print(msg + NL);
+  //--- SD card available
+  if (sdCard.isMounted()) {
+    carState.initalize_config();
+    console << carState.print("State after reading SER4CNFG.INI") << NL;
+    sdCard.check_log_file();
+    //------from now config ini values can be used
+  } else {
+    console << "WARN: Skip config read from SD, card not mounted." << NL;
+  }
+
+  SystemInited = true;
+
+  //------------------------------------------------------------
   // IOExt AC
-  msg = ioExt.init_t(1, 10, 10000, base_offset_suspend + 20);
+  msg = ioExt.init_t(1, 10, 4000, base_offset_suspend + 20);
   console << msg << NL;
   ioExt.verboseModeDIn = false;
   ioExt.verboseModeDInHandler = false;
@@ -263,19 +280,6 @@ void app_main(void) {
   console << msg << NL;
   display.print(msg + "\n");
   // vTaskDelay(10);
-
-  SystemInited = true;
-  //------------------------------------------------------------
-  // SC card (needs SystemInited == true)
-  msg = sdCard.init();
-  console << msg << NL;
-  display.print(msg + NL);
-  sdCard.mount();
-  //--- SD card available
-  carState.initalize_config();
-  console << carState.print("State after reading SER4CNFG.INI") << NL;
-  sdCard.check_log_file();
-  //------from now config ini values can be used
 
   stringstream ss;
   ss << NL;
@@ -308,17 +312,6 @@ void app_main(void) {
   console << NL;
   display.print("start\n");
   display.set_DisplayStatus(DISPLAY_STATUS::DRIVER_SETUP);
-  //------------------------------------------------------------
-  // SC card
-  msg = sdCard.init();
-  console << msg << NL;
-  display.print(msg + NL);
-  sdCard.mount();
-  //--- SD card available
-  carState.initalize_config();
-  console << carState.print("State after reading SER4CNFG.INI") << NL;
-  sdCard.check_log_file();
-  //------from now config ini values can be used
 
   esp_task_wdt_init(3600 * 48, false);
   // esp_task_wdt_init(5, false);

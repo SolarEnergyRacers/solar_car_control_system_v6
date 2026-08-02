@@ -16,6 +16,10 @@
 // #include <SD_MMC.h>
 #include <SPI.h>
 
+#include <esp_vfs_fat.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
+
 #include <Adafruit_ILI9341.h>
 #include <CarState.h>
 #include <Console.h>
@@ -29,6 +33,22 @@ extern SPIBus spiBus;
 extern SDCard sdCard;
 
 extern bool SystemInited;
+
+namespace {
+SemaphoreHandle_t sdLifecycleMutex = nullptr;
+
+SemaphoreHandle_t getSdLifecycleMutex() {
+  if (sdLifecycleMutex == nullptr) {
+    sdLifecycleMutex = xSemaphoreCreateMutex();
+  }
+  return sdLifecycleMutex;
+}
+
+void clearStaleSdPathRegistration() {
+  esp_vfs_fat_unregister_path("/sd");
+  esp_vfs_fat_unregister_path("/sdcard");
+}
+} // namespace
 
 string SDCard::re_init() { return init(); }
 
@@ -60,27 +80,56 @@ bool SDCard::update_sd_card_detect() {
 }
 
 void SDCard::end() {
+  bool hasLifecycleSemaphore = false;
+  SemaphoreHandle_t lifecycleMutex = getSdLifecycleMutex();
+  if (lifecycleMutex != nullptr) {
+    xSemaphoreTakeT(lifecycleMutex);
+    hasLifecycleSemaphore = true;
+  }
+
   // Release SD VFS resources so esp_vfs_fat_register can succeed on the next mount.
-  // Must be called with spiBus.mutex held.
+  xSemaphoreTakeT(spiBus.mutex);
+  try {
+    if (dataFile) {
+      dataFile.flush();
+      dataFile.close();
+      dataFile = (fs::File)0;
+    }
+  } catch (...) {
+    dataFile = (fs::File)0;
+  }
   SD.end();
+  clearStaleSdPathRegistration();
+  xSemaphoreGive(spiBus.mutex);
   mounted = false;
+
+  if (hasLifecycleSemaphore)
+    xSemaphoreGive(lifecycleMutex);
 }
 
-bool SDCard::isMounted() { return update_sd_card_detect() && mounted; }
+bool SDCard::isMounted() { return mounted; }
 
 bool SDCard::mount() {
-  if (!SystemInited)
-    return 0;
+  bool hasLifecycleSemaphore = false;
+  SemaphoreHandle_t lifecycleMutex = getSdLifecycleMutex();
+  if (lifecycleMutex != nullptr) {
+    xSemaphoreTakeT(lifecycleMutex);
+    hasLifecycleSemaphore = true;
+  }
 
   if (isMounted()) {
     carState.EngineerInfo = "  SD card already mounted.";
     console << "     " << carState.EngineerInfo << NL;
+    if (hasLifecycleSemaphore)
+      xSemaphoreGive(lifecycleMutex);
     return true;
   }
   if (!update_sd_card_detect()) {
     carState.EngineerInfo = "  No SD card detected!";
     console << "     " << carState.EngineerInfo << NL;
     mounted = false;
+    if (hasLifecycleSemaphore)
+      xSemaphoreGive(lifecycleMutex);
     return false;
   }
   bool hasSemaphore = false; // prevent SemaphoreGive when taken by other task
@@ -90,17 +139,20 @@ bool SDCard::mount() {
     mounted = false;
     int attempts = 0;
     bool mounted_temp = false;
+    vTaskDelay(50);
     xSemaphoreTakeT(spiBus.mutex);
     hasSemaphore = true;
     // Unconditional SD.end() to unregister any stale FAT VFS state from a previous
     // failed SD.begin(), preventing esp_vfs_fat_register failed 0x(101).
     SD.end();
+    clearStaleSdPathRegistration();
     while (!mounted_temp && attempts++ < 3) {
       // max_files=1: only 1 log file open at a time. Keeps FAT VFS context
       // allocation ~1 KB instead of ~26 KB, preventing heap fragmentation failures.
       mounted_temp = SD.begin(SPI_CS_SDCARD, spiBus.spi, 4000000, "/sd", 1);
       if (!mounted_temp) {
         SD.end();
+        clearStaleSdPathRegistration();
         vTaskDelay(10);
       }
     }
@@ -136,6 +188,8 @@ bool SDCard::mount() {
       carState.EngineerInfo = "  SD card mounted";
       console << "     " << carState.EngineerInfo << ", " << attempts << " attempts" << NL;
       mounted = true;
+      if (hasLifecycleSemaphore)
+        xSemaphoreGive(lifecycleMutex);
       return true;
     }
   } catch (exception &ex) {
@@ -146,22 +200,28 @@ bool SDCard::mount() {
   }
   carState.EngineerInfo = "ERROR: Unable to mount sdCard";
   console << "     " << carState.EngineerInfo << NL;
+  if (hasLifecycleSemaphore)
+    xSemaphoreGive(lifecycleMutex);
   return false;
 }
 
 bool SDCard::close_log_file() {
-  if (!isMounted()) {
-    console << "  SD card not mounted (close_log_file failed)" << NL;
-    return false;
-  }
+  bool hasSemaphore = false;
   xSemaphoreTakeT(spiBus.mutex);
+  hasSemaphore = true;
   try {
-    dataFile.flush();
-    dataFile.close();
+    if (dataFile) {
+      dataFile.flush();
+      dataFile.close();
+      dataFile = (fs::File)0;
+    }
   } catch (...) {
+    if (hasSemaphore)
+      xSemaphoreGive(spiBus.mutex);
     return false;
   }
-  xSemaphoreGive(spiBus.mutex);
+  if (hasSemaphore)
+    xSemaphoreGive(spiBus.mutex);
   return true;
 }
 
@@ -267,36 +327,65 @@ bool SDCard::check_log_file() {
 }
 
 bool SDCard::unmount() {
+  bool hasLifecycleSemaphore = false;
+  SemaphoreHandle_t lifecycleMutex = getSdLifecycleMutex();
+  if (lifecycleMutex != nullptr) {
+    xSemaphoreTakeT(lifecycleMutex);
+    hasLifecycleSemaphore = true;
+  }
+
   if (!update_sd_card_detect()) {
     carState.EngineerInfo = "No mounted SD card detected to unmount!";
     console << "     " << carState.EngineerInfo << NL;
+    // Card can already be physically removed. Ensure SD stack is reset.
+    xSemaphoreTakeT(spiBus.mutex);
+    try {
+      if (dataFile) {
+        dataFile.flush();
+        dataFile.close();
+        dataFile = (fs::File)0;
+      }
+    } catch (...) {
+      dataFile = (fs::File)0;
+    }
+    SD.end();
+    clearStaleSdPathRegistration();
+    xSemaphoreGive(spiBus.mutex);
     mounted = false;
+    if (hasLifecycleSemaphore)
+      xSemaphoreGive(lifecycleMutex);
     return false;
   }
-  if (close_log_file()) {
-    carState.EngineerInfo = "SD card unmounting...";
-    console << "     " << carState.EngineerInfo << NL;
-    bool hasSemaphore = false;
+  // Best effort close; unmount should continue even if no file is open.
+  close_log_file();
+  carState.EngineerInfo = "SD card unmounting...";
+  console << "     " << carState.EngineerInfo << NL;
+  try {
+    xSemaphoreTakeT(spiBus.mutex);
     try {
-      xSemaphoreTakeT(spiBus.mutex);
-      hasSemaphore = true;
-      SD.end();
-      xSemaphoreGive(spiBus.mutex);
-      hasSemaphore = false;
-      carState.EngineerInfo = "SD card UNmounted.";
-      console << "     " << carState.EngineerInfo << NL;
-      mounted = false;
-    } catch (exception &ex) {
-      if (hasSemaphore)
-        xSemaphoreGive(spiBus.mutex);
-      carState.EngineerInfo = "ERROR unmounting SD card: ";
-      console << "     " << carState.EngineerInfo << ex.what() << NL;
-      return false;
+      if (dataFile) {
+        dataFile.flush();
+        dataFile.close();
+        dataFile = (fs::File)0;
+      }
+    } catch (...) {
+      dataFile = (fs::File)0;
     }
-  } else {
-    carState.EngineerInfo = "SD card already unmounted.";
+    SD.end();
+    clearStaleSdPathRegistration();
+    xSemaphoreGive(spiBus.mutex);
+    carState.EngineerInfo = "SD card UNmounted.";
     console << "     " << carState.EngineerInfo << NL;
+    mounted = false;
+  } catch (exception &ex) {
+    carState.EngineerInfo = "ERROR unmounting SD card: ";
+    console << "     " << carState.EngineerInfo << ex.what() << NL;
+    if (hasLifecycleSemaphore)
+      xSemaphoreGive(lifecycleMutex);
+    return false;
   }
+  if (hasLifecycleSemaphore)
+    xSemaphoreGive(lifecycleMutex);
   return true;
 }
 

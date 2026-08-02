@@ -112,8 +112,6 @@ void sdCardDetectHandler() {
 	if (!carState.SdCardDetect && sdCardDetectOld) {
 		carState.EngineerInfo = "SD card removed.";
 		console << "     " << carState.EngineerInfo << NL;
-		xSemaphoreTakeT(spiBus.mutex);
 		sdCard.end();
-		xSemaphoreGive(spiBus.mutex);
 	}
 }
