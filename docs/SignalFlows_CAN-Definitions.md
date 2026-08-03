@@ -1,10 +1,24 @@
 # Signals and Media in SER V6
 
-Version 2023.01.01
+Version 
+- 2023.01.01
+- 2026.08.01
 
-[github: issues from SER v3](https://github.com/SolarEnergyRacers/solar_car_control_system_v3/issues/)
+[github: issues from SER v3](https://github.com/SolarEnergyRacers/solar_car_control_system_v3/issues/)  
 [github: issues from SER v6](https://github.com/SolarEnergyRacers/solar_car_control_system_v6/issues/)
 
+## Device Base Addresses
+
+| Device                                                  | Used | Address   |
+| ------------------------------------------------------- | ---- | --------- |
+| [MC_BASE_ADDR](#mc---motor-controller)                  | ❌    | **0x500** |
+| [MPPT1_BASE_ADDR](#mppt---maximum-power-point-tracking) | ✅    | **0x600** |
+| [MPPT2_BASE_ADDR](#mppt---maximum-power-point-tracking) | ✅    | **0x610** |
+| [MPPT3_BASE_ADDR](#mppt---maximum-power-point-tracking) | ✅    | **0x620** |
+| [AC_BASE_ADDR](#ac---auxiliary-controller)              | ✅    | **0x630** |
+| [DC_BASE_ADDR](#dc---drive-controller)                  | ✅    | **0x660** |
+| [BMS_BASE_ADDR](#bms---battery-management-system)       | ✅    | **0x700** |
+  
 ## Communication between Parts
 ### Communication AC - DC
 
@@ -63,13 +77,78 @@ The id (11 bits) and data (64 bits) parts of the CAN frame get transmitted
 The id is encoded into two chars, aligned by least significant bit.
 The 5 unused bits are set to 1 to make the start of the CAN frame easier to identify.
 
-\[ char 0 \]  \[ char 1 \]
+| char 0   | char 1   |
+| -------- | -------- |
+| 11111abc | defghijk |
 
-  11111abc    defghijk
-
-a = MSB
-
+a = MSB  
 k = LSB
+
+```text
+Raw forwarded CAN frame
++----------------------+----------------------------------+
+| CAN ID (11 bits)     | DATA (64 bits)                   |
++----------------------+----------------------------------+
+| id10 ... id0         | b63 b62 ... b1 b0                |
++----------------------+----------------------------------+
+
+Serialized ID envelope (2 chars, LSB aligned)
++----------+----------+
+| char 0   | char 1   |
++----------+----------+
+|11111abc  |defghijk  |
++----------+----------+
+      a = id10 (MSB)
+      ...
+      k = id0  (LSB)
+```
+
+Worked example (CAN ID = 0x661):
+
+```text
+11-bit ID (id10..id0): 11001100001
+
+Mapping:
+      abc      = 110
+      defghijk = 01100001
+
+Serialized chars:
+      char0 = 11111abc  = 11111110 = 0xFE
+      char1 = defghijk  = 01100001 = 0x61
+
+Reconstruct ID:
+      id = ((char0 & 0x07) << 8) | char1
+             = ((0xFE  & 0x07) << 8) | 0x61
+             = (0x06 << 8) | 0x61
+             = 0x661
+```
+
+Data frame partitions (64-bit payload):
+
+```text
+┌───────────────────┬───────────────────────────────────────────────────────────────┐
+│ 64-bit partition  │                              [0]                              │
+│ (u64, i64)        ├───────────────────────────────────────────────────────────────┤
+│              bit  │63                            ···                             0│
+├───────────────────┼───────────────────────────────┬───────────────────────────────┤
+│ 32-bit partition  │            [1]                │            [0]                │
+│ (u32, i32, f32)   ├───────────────────────────────┼───────────────────────────────┤
+│              bit  │63         ...               32│31                         ...0│
+├───────────────────┼───────────────┬───────────────┼───────────────┬───────────────┤
+│ 16-bit partition  │      W3       │      W2       │      W1       │      W0       │
+│ (u16, i16)        ├───────────────┼───────────────┼───────────────┼───────────────┤
+│              bit  │63    ...    48│47    ...    32│31    ...    16│15    ...     0│
+├───────────────────┼───────┬───────┼───────┬───────┼───────┬───────┼───────┬───────┤
+│ 8-bit partition   │  B7   │  B6   │  B5   │  B4   │  B3   │  B2   │  B1   │  B0   │
+│ (u8, i8)          ├───────┼───────┼───────┼───────┼───────┼───────┼───────┼───────┤
+│              bit  │63...56│55...48│47...40│39...32│31...24│23...16│15... 8│7 ... 0│
+├───────────────────┼───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┤
+│ 1-bit partition   │b63                      ...                                 b0│
+│ (b64 as uint64_t) ├───────────────────────────────────────────────────────────────┤
+│              bit  │63                       ···                                  0│
+└───────────────────┴───────────────────────────────────────────────────────────────┘
+                     MSB  ◄───────────────────────────────────────────────────►  LSB
+```
 
 #### Data Frames
 
@@ -129,16 +208,19 @@ The CAN frames to be transmitted can be defined in property `radio_packages` of 
 - Break pedal (to DC)
 
 ## CAN Signals
-
-### BMS _ Battery Management System
+### BMS - Battery Management System
 
 BMS_BASE_ADDR: **0x700**
 
-### MPPT
+(see docs)
+
+### MPPT - Maximum Power Point Tracking
 
 MPPT1_BASE_ADDR: **0x600**
 MPPT2_BASE_ADDR: **0x610**
 MPPT3_BASE_ADDR: **0x620**
+
+(see docs)
 
 ### DC - Drive Controller
 

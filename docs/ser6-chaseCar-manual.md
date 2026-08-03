@@ -112,6 +112,7 @@ c [-|s|p] _ _ _ _ _ _ constant mode on (-:off|s:speed|p:power)
 | U                | unmount sdcard and disable logging                                                    |
 | ~H~              | ~memory_info~                                                                         |
 | k kp ki kd       | update PID constants                                                                  |
+| G [0-7]          | GlideMode (0...7: 0:glide, 3:half glide/half recup, )7:recuperation                   |
 | I                | scan I2C devices                                                                      |
 | i                | IO ReadAll                                                                            |
 | ii               | verbose IO input view                                                                 |

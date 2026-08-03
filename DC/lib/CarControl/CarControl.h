@@ -13,8 +13,6 @@
 #include <global_definitions.h>
 #include "../definitions.h"
 
-#define CONST_SPEED_DECELERATION false
-
 class CarControl : public AbstractTask {
 
 public:
@@ -35,8 +33,7 @@ public:
   void set_DAC();
 
   bool read_paddles();
-  bool read_PLUS_MINUS();
-  bool verboseMode = false;
+   bool verboseMode = false;
   bool verboseModeDebug = false;
 
 private:

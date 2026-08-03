@@ -78,6 +78,7 @@ void CarControl::task(void *pvParams) {
                                             (uint8_t)(carState.Kp * 4),       // Kp
                                             (uint8_t)(carState.Ki * 10),      // Ki
                                             (uint8_t)(carState.Kd * 10),      // Kd
+                                            (uint8_t) carState.GlideMode,     // 0...7: 0:glide, 3:half glide/half recup, 7:recuperation
                                             (bool)constantMode,               // switch constant mode Speed / Power
                                             (bool)carState.ConfirmDriverInfo, // got confirm of driver about info
                                             (bool)force                       // force or not

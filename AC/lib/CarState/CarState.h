@@ -97,6 +97,7 @@ class CarState {
 
 public:
   CarState() {
+    DriverName = "Nobody";
     Speed = 0;
     Acceleration = 0;
     Deceleration = 0;
@@ -144,6 +145,7 @@ public:
   bool ButtonConstantModeOFF;
   bool ButtonConstant_v_P;
 
+  string DriverName;
   // physical car data (measurement values)
   uint8_t Speed;          // ADC
   uint16_t Potentiometer; // ADC potentiometer from switch board
@@ -227,6 +229,7 @@ public:
   double Kp; // proportional
   double Ki; // integral
   double Kd; // differential
+  uint8_t GlideMode; // 0...7: 0:glide, 3:half glide/half recup, 7:recuperation
 
   // [Dynamic]
   int ConstSpeedIncrease; // [km/h] per click

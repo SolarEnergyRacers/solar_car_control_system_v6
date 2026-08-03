@@ -227,9 +227,10 @@ public:
   double Kd = 0.01; // differential
 
   // [Dynamic]
-  int PaddleDamping = 50;   // reduced from 160 for faster response (0...ca.30000)
+  int PaddleDamping = 50;  // reduced from 160 for faster response (0...ca.30000)
   int StartOffset_acc = 0; // 0 ... 65535: offset calculated for paddle at start
   int StartOffset_dec = 0; // 0 ... 65535: offset calculated for paddle at start
+  uint8_t GlideMode = 0;   // 0 ... 7: 0:glide, 3:half glide/half recup, 7:recuperation
 
   int ButtonControlModeIncrease;      // on click means ButtonControlModeIncrease units
   int ButtonControlModeIncreaseLow;   // ButtonControlModeIncrease low mode
