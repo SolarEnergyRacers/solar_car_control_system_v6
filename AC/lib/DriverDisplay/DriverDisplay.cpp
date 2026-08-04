@@ -347,6 +347,8 @@ void DriverDisplay::task(void *pvParams) {
       draw_display_background();
       BatteryVoltage.showLabel(display.tft);
       BatteryVoltage.set_epsilon(0.1);
+      BatteryTemp.showLabel(display.tft);
+      BatteryTemp.set_epsilon(0.1);
       BatteryOn.showLabel(display.tft);
       PhotoVoltaicCurrent.showLabel(display.tft);
       PhotoVoltaicCurrent.set_epsilon(0.1);
@@ -427,6 +429,10 @@ void DriverDisplay::task(void *pvParams) {
       BatteryVoltage.Value = carState.BatteryVoltage;
       if (BatteryVoltage.is_changed() || justInited) {
         BatteryVoltage.showValue(display.tft);
+      }
+      BatteryTemp.Value = carState.Tmax;
+      if (BatteryTemp.is_changed() || justInited) {
+        BatteryTemp.showValue(display.tft);
       }
       BatteryOn.Value = carState.BatteryOn;
       if (BatteryOn.is_changed() || justInited) {

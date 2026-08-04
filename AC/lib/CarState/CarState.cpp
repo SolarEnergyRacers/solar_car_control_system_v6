@@ -146,34 +146,62 @@ const string CarState::print(string msg, bool withColors) {
   ss << "====uptime:" << globalTime.strUptime() << "s====" << globalTime.strTime("%F %R") << "==\n";
   if (msg.length() > 0)
     ss << msg << NL;
-  ss << "Display Status ........ " << DISPLAY_STATUS_str[(int)displayStatus] << NL << "Driver Name ........... " << DriverName << NL
-     << "Potentiometer ......... " << (int)Potentiometer << NL << "Speed ................. " << (int)Speed << NL
-     << "Acceleration locked ... " << BOOL_str[(int)(AccelerationLocked)] << NL << "Acceleration .......... " << (int)Acceleration << NL
-     << "Deceleration .......... " << (int)Deceleration << NL << "Acceleration Display .. " << (int)AccelerationDisplay << NL
-     << "Break pedal pressed ... " << BOOL_str[(int)(BreakPedal)] << NL << NL << "Battery On............. " << BatteryOn << NL
-     << "Battery Voltage ....... " << BatteryVoltage << NL << "Battery Current........ " << BatteryCurrent << NL
-     << "Battery Errors ........." << batteryErrorsAsString(true) << NL << "Battery Precharge State "
-     << PRECHARGE_STATE_str[(int)(PrechargeState)] << NL << "Photo Voltaic On ...... " << PhotoVoltaicOn << NL << "MPPT1 Current ......... "
-     << Mppt1Current << NL << "MPPT2 Current ......... " << Mppt2Current << NL << "MPPT3 Current ......... " << Mppt3Current << NL
-     << "Photo Voltaic Current . " << PhotoVoltaicCurrent << NL << "Photo Reference Cell .. " << ReferenceSolarCell << NL
-     << "Photo Voltaic On ...... " << PhotoVoltaicOn << NL << "Motor On .............. " << MotorOn << NL << "Motor Current ......... "
-     << MotorCurrent << NL << "Drive Direction ....... " << DRIVE_DIRECTION_str[(int)(DriveDirection)]
-     << NL
+  ss << "Display Status ........ " << DISPLAY_STATUS_str[(int)displayStatus] << NL
+    << "Driver Name ........... " << DriverName << NL
+    << "Potentiometer ......... " << (int)Potentiometer << NL
+    << "Speed ................. " << (int)Speed << NL
+    << "Acceleration locked ... " << BOOL_str[(int)(AccelerationLocked)] << NL
+    << "Acceleration .......... " << (int)Acceleration << NL
+    << "Deceleration .......... " << (int)Deceleration << NL
+    << "Acceleration Display .. " << (int)AccelerationDisplay << NL
+    << "Break pedal pressed ... " << BOOL_str[(int)(BreakPedal)] << NL
+    << NL
+    << "Battery On............. " << BatteryOn << NL
+    << "Battery Voltage ....... " << BatteryVoltage << NL
+    << "Battery Current........ " << BatteryCurrent << NL
+    << "Battery Errors ........." << batteryErrorsAsString(true) << NL
+    << "Battery Precharge State "
+    << PRECHARGE_STATE_str[(int)(PrechargeState)] << NL
+    << "Photo Voltaic On ...... " << PhotoVoltaicOn << NL
+    << "MPPT1 Current ......... " << Mppt1Current << NL
+    << "MPPT2 Current ......... " << Mppt2Current << NL
+    << "MPPT3 Current ......... " << Mppt3Current << NL
+    << "MPPT4 Current ......... " << Mppt4Current << NL
+    << "Photo Voltaic Current . " << PhotoVoltaicCurrent << NL
+    << "Photo Reference Cell .. " << ReferenceSolarCell << NL
+
+    << "Photo Voltaic On ...... " << PhotoVoltaicOn << NL
+    << "Motor On .............. " << MotorOn << NL
+    << "Motor Current ......... " << MotorCurrent << NL
+    << "Drive Direction ....... " << DRIVE_DIRECTION_str[(int)(DriveDirection)] << NL
+
      // << "Green Light ........... " << GreenLight << NL
-     << NL << "Constant Mode ......... " << CONSTANT_MODE_str[(int)(ConstantMode)] << NL << "Target Speed .......... " << (int)TargetSpeed
-     << NL << "Target Power .......... " << (int)TargetPower << NL << "EngineerInfo Last ..... " << "[NORMAL] "
-     << getCleanString(EngineerInfo) << NL << "DriverInfo Last ....... " << "[" << INFO_TYPE_str[(int)DriverInfoType] << "] "
-     << getCleanString(DriverInfo) << NL << "Speed Arrow ........... " << SPEED_ARROW_str[(int)SpeedArrow] << NL
-     << "IO .................... " << printIOs("", false) << NL << NL << "SD Card detected....... " << BOOL_str[(int)(SdCardDetect)] << "("
-     << SdCardDetect << "), mounted:" << BOOL_str[(int)(sdCard.isMounted())] << NL << "Log file name ......... " << LogFilename << NL
+
+     << NL
+    << "Constant Mode ......... " << CONSTANT_MODE_str[(int)(ConstantMode)] << NL
+    << "Target Speed .......... " << (int)TargetSpeed << NL
+		 << "Target Power .......... " << (int)TargetPower << NL
+		 << "EngineerInfo Last ..... " << "[NORMAL] " << getCleanString(EngineerInfo) << NL
+		
+		 << "DriverInfo Last ....... " << "[" << INFO_TYPE_str[(int)DriverInfoType] << "] "
+     << getCleanString(DriverInfo) << NL
+		 << "Speed Arrow ........... " << SPEED_ARROW_str[(int)SpeedArrow] << NL
+     << "IO .................... " << printIOs("", false) << NL
+		 << NL
+		 << "SD Card detected....... " << BOOL_str[(int)(SdCardDetect)] << "("
+     << SdCardDetect << "), mounted:" << BOOL_str[(int)(sdCard.isMounted())] << NL
+		 << "Log file name ......... " << LogFilename << NL
      << "Log file period [h].... " << LogFilePeriod << NL << "Log file interval [ms]. " << LogInterval << NL
      << NL
      // [PID]
-     << "Kp .................... " << Kp << NL << "Ki .................... " << Ki << NL << "Kd .................... " << Kd << NL
+     << "Kp .................... " << Kp << NL 
+     << "Ki .................... " << Ki << NL 
+     << "Kd .................... " << Kd << NL
      << "Glide Mode ............ " << (int)GlideMode << " of 7"
      << NL
      // [Dynamic]
-     << "Const speed increase .. " << ConstSpeedIncrease << NL << "Const power increase .. " << ConstPowerIncrease << NL
+     << "Const speed increase .. " << ConstSpeedIncrease << NL 
+     << "Const power increase .. " << ConstPowerIncrease << NL
      << NL
      // [Communication]
      << "Serial 1 baud rate .... " << Serial1Baudrate << NL << "Serial 2 baud rate .... " << Serial2Baudrate << NL
@@ -279,6 +307,7 @@ const string CarState::csv(const string msg, bool withHeader) {
        << "mppt1Current, "
        << "mppt2Current, "
        << "mppt3Current, "
+       << "mppt4Current, "
        << "voltageMin, "
        << "voltageAvg, "
        << "voltageMax, "

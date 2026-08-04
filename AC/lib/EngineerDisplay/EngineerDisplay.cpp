@@ -81,7 +81,7 @@ void EngineerDisplay::draw_display_background() {
   Mppt1.showLabel(display.tft);
   Mppt2.showLabel(display.tft);
   Mppt3.showLabel(display.tft);
-  // Mppt4.showLabel(display.tft);
+  Mppt4.showLabel(display.tft);
   EngineerInfo.showLabel(display.tft);
   BatteryStatus.showLabel(display.tft);
   BmsStatus.showLabel(display.tft);
@@ -140,6 +140,7 @@ void EngineerDisplay::task(void *pvParams) {
       Mppt1.Value = carState.Mppt1Current;
       Mppt2.Value = carState.Mppt2Current;
       Mppt3.Value = carState.Mppt3Current;
+      Mppt4.Value = carState.Mppt4Current;
 
       VoltageMin.Value = carState.Umin;
       VoltageAvg.Value = carState.Uavg;
@@ -152,7 +153,7 @@ void EngineerDisplay::task(void *pvParams) {
       Mppt1.showValue(display.tft);
       Mppt2.showValue(display.tft);
       Mppt3.showValue(display.tft);
-      // Mppt4.showValue(display.tft);
+      Mppt4.showValue(display.tft);
 
       BatteryStatus.showValue(display.tft);
       BmsStatus.showValue(display.tft);

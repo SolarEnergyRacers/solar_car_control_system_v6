@@ -286,6 +286,17 @@ void CANBus::handle_rx_packet(CANPacket packet) {
             if (verboseModeCanIn) {
                 console << ", Mppt3Cur=" << carState.Mppt3Current << NL;
             }
+            break; 
+        case MPPT4_BASE_ADDR | 0x01:
+            carState.Mppt4Current = packet.getData_f32(1);
+            carState.PhotoVoltaicCurrent =
+                carState.Mppt1Current + carState.Mppt2Current + carState.Mppt3Current + carState.Mppt4Current;
+
+            // MPPT4 Output Voltage V packet.getData_f32(0)
+            // MPPT4 Output Current A packet.getData_f32(1)
+            if (verboseModeCanIn) {
+                console << ", Mppt4Cur=" << carState.Mppt4Current << NL;
+            }
             break;
         case MPPT1_BASE_ADDR | 0x02:
             carState.T1 = packet.getData_f32(0);
@@ -303,6 +314,12 @@ void CANBus::handle_rx_packet(CANPacket packet) {
             carState.T3 = packet.getData_f32(0);
             if (verboseModeCanIn) {
                 console << "T3=" << carState.T3 << NL;
+            }
+            break;
+        case MPPT4_BASE_ADDR | 0x02:
+            carState.T4 = packet.getData_f32(0);
+            if (verboseModeCanIn) {
+                console << "T4=" << carState.T4 << NL;
             }
             break;
             // case MC_BASE_ADDR | 0x09: // ERPM, Current, Duty Cycle

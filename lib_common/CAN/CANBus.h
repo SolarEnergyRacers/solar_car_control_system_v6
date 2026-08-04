@@ -68,6 +68,14 @@
 #define Mppt3Base0x05 MPPT3_BASE_ADDR | 0x05  // MPPT_STATUS
 #define Mppt3Base0x06 MPPT3_BASE_ADDR | 0x06  // MPPT_POWER_CONN
 
+#define Mppt4Base0x00 MPPT4_BASE_ADDR | 0x00  // MPPT_INPUT
+#define Mppt4Base0x01 MPPT4_BASE_ADDR | 0x01  // MPPT_OUTPUT
+#define Mppt4Base0x02 MPPT4_BASE_ADDR | 0x02  // MPPT_TEMP
+#define Mppt4Base0x03 MPPT4_BASE_ADDR | 0x03  // MPPT_AUX_POWER
+#define Mppt4Base0x04 MPPT4_BASE_ADDR | 0x04  // MPPT_LIMITS
+#define Mppt4Base0x05 MPPT4_BASE_ADDR | 0x05  // MPPT_STATUS
+#define Mppt4Base0x06 MPPT4_BASE_ADDR | 0x06  // MPPT_POWER_CONN
+
 // #define McBase0x09 MC_BASE_ADDR | 0x09 // ERPM, Current, Duty Cycle
 // #define McBase0x0e MC_BASE_ADDR | 0x0e // Ah Used, Ah Charged
 // #define McBase0x0f MC_BASE_ADDR | 0x0f // Wh Used, Wh Charged

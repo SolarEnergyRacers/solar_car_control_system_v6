@@ -15,7 +15,8 @@ Version
 | [MPPT1_BASE_ADDR](#mppt---maximum-power-point-tracking) | ✅    | **0x600** |
 | [MPPT2_BASE_ADDR](#mppt---maximum-power-point-tracking) | ✅    | **0x610** |
 | [MPPT3_BASE_ADDR](#mppt---maximum-power-point-tracking) | ✅    | **0x620** |
-| [AC_BASE_ADDR](#ac---auxiliary-controller)              | ✅    | **0x630** |
+| [MPPT4_BASE_ADDR](#mppt---maximum-power-point-tracking) | ✅    | **0x630** |
+| [AC_BASE_ADDR](#ac---auxiliary-controller)              | ✅    | **0x650** |
 | [DC_BASE_ADDR](#dc---drive-controller)                  | ✅    | **0x660** |
 | [BMS_BASE_ADDR](#bms---battery-management-system)       | ✅    | **0x700** |
   
@@ -219,7 +220,7 @@ BMS_BASE_ADDR: **0x700**
 MPPT1_BASE_ADDR: **0x600**
 MPPT2_BASE_ADDR: **0x610**
 MPPT3_BASE_ADDR: **0x620**
-
+MPPT4_BASE_ADDR: **0x630**
 (see docs)
 
 ### DC - Drive Controller
@@ -273,7 +274,7 @@ Interval: ?ms
 
 ### AC - Auxiliary Controller
 
-AC_BASE_ADDR: **0x630**
+AC_BASE_ADDR: **0x640**
 
 #### CAN Address Offset: 0x00 - Display Data
 
@@ -285,6 +286,7 @@ Interval: 1000ms
 | u_8    | [2]    | 2      | Kp [int (float * 100)]                |
 | u_8    | [3]    | 3      | Ki [int (float * 100)]                |
 | u_8    | [4]    | 4      | Kd [int (float * 100)]                |
+| u_8    | [5]    | 4      | GlideMode                             |
 | b_33   | [33]   | 5      | ConstantMode: true-SPEED, false-POWER |
 
 ### MC - Motor Controller

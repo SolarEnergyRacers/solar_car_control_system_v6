@@ -50,17 +50,18 @@ private:
   DisplayValue<float> Mppt1 = DisplayValue<float>(160, 10, "MPPT-1:", "%5.2f", "A");
   DisplayValue<float> Mppt2 = DisplayValue<float>(160, 30, "MPPT-2:", "%5.2f", "A");
   DisplayValue<float> Mppt3 = DisplayValue<float>(160, 50, "MPPT-3:", "%5.2f", "A");
-  // DisplayValue<float> Mppt4 = DisplayValue<float>(160, 70, "MPPT-4:", "%5.2f", "A");
+  DisplayValue<float> Mppt4 = DisplayValue<float>(160, 70, "MPPT-4:", "%5.2f", "A");
 
   // Battery status [OK/Error]
   DisplayValue<string> BatteryStatus = DisplayValue<string>(4, 70, "Battery:", "%18s", "");
   // BMS error [string]
   DisplayValue<string> BmsStatus = DisplayValue<string>(4, 90, "BMS Msg:", "%18s", "");
 
-  // MPPT1...3 temperature [°C]
+  // MPPT1...4 temperature [°C]
   DisplayValue<float> Temperature1 = DisplayValue<float>(168, 110, "MPPT-1:", "%4.1f", "C");
   DisplayValue<float> Temperature2 = DisplayValue<float>(168, 130, "MPPT-2:", "%4.1f", "C");
   DisplayValue<float> Temperature3 = DisplayValue<float>(168, 150, "MPPT-3:", "%4.1f", "C");
+  DisplayValue<float> Temperature4 = DisplayValue<float>(168, 190, "MPPT-4:", "%4.1f", "C");
   // Motorcontroller temperature [°C]
   //  DisplayValue<float> Temperature4 = DisplayValue<float>(168, 190, "T-4   :", "%4.1f", "C");
   // Min and max BMS cell temperature [°C]
