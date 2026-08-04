@@ -173,6 +173,7 @@ public:
   float Mppt1Current; // CAN
   float Mppt2Current; // CAN
   float Mppt3Current; // CAN
+  float Mppt4Current; // CAN
 
   float Umin; // CAN
   float Uavg; // CAN
@@ -181,7 +182,8 @@ public:
   float T1; // MPPT1
   float T2; // MPPT2
   float T3; // MPPT3
-  // float T4; // Motorcontroller
+  float T4; // MPPT4
+  // float T5; // Motorcontroller
   float Tmin; // max. cell temperatur from BMS
   float Tmax; // max. cell temperatur from BMS
 
@@ -226,9 +228,9 @@ public:
   int SleepTimeIOExt = 400; // [ms]
 
   // [PID]
-  double Kp; // proportional
-  double Ki; // integral
-  double Kd; // differential
+  double Kp;         // proportional
+  double Ki;         // integral
+  double Kd;         // differential
   uint8_t GlideMode; // 0...7: 0:glide, 3:half glide/half recup, 7:recuperation
 
   // [Dynamic]

@@ -167,7 +167,7 @@ void CANBus::handle_rx_packet(CANPacket packet) {
 
   case MPPT1_BASE_ADDR | 0x1:
     carState.Mppt1Current = packet.getData_f32(1);
-    carState.PhotoVoltaicCurrent = carState.Mppt1Current + carState.Mppt2Current + carState.Mppt3Current;
+    carState.PhotoVoltaicCurrent = carState.Mppt1Current + carState.Mppt2Current + carState.Mppt3Current + carState.Mppt4Current;
 
     // MPPT1 Output Voltage V packet.getData_f32(0)
     // MPPT1 Output Current A packet.getData_f32(1)
@@ -178,7 +178,7 @@ void CANBus::handle_rx_packet(CANPacket packet) {
     break;
   case MPPT2_BASE_ADDR | 0x1:
     carState.Mppt2Current = packet.getData_f32(1);
-    carState.PhotoVoltaicCurrent = carState.Mppt1Current + carState.Mppt2Current + carState.Mppt3Current;
+    carState.PhotoVoltaicCurrent = carState.Mppt1Current + carState.Mppt2Current + carState.Mppt3Current + carState.Mppt4Current;
 
     // MPPT2 Output Voltage V packet.getData_f32(0)
     // MPPT2 Output Current A packet.getData_f32(1)
@@ -189,12 +189,22 @@ void CANBus::handle_rx_packet(CANPacket packet) {
     break;
   case MPPT3_BASE_ADDR | 0x1:
     carState.Mppt3Current = packet.getData_f32(1);
-    carState.PhotoVoltaicCurrent = carState.Mppt1Current + carState.Mppt2Current + carState.Mppt3Current;
+    carState.PhotoVoltaicCurrent = carState.Mppt1Current + carState.Mppt2Current + carState.Mppt3Current + carState.Mppt4Current;
 
     // MPPT3 Output Voltage V packet.getData_f32(0)
     // MPPT3 Output Current A packet.getData_f32(1)
     if (verboseModeCanIn) {
       console << ", Mppt3Cur=" << carState.Mppt3Current << NL;
+    }
+    break;
+  case MPPT4_BASE_ADDR | 0x1:
+    carState.Mppt4Current = packet.getData_f32(1);
+    carState.PhotoVoltaicCurrent = carState.Mppt1Current + carState.Mppt2Current + carState.Mppt3Current + carState.Mppt4Current;
+
+    // MPPT4 Output Voltage V packet.getData_f32(0)
+    // MPPT4 Output Current A packet.getData_f32(1)
+    if (verboseModeCanIn) {
+      console << ", Mppt4Cur=" << carState.Mppt4Current << NL;
     }
     break;
   case MPPT1_BASE_ADDR | 0x2:
@@ -214,6 +224,13 @@ void CANBus::handle_rx_packet(CANPacket packet) {
     if (verboseModeCanIn) {
       console << "T3=" << carState.T3 << NL;
     }
+    break;
+  case MPPT4_BASE_ADDR | 0x2:
+    carState.T4 = packet.getData_f32(0);
+    if (verboseModeCanIn) {
+      console << "T4=" << carState.T4 << NL;
+    }
+    break;
   }
 }
 

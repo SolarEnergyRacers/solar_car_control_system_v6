@@ -21,12 +21,13 @@
 #define LIFESIGN_FREQUENCY_MS 500
 
 // #define MC_BASE_ADDR 0x500
-#define BMS_BASE_ADDR 0x700
 #define MPPT1_BASE_ADDR 0x600
 #define MPPT2_BASE_ADDR 0x610
 #define MPPT3_BASE_ADDR 0x620
+#define MPPT4_BASE_ADDR 0x630
 #define AC_BASE_ADDR 0x650
 #define DC_BASE_ADDR 0x660
+#define BMS_BASE_ADDR 0x700
 
 /* CAN Frame max ages
  *  ------------------

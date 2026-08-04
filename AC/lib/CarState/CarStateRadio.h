@@ -37,6 +37,7 @@ private:
       (uint16_t)Mppt1Base0x01, //
       (uint16_t)Mppt2Base0x01, //
       (uint16_t)Mppt3Base0x01, //
+      (uint16_t)Mppt4Base0x01, //
       (uint16_t)BmsBase0x00,   //
       (uint16_t)BmsBase0x01,   //
       (uint16_t)BmsBase0x02,   //
@@ -78,6 +79,8 @@ private:
       (uint16_t)Mppt2Base0x02, //
       (uint16_t)Mppt3Base0x00, //
       (uint16_t)Mppt3Base0x02, //
+      (uint16_t)Mppt4Base0x00, //
+      (uint16_t)Mppt4Base0x02, //
       (uint16_t)BmsBase0x01,   //
       (uint16_t)BmsBase0x02    //
   };

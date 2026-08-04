@@ -54,6 +54,8 @@ private:
   DisplayValue<bool> MotorOn = DisplayValue<bool>(160, 110, " ", "%3s", "", ILI9341_OLIVE, ILI9341_BLACK);
   DisplayValue<float> BatteryVoltage = DisplayValue<float>(10, 130, "Bat  :", "%5.1f", "V", ILI9341_ORANGE, ILI9341_BLACK);
   DisplayValue<bool> BatteryOn = DisplayValue<bool>(160, 130, " ", "%3s", "", ILI9341_OLIVE, ILI9341_BLACK);
+  DisplayValue<float> BatteryTemp = DisplayValue<float>(224, 130, "T:", "%4.1f", "C", ILI9341_ORANGE, ILI9341_BLACK);
+  
   DisplayValue<float> PhotoVoltaicCurrent = DisplayValue<float>(10, 150, "PV   :", "%5.1f", "A", ILI9341_ORANGE, ILI9341_BLACK);
   DisplayValue<bool> PhotoVoltaicOn = DisplayValue<bool>(160, 150, " ", "%3s", "", ILI9341_OLIVE, ILI9341_BLACK);
 

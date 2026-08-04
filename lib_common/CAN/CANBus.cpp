@@ -32,8 +32,7 @@ constexpr uint32_t CANBus::REINIT_COOLDOWN_MS;
 
 static inline bool is_relevant_can_id(uint16_t packetId) {
     if (packetId == (AC_BASE_ADDR | 0x00) ||
-        packetId == (DC_BASE_ADDR | 0x00) ||
-        packetId == (DC_BASE_ADDR | 0x01)) {
+        packetId == (DC_BASE_ADDR | 0x00) || packetId == (DC_BASE_ADDR | 0x01)) {
         return true;
     }
 
@@ -48,7 +47,8 @@ static inline bool is_relevant_can_id(uint16_t packetId) {
 
     if (packetId == (MPPT1_BASE_ADDR | 0x01) || packetId == (MPPT1_BASE_ADDR | 0x02) ||
         packetId == (MPPT2_BASE_ADDR | 0x01) || packetId == (MPPT2_BASE_ADDR | 0x02) ||
-        packetId == (MPPT3_BASE_ADDR | 0x01) || packetId == (MPPT3_BASE_ADDR | 0x02)) {
+        packetId == (MPPT3_BASE_ADDR | 0x01) || packetId == (MPPT3_BASE_ADDR | 0x02) ||
+        packetId == (MPPT4_BASE_ADDR | 0x01) || packetId == (MPPT4_BASE_ADDR | 0x02)) {
         return true;
     }
 
@@ -265,6 +265,14 @@ void CANBus::init_ages() {
     max_ages[MPPT3_BASE_ADDR | 0x5] = MAXAGE_MPPT_STATUS;
     max_ages[MPPT3_BASE_ADDR | 0x6] = MAXAGE_MPPT_POWER_CONN;
 
+    max_ages[MPPT4_BASE_ADDR] = MAXAGE_MPPT_INPUT;
+    max_ages[MPPT4_BASE_ADDR | 0x1] = MAXAGE_MPPT_OUTPUT;
+    max_ages[MPPT4_BASE_ADDR | 0x2] = MAXAGE_MPPT_TEMP;
+    max_ages[MPPT4_BASE_ADDR | 0x3] = MAXAGE_MPPT_AUX_POWER;
+    max_ages[MPPT4_BASE_ADDR | 0x4] = MAXAGE_MPPT_LIMITS;
+    max_ages[MPPT4_BASE_ADDR | 0x5] = MAXAGE_MPPT_STATUS;
+    max_ages[MPPT4_BASE_ADDR | 0x6] = MAXAGE_MPPT_POWER_CONN;    
+
     // init ages
     ages[AC_BASE_ADDR | 0x00] = INT32_MAX;
     ages[DC_BASE_ADDR | 0x00] = INT32_MAX;
@@ -314,6 +322,14 @@ void CANBus::init_ages() {
     ages[MPPT3_BASE_ADDR | 0x4] = INT32_MAX;
     ages[MPPT3_BASE_ADDR | 0x5] = INT32_MAX;
     ages[MPPT3_BASE_ADDR | 0x6] = INT32_MAX;
+
+    ages[MPPT4_BASE_ADDR] = INT32_MAX;
+    ages[MPPT4_BASE_ADDR | 0x1] = INT32_MAX;
+    ages[MPPT4_BASE_ADDR | 0x2] = INT32_MAX;
+    ages[MPPT4_BASE_ADDR | 0x3] = INT32_MAX;
+    ages[MPPT4_BASE_ADDR | 0x4] = INT32_MAX;
+    ages[MPPT4_BASE_ADDR | 0x5] = INT32_MAX;
+    ages[MPPT4_BASE_ADDR | 0x6] = INT32_MAX;
 }
 
 CANPacket
