@@ -371,8 +371,9 @@ CANPacket CANBus::writePacket(uint16_t adr,
                               uint8_t data_u8_2,    // Kp * 100
                               uint8_t data_u8_3,    // Ki * 100
                               uint8_t data_u8_4,    // Kd * 100
-                              bool data_b_41,       // ConstantMode Speed/Power
-                              bool data_b_42,       // confirmDriverInfoConfirm
+                              uint8_t data_u8_5,    // GlideMode 0...7: 0:glide, 3:half glide/half recup, 7:recuperation
+                              bool data_b_48,       // ConstantMode Speed/Power
+                              bool data_b_49,       // confirmDriverInfoConfirm
                               bool force) {
     uint64_t data = 0UL;
     CANPacket packet = CANPacket(adr, data);
@@ -380,8 +381,9 @@ CANPacket CANBus::writePacket(uint16_t adr,
     packet.setData_u8(2, data_u8_2);
     packet.setData_u8(3, data_u8_3);
     packet.setData_u8(4, data_u8_4);
-    packet.setData_b(41, data_b_41);
-    packet.setData_b(42, data_b_42);
+    packet.setData_u8(5, data_u8_5);
+    packet.setData_b(48, data_b_48);
+    packet.setData_b(49, data_b_49);
     return writePacket(adr, packet, force);
 }
 

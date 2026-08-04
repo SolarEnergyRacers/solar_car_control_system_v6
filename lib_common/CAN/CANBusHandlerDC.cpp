@@ -45,11 +45,12 @@ void CANBus::handle_rx_packet(CANPacket packet) {
     carState.Kp = (double)packet.getData_u8(2) / 4.;
     carState.Ki = (double)packet.getData_u8(3) / 10.;
     carState.Kd = (double)packet.getData_u8(4) / 10.;
-    carState.ConstantMode = packet.getData_b(41) ? CONSTANT_MODE::SPEED : CONSTANT_MODE::POWER;
-    carState.ConfirmDriverInfo = packet.getData_b(42);
-    if (canBus.verboseModeCanIn)
-      console << fmt::format("LifeSign= {:4x}, Kp={5.2f}, Ki={5.2f}, Kd={5.2f} carState.ConstantMode={}\n", carState.LifeSign, carState.Kp,
-                             carState.Ki, carState.Kd, CONSTANT_MODE_str[(int)(carState.ConstantMode)]);
+    carState.GlideMode = (uint8_t)(packet.getData_u8(5) & 0x07);
+    carState.ConstantMode = packet.getData_b(48) ? CONSTANT_MODE::SPEED : CONSTANT_MODE::POWER;
+    carState.ConfirmDriverInfo = packet.getData_b(49);
+    if (verboseModeCanIn)
+      console << fmt::format("LifeSign= {:4x}, Kp={5.2f}, Ki={5.2f}, Kd={5.2f} carState.ConstantMode={}, GlideMode={} of 7\n", carState.LifeSign, carState.Kp,
+                             carState.Ki, carState.Kd, CONSTANT_MODE_str[(int)(carState.ConstantMode)], carState.GlideMode);
     break;
 
   case DC_BASE_ADDR:

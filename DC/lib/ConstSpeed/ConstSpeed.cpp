@@ -111,27 +111,19 @@ void ConstSpeed::task(void *pvParams) {
 
       // set acceleration & deceleration
       uint8_t acc = 0;
-#if CONST_SPEED_DECELERATION == true
       uint8_t dec = 0;
-#endif
+
       if (output_setpoint > 0) {
         acc = round(output_setpoint);
-        if (verboseModePID)
-          console << "acc=" << acc;
-      }
-#if CONST_SPEED_DECELERATION == false
-      carState.AccelerationDisplay = round(acc * normalisation_factor);
-#else
-      else if (output_setpoint < 0) {
-        dec = round(-output_setpoint);
-        if (verboseModePID)
-          console << "dec=" << dec;
+      } else if (output_setpoint < 0) {
+        dec = round(-output_setpoint * carState.GlideMode/7.);
       }
       carState.AccelerationDisplay = round((acc > 0 ? acc : -dec) * normalisation_factor);
-#endif
       carControl.set_DAC();
 
       if (verboseModePID) {
+        console << "dec=" << dec;
+        console << "acc=" << acc;
         console << ", disp: " << carState.AccelerationDisplay << " (" << output_setpoint << ")\n";
       }
     }

@@ -133,6 +133,15 @@ void CmdHandler::task(void *pvParams) {
         case 'D':
           display.set_DisplayStatus(DISPLAY_STATUS::ENGINEER_HALTED);
           display.set_DisplayStatus(DISPLAY_STATUS::DRIVER_SETUP);
+          if (input.length() > 1) {
+            string arr[2];
+            splitString(arr, &input[1]);
+            carState.DriverName = arr[0].c_str();
+            carState.DriverInfoType = INFO_TYPE::INFO;
+            carState.DriverInfo = carState.DriverName;
+            console << "Received: '" << input.c_str() << "' -->  carState.DriverInfo " << INFO_TYPE_str[(int)carState.DriverInfoType]
+                    << ": " << carState.DriverInfo << NL;
+          }
           break;
         case 'S':
           if (input[1] == 'a') {
@@ -199,9 +208,9 @@ void CmdHandler::task(void *pvParams) {
             carStateRadio.verboseModeRadioSend = !carStateRadio.verboseModeRadioSend;
             console << "set verboseModeRadioSend: " << carStateRadio.verboseModeRadioSend << NL;
           } else if (input[1] == 't') {
-              carStateRadio.mode = SEND_MODE::ASCII;
+            carStateRadio.mode = SEND_MODE::ASCII;
           } else if (input[1] == 'b') {
-              carStateRadio.mode = SEND_MODE::BINARY;
+            carStateRadio.mode = SEND_MODE::BINARY;
           } else if (input[1] == 'r') {
             carState.Serial2Baudrate = atof(&input[2]);
             Serial2.end();
@@ -239,7 +248,7 @@ void CmdHandler::task(void *pvParams) {
           } else if (input[1] == 'b') {
             console << "CAN RX buffer level: " << canBus.availablePacketsIn() << " / " << canBus.counterI << NL;
             console << "CAN TX buffer level: " << canBus.availablePacketsOut() << NL;
-          } else {
+          } else if (input.length() > 2) {
             string arr[4];
             splitString(arr, &input[1]);
             float motCurrent = atof(arr[0].c_str());
@@ -309,10 +318,22 @@ void CmdHandler::task(void *pvParams) {
             console << "PID set parameters: ";
           }
           console << "Kp=" << carState.Kp << ", Ki=" << carState.Ki << ", Kd=" << carState.Kd << NL;
-          // }
 #else
           console << "Car speed control settings only on DC possible yet\n";
 #endif
+        } break;
+        case 'G': {
+          console << "Received: '" << input.c_str() << "' --> ";
+          string arr[4];
+          int count = splitString(arr, &input[1]);
+          if (count > 0) {
+            int mode = atoi(arr[0].c_str());
+            if (mode < 0 || mode > 7)
+              console << "ERROR: Glide mode must be between 0 and 7" << NL;
+            else
+              carState.GlideMode = mode;
+          }
+          console << "Glide mode set to: " << (int)carState.GlideMode << " of 7" << NL;
         } break;
         case 'i':
           carControl.verboseModeCarControl = !carControl.verboseModeCarControl;

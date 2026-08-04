@@ -376,7 +376,7 @@ void Display::lifeSign() {
   lifeSignLast = carState.LifeSign;
 
   if (SystemJustInited) {
-    carState.DriverInfo = "ok.";
+    carState.DriverInfo = "System inited\nDC connected         ";
     SystemJustInited = false;
   }
   int color = ILI9341_GREEN;

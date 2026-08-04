@@ -30,20 +30,18 @@ string GPInputOutput::init() {
 
   pinMode(SPI_CS_SDCARD, OUTPUT);
   digitalWrite(SPI_CS_SDCARD, HIGH);
-
   pinMode(SPI_CS_TFT, OUTPUT);
   digitalWrite(SPI_CS_TFT, HIGH);
 
   pinMode(SPI_CLK, OUTPUT);
   pinMode(SPI_MOSI, OUTPUT);
   pinMode(SPI_MISO, INPUT);
-  pinMode(SPI_CS_TFT, OUTPUT);
   pinMode(SPI_RST, OUTPUT);
 
   pinMode(ESP32_AC_BUTTON_NEXT_SCREEN_GPIO27, INPUT_PULLDOWN);
   pinMode(ESP32_AC_BUTTON_CONST_MODE_GPIO02, INPUT_PULLDOWN);
 
-  // console << "Start test SPI_CS_SDCARD.\n";
+  // console << "Start test SPI_CS_SDCARD pin: Switching 110 times between High and Low (1.5s)\n";
   // for( int i = 0; i < 100; i++){
   //   digitalWrite(SPI_CS_SDCARD, LOW);
   //   console << "Low\n";

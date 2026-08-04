@@ -11,8 +11,8 @@
 CarStatePin CarState::pins[] = {
     // GPIO, I/O mode, value, oldValue, inited, timestamp, name, handler, continuos mode, debounce time (==0 for toggles!)
     // esp32 GIO pins
-    {DI_ButtonPlus_GPIO18,        INPUT_PULLUP,   0, 0, false, 0l, DI_ButtonPlus_GPIO18_name,        buttonPlusHandler,              true,  50},
-    {DI_ButtonMinus_GPIO19,       INPUT_PULLUP,   0, 0, false, 0l, DI_ButtonMinus_GPIO19_name,       buttonMinusHandler,             true,  50},
+    {DI_ButtonPlus_GPIO18,        INPUT_PULLUP,   0, 0, false, 0l, DI_ButtonPlus_GPIO18_name,        buttonPlusHandler,              true,  200},
+    {DI_ButtonMinus_GPIO19,       INPUT_PULLUP,   0, 0, false, 0l, DI_ButtonMinus_GPIO19_name,       buttonMinusHandler,             true,  200},
     {DI_ButtonSet_GPIO05,         INPUT_PULLUP,   0, 0, false, 0l, DI_ButtonSet_GPIO05_name,         buttonSetHandler,               false, 50},
     {DI_BreakPedal_GPIO04,        INPUT_PULLUP,   0, 0, false, 0l, DI_BreakPedal_GPIO04_name,        breakPedalHandler,              false, 0},
     {DO_BreakLight_GPIO27,        OUTPUT,         1, 1, false, 0l, DO_BreakLight_GPIO27_name,        NULL,                           false, 50},

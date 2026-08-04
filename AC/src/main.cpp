@@ -45,6 +45,7 @@
 #include <EngineerDisplay.h>
 #include <GPIO.h>
 #include <I2CBus.h>
+#include <IOExt.h>
 #include <OneWire.h>
 #include <OneWireBus.h>
 #include <RTC_SER.h>
@@ -81,6 +82,7 @@ DriverDisplay driverDisplay;
 EngineerDisplay engineerDisplay;
 GPInputOutput gpio;
 I2CBus i2cBus;
+IOExt ioExt;
 SDCard sdCard;
 SPIBus spiBus;
 Uart uart;
@@ -91,6 +93,7 @@ static void carControlTask(void *pvParams) { carControl.task(pvParams); }
 static void cmdHandlerTask(void *pvParams) { cmdHandler.task(pvParams); }
 static void engineerDisplayTask(void *pvParams) { engineerDisplay.task(pvParams); }
 static void driverDisplayTask(void *pvParams) { driverDisplay.task(pvParams); }
+static void ioExtTask(void *pvParams) { ioExt.task(pvParams); }
 auto compiletime = RtcDateTime(__DATE__, __TIME__);
 
 // Adafruit_ILI9341 ili9341 = Adafruit_ILI9341(SPI_CS_TFT, SPI_DC, SPI_MOSI, SPI_CLK, SPI_RST, SPI_MISO);
@@ -241,18 +244,42 @@ void app_main(void) {
   display.print(msg + NL);
   // vTaskDelay(10);
 
-  SystemInited = true;
   //------------------------------------------------------------
-  // SC card (needs SystemInited == true)
+  // SC card
   msg = sdCard.init();
   console << msg << NL;
   display.print(msg + NL);
-  sdCard.mount();
   //--- SD card available
-  carState.initalize_config();
-  console << carState.print("State after reading SER4CNFG.INI") << NL;
-  sdCard.check_log_file();
-  //------from now config ini values can be used
+  if (sdCard.isMounted()) {
+    carState.initalize_config();
+    console << carState.print("State after reading SER4CNFG.INI") << NL;
+    sdCard.check_log_file();
+    //------from now config ini values can be used
+  } else {
+    console << "WARN: Skip config read from SD, card not mounted." << NL;
+  }
+
+  SystemInited = true;
+
+  //------------------------------------------------------------
+  // IOExt AC
+  msg = ioExt.init_t(1, 10, 4000, base_offset_suspend + 20);
+  console << msg << NL;
+  ioExt.verboseModeDIn = false;
+  ioExt.verboseModeDInHandler = false;
+  ioExt.verboseModeDOut = false;
+  console << "[  ] " << ioExt.getName() << " create task ..." << NL;
+  xTaskCreatePinnedToCore(ioExtTask,             /* task function. */
+                          ioExt.getInfo(),       /* name of task. */
+                          ioExt.getStackSize(),  /* stack size of task */
+                          NULL,                  /* parameter of the task */
+                          ioExt.getPriority(),   /* priority of the task */
+                          ioExt.getTaskHandle(), /* task handle to keep track of created task */
+                          ioExt.getCoreId());    /* pin task to core id */
+  msg = ioExt.report_task_init();
+  console << msg << NL;
+  display.print(msg + "\n");
+  // vTaskDelay(10);
 
   stringstream ss;
   ss << NL;
@@ -285,17 +312,6 @@ void app_main(void) {
   console << NL;
   display.print("start\n");
   display.set_DisplayStatus(DISPLAY_STATUS::DRIVER_SETUP);
-  //------------------------------------------------------------
-  // SC card
-  msg = sdCard.init();
-  console << msg << NL;
-  display.print(msg + NL);
-  sdCard.mount();
-  //--- SD card available
-  carState.initalize_config();
-  console << carState.print("State after reading SER4CNFG.INI") << NL;
-  sdCard.check_log_file();
-  //------from now config ini values can be used
 
   esp_task_wdt_init(3600 * 48, false);
   // esp_task_wdt_init(5, false);

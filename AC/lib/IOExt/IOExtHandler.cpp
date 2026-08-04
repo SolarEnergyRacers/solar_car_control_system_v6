@@ -6,122 +6,112 @@
 #include <stdio.h>
 
 // standard libraries
-#include <fmt/core.h>
-#include <inttypes.h>
-#include <iostream>
-#include <stdio.h>
 #include <string>
 
-#include <Wire.h>     // I2C
-
-#include <CarControl.h>
 #include <Console.h>
 #include <Helper.h>
-#include <I2CBus.h>
+#include <IOExt.h>
 #include <IOExtHandler.h>
+#include <SDCard.h>
+#include <SPIBus.h>
 
 extern Console console;
-extern I2CBus i2cBus;
+extern IOExt ioExt;
 extern CarState carState;
-extern CarControl carControl;
+extern SDCard sdCard;
+extern SPIBus spiBus;
+extern bool SystemInited;
 
+void nextScreenButtonHandler() {
+	if (!SystemInited)
+		return;
 
-// void breakPedalHandler() {
-//   if (!SystemInited)
-//     return;
+	CarStatePin *pin = carState.getPin(ESP32_AC_BUTTON_NEXT_SCREEN_GPIO27_name);
+	if (pin == NULL || pin->value == 0)
+		return;
 
-//   carState.BreakPedal = carState.getPin(DI_BreakPedal_GPIO04)->value == 0;
-//   carControl.read_paddles(); // read peaddels and handels breeak
+	static unsigned long nextScreenButton_lastPress = 0;
+	static const unsigned long nextScreenButton_debounceTime_ms = 500;
+	unsigned long timestamp = millis();
+	if (timestamp < nextScreenButton_lastPress + nextScreenButton_debounceTime_ms)
+		return;
+	nextScreenButton_lastPress = timestamp;
 
-//   if (ioExt.verboseModeDInHandler)
-//     console << "Break pedal pressed " << (carState.BreakPedal ? "pressed" : "released") << NL;
-// }
+	switch (carState.displayStatus) {
+	case DISPLAY_STATUS::ENGINEER_RUNNING:
+		carState.displayStatus = DISPLAY_STATUS::DRIVER_SETUP;
+		console << "Switch Next Screen toggle: switch from engineer --> driver" << NL;
+		break;
+	case DISPLAY_STATUS::DRIVER_RUNNING:
+		carState.displayStatus = DISPLAY_STATUS::ENGINEER_SETUP;
+		console << "Switch Next Screen toggle: switch from driver --> engineer" << NL;
+		break;
+	default:
+		break;
+	}
+}
 
-// void buttonSetHandler() {
-//   if (!SystemInited)
-//     return;
-//   if (carState.getPin(DI_ButtonSet_GPIO05)->value != 0)
-//     return;
-//   carState.ConstantModeOn = !carState.ConstantModeOn; // #SAFETY#: deceleration unlock const mode
-//   if (ioExt.verboseModeDInHandler)
-//     console << "Set constant mode " << CONSTANT_MODE_str[(int)(carState.ConstantMode)] << ", target Speed: " << carState.TargetSpeed
-//             << "km/h / " << carState.TargetPower << "W.\n";
-// }
+void constModeOrMountRequestHandler() {
+	if (!SystemInited)
+		return;
 
-// void buttonConfirmDriverInfoHandler() {
-//   if (!SystemInited)
-//     return;
-//   if (carState.getPin(DI_Button_Confirm)->value != 0)
-//     return;
-//   carState.ConfirmDriverInfo = true;
-//   carState.DriverInfo = "";
-//   if (ioExt.verboseModeDInHandler)
-//     console << "ConfirmDriverInfo: " << carState.ConfirmDriverInfo<< " - buttenConfirmDriverInfoResetHandler " << NL;
-// }
+	CarStatePin *pin = carState.getPin(ESP32_AC_BUTTON_CONST_MODE_GPIO02_name);
+	if (pin == NULL || pin->value == 0)
+		return;
 
-// void buttonMinusHandler() {
-//   if (!SystemInited)
-//     return;
-//   if (!carState.ConstantModeOn) {
-//     carState.ConstantModeOn = true;
-//     carState.TargetSpeed = carState.Speed;                                       // unit: km/h
-//     carState.TargetPower = carState.MotorCurrent * carState.MotorVoltage / 1000; // unit: kW
-//     if (ioExt.verboseModeDInHandler)
-//       console << "Set (-) constant mode " << CONSTANT_MODE_str[(int)(carState.ConstantMode)] << ", target Speed: " << carState.TargetSpeed
-//               << "km/h | " << carState.TargetPower << "W.(" << carState.ConstSpeedIncrease << "km/h|" << carState.ConstPowerIncrease
-//               << "W)\n";
-//     return;
-//   }
-//   if (carState.ConstantMode == CONSTANT_MODE::SPEED) {
-//     carState.TargetSpeed -= carState.ConstSpeedIncrease;
-//     if (carState.TargetSpeed < 0)
-//       carState.TargetSpeed = 0;
-//   } else { // CONSTANT_MODE::POWER
-//     carState.TargetPower -= carState.ConstPowerIncrease;
-//     if (carState.TargetPower < 0)
-//       carState.TargetPower = 0;
-//   }
-//   if (ioExt.verboseModeDInHandler)
-//     console << "MINUS, mode " << CONSTANT_MODE_str[(int)(carState.ConstantMode)] << ", target Speed: " << carState.TargetSpeed << "km/h | "
-//             << carState.TargetPower << "W (" << carState.ConstSpeedIncrease << "km/h|" << carState.ConstPowerIncrease << "W)\n";
-// }
+	static unsigned long mountrequest_lastPress = 0;
+	static const unsigned long mountrequest_debounceTime_ms = 500;
+	unsigned long timestamp = millis();
+	if (timestamp < mountrequest_lastPress + mountrequest_debounceTime_ms)
+		return;
+	mountrequest_lastPress = timestamp;
 
-// void buttonPlusHandler() {
-//   if (!SystemInited)
-//     return;
-//   if (!carState.ConstantModeOn) {
-//     carState.ConstantModeOn = true;
-//     carState.TargetSpeed = carState.Speed;                                       // unit: km/h
-//     carState.TargetPower = carState.MotorCurrent * carState.MotorVoltage / 1000; // unit: kW
-//     carState.ConstantMode = CONSTANT_MODE::SPEED;
-//     if (ioExt.verboseModeDInHandler)
-//       console << "Set (+) constant mode " << CONSTANT_MODE_str[(int)(carState.ConstantMode)] << ", target Speed: " << carState.TargetSpeed
-//               << "km/h | " << carState.TargetPower << "W (" << carState.ConstSpeedIncrease << "km/h|" << carState.ConstPowerIncrease
-//               << "W)\n";
-//     return;
-//   }
-//   if (carState.ConstantMode == CONSTANT_MODE::SPEED) {
-//     carState.TargetSpeed += carState.ConstSpeedIncrease;
-//     if (carState.TargetSpeed > 111) // only until 111km/h
-//       carState.TargetSpeed = 111;
-//   } else { // CONSTANT_MODE::POWER
-//     carState.TargetPower += carState.ConstPowerIncrease;
-//     if (carState.TargetPower > 4500) // only until 5kW
-//       carState.TargetPower = 4500;
-//   }
-//   if (ioExt.verboseModeDInHandler)
-//     console << "PLUS,  mode " << CONSTANT_MODE_str[(int)(carState.ConstantMode)] << ", target Speed: " << carState.TargetSpeed << "km/h | "
-//             << carState.TargetPower << "W (" << carState.ConstSpeedIncrease << "km/h|" << carState.ConstPowerIncrease << "W)\n";
-// }
+	switch (carState.displayStatus) {
+	case DISPLAY_STATUS::ENGINEER_RUNNING:
+		if (sdCard.isMounted()) {
+			sdCard.unmount();
+			vTaskDelay(1000);
+		} else {
+			if (sdCard.mount()) {
+				carState.EngineerInfo = "SD card mounted.";
+				console << "     " << carState.EngineerInfo << NL;
+				vTaskDelay(1000);
+				string state = carState.csv("Recent State just after mounting", true); // with header
+				sdCard.write_log(state);
+			} else {
+				carState.EngineerInfo = "SD card mount failed.";
+				console << "     " << carState.EngineerInfo << NL;
+			}
+		}
+		break;
+	case DISPLAY_STATUS::DRIVER_RUNNING:
+		carState.ConstantMode = (carState.ConstantMode == CONSTANT_MODE::POWER) ? CONSTANT_MODE::SPEED : CONSTANT_MODE::POWER;
+		console << "Switch ConstMode toggle: switch to " << (carState.ConstantMode == CONSTANT_MODE::SPEED ? "SPEED" : "POWER") << NL;
+		break;
+	default:
+		break;
+	}
+}
 
-// void fwdBwdHandler() {
-//   carState.DriveDirection = carState.getPin(DI_FWD_BWD_SENSOR_VN)->value == 1 ? DRIVE_DIRECTION::FORWARD : DRIVE_DIRECTION::BACKWARD;
-//   if (ioExt.verboseModeDInHandler)
-//     console << "Direction " << (carState.DriveDirection == DRIVE_DIRECTION::FORWARD ? "Forward" : "Backward") << "\n";
-// }
+void sdCardDetectHandler() {
+	if (!SystemInited)
+		return;
 
-// void mcOnOffHandler() {
-//   carState.MotorOn = carState.getPin(DI_MCONOFF_SENSOR_VP)->value == 1;
-//   if (ioExt.verboseModeDInHandler)
-//     console << "MC " << (carState.MotorOn ? "On" : "Off") << "\n";
-// }
+	CarStatePin *pin = carState.getPin(ESP32_AC_SD_DETECT_GPIO35_name);
+	if (pin == NULL)
+		return;
+
+	bool sdCardDetectOld = carState.SdCardDetect;
+	carState.SdCardDetect = pin->value != 0;
+	if (carState.SdCardDetect && !sdCardDetectOld) {
+		carState.EngineerInfo = "SD card detected. Not mounted yet.";
+		console << "     " << carState.EngineerInfo << NL;
+		return;
+	}
+
+	if (!carState.SdCardDetect && sdCardDetectOld) {
+		carState.EngineerInfo = "SD card removed.";
+		console << "     " << carState.EngineerInfo << NL;
+		sdCard.end();
+	}
+}

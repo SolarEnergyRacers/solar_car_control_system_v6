@@ -140,6 +140,7 @@ const string CarState::print(const string msg, bool withColors) {
   ss << "Kp .................... " << Kp << NL;
   ss << "Ki .................... " << Ki << NL;
   ss << "Kd .................... " << Kd << NL;
+  ss << "Glide Mode ............ " << (int)GlideMode << NL;
   // [Dynamic]
   ss << "Paddle damping ........ " << PaddleDamping << NL;
   ss << "Paddle offset ......... " << "acc " << carState.StartOffset_acc << ", dec "<<carState.StartOffset_dec << NL;

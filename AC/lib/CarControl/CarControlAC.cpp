@@ -31,7 +31,6 @@ extern CarStateRadio carStateRadio;
 extern Console console;
 extern I2CBus i2cBus;
 extern SDCard sdCard;
-extern SPIBus spiBus;
 
 extern bool SystemInited;
 
@@ -58,97 +57,6 @@ void CarControl::exit(void) {
   // TODO
 }
 
-bool CarControl::read_nextScreenButton() {
-  if (!SystemInited)
-    return false;
-  unsigned long timestamp = millis();
-  if (timestamp < nextScreenButton_lastPress + nextScreenButton_debounceTime_ms)
-    return false;
-
-  int button_nextScreen_pressed = digitalRead(ESP32_AC_BUTTON_NEXT_SCREEN_GPIO27);
-  if (!button_nextScreen_pressed)
-    return false;
-  nextScreenButton_lastPress = timestamp;
-
-  switch (carState.displayStatus) {
-  case DISPLAY_STATUS::ENGINEER_RUNNING:
-    carState.displayStatus = DISPLAY_STATUS::DRIVER_SETUP;
-    console << "Switch Next Screen toggle: switch from engineer --> driver" << NL;
-    break;
-  case DISPLAY_STATUS::DRIVER_RUNNING:
-    carState.displayStatus = DISPLAY_STATUS::ENGINEER_SETUP;
-    console << "Switch Next Screen toggle: switch from driver --> engineer" << NL;
-    break;
-  default:
-    break;
-  }
-  return true;
-}
-
-bool CarControl::read_sd_card_detect() {
-  if (!SystemInited)
-    return false;
-
-  bool sdCardDetectOld = carState.SdCardDetect;
-  if (sdCard.update_sd_card_detect() && !sdCardDetectOld) {
-    carState.EngineerInfo = "SD card detected. Not mounted yet.";
-    console << "     " << carState.EngineerInfo << NL;
-    // Do not mount automatically!
-  } else if (!carState.SdCardDetect && sdCardDetectOld) {
-    carState.EngineerInfo = "SD card removed.";
-    console << "     " << carState.EngineerInfo << NL;
-    // Free SD VFS resources immediately so the next mount attempt can allocate a
-    // fresh context. Without this, esp_vfs_fat_register fails with ESP_ERR_NO_MEM
-    // (no free FAT VFS slots) when the card is re-inserted.
-    xSemaphoreTakeT(spiBus.mutex);
-    sdCard.end();
-    xSemaphoreGive(spiBus.mutex);
-  }
-
-  return carState.SdCardDetect;
-}
-
-bool CarControl::read_const_mode_and_mountrequest() {
-  if (!SystemInited)
-    return false;
-
-  unsigned long timestamp = millis();
-  if (timestamp < mountrequest_lastPress + mountrequest_debounceTime_ms)
-    return false;
-
-  bool button_constMode_pressed = digitalRead(ESP32_AC_BUTTON_CONST_MODE_GPIO02); // switch constant mode (Speed, Power)
-  if (!button_constMode_pressed)
-    return false;
-
-  switch (carState.displayStatus) {
-  case DISPLAY_STATUS::ENGINEER_RUNNING:
-    if (sdCard.isMounted()) {
-      sdCard.unmount();
-      vTaskDelay(1000);
-    } else {
-      if (sdCard.mount()) {
-        carState.EngineerInfo = "SD card mounted.";
-        console << "     " << carState.EngineerInfo << NL;
-        vTaskDelay(1000);
-        string state = carState.csv("Recent State just after mounting", true); // with header
-        sdCard.write_log(state);
-      } else {
-        carState.EngineerInfo = "SD card mount failed.";
-        console << "     " << carState.EngineerInfo << NL;
-      }
-    }
-    break;
-  case DISPLAY_STATUS::DRIVER_RUNNING:
-    carState.ConstantMode = (carState.ConstantMode == CONSTANT_MODE::POWER) ? CONSTANT_MODE::SPEED : CONSTANT_MODE::POWER;
-    console << "Switch ConstMode toggle: switch to " << (carState.ConstantMode == CONSTANT_MODE::SPEED ? "SPEED" : "POWER") << NL;
-    break;
-  default:
-    break;
-  }
-
-  return true;
-}
-
 string carStateEngineerInfoLast = "";
 uint16_t carStateLifeSignLast = 0;
 void CarControl::task(void *pvParams) {
@@ -162,11 +70,6 @@ void CarControl::task(void *pvParams) {
         force = true;
         carStateLifeSignLast = carState.LifeSign;
       }
-      bool button_nextScreen_pressed = read_nextScreenButton();
-      // vTaskDelay(10);
-      read_sd_card_detect();
-      // vTaskDelay(10);
-      read_const_mode_and_mountrequest();
       // vTaskDelay(10);
 #ifndef SUPRESS_CAN_OUT_AC
       bool constantMode = carState.ConstantMode == CONSTANT_MODE::SPEED ? true : false;
@@ -175,16 +78,21 @@ void CarControl::task(void *pvParams) {
                                             (uint8_t)(carState.Kp * 4),       // Kp
                                             (uint8_t)(carState.Ki * 10),      // Ki
                                             (uint8_t)(carState.Kd * 10),      // Kd
+                                            (uint8_t) carState.GlideMode,     // 0...7: 0:glide, 3:half glide/half recup, 7:recuperation
                                             (bool)constantMode,               // switch constant mode Speed / Power
                                             (bool)carState.ConfirmDriverInfo, // got confirm of driver about info
                                             (bool)force                       // force or not
       );
       carStateRadio.push_if_radio_packet(AC_BASE0x00, packet);
 #endif
-      if (carControl.verboseModeCarControlDebug)
+  CarStatePin *buttonNextScreenPin = carState.getPin(ESP32_AC_BUTTON_NEXT_SCREEN_GPIO27_name);
+  CarStatePin *buttonConstModePin = carState.getPin(ESP32_AC_BUTTON_CONST_MODE_GPIO02_name);
+  if (carControl.verboseModeCarControlDebug)
         console << fmt::format("[I:{:02d}|{:02d},O::{:02d}|{:02d}] CAN.PacketId=0x{:03x}-S-data:LifeSign={:4x}, buttonNextScreen = {:1x}, buttonConst = {:1x} ",
                                canBus.availablePacketsIn(), canBus.getMaxPacketsBufferInUsage(), canBus.availablePacketsOut(),
-                               canBus.getMaxPacketsBufferOutUsage(), AC_BASE0x00, carState.LifeSign, button_nextScreen_pressed, read_const_mode_and_mountrequest())
+                               canBus.getMaxPacketsBufferOutUsage(), AC_BASE0x00, carState.LifeSign,
+           buttonNextScreenPin != NULL ? buttonNextScreenPin->value : -1,
+           buttonConstModePin != NULL ? buttonConstModePin->value : -1)
                 << NL;
       // self destroying engineer info
       if (carState.EngineerInfo.compare(carStateEngineerInfoLast) != 0) {
