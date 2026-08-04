@@ -153,7 +153,88 @@ Data frame partitions (64-bit payload):
 
 #### Data Frames
 
-The CAN frames to be transmitted can be defined in property `radio_packages` of class `CarStateRadio`.
+The CAN frames to be transmitted are configured in property `radio_packets` of class `CarStateRadio`.
+
+CarStateRadio send path (from CAN RX / AC local packet to radio serial):
+
+```text
+Incoming CANPacket(id, data[8])
+                                          │
+                                          ▼
+push_if_radio_packet(adr, packet)
+                                          │ if adr is in radio_packets
+                                          ▼
+packet_cache[adr] = packet
+                                          │
+                                          │ (same adr overwrites older packet)
+                                          ▼
+send_binary() / send_ascii()
+                                          │
+                                          ▼
+for each cache entry (sorted by CAN ID):
+      CANPacket::to_serial(adr, buffer[11])
+      Serial2.write(...)  or  Serial2.print(hex...)
+```
+
+Serialized radio frame (one forwarded CAN packet):
+
+```text
+Radio TX frame (11 bytes total)
+┌───────────────────────────┬───────────────────────────────────────────────────────┬──────────┐
+│ ID envelope (2 bytes)     │ CAN payload (8 bytes)                                 │Terminator│
+├───────────────┬───────────┼──────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┼──────────┤
+│ byte 0        │ byte 1    │ B0   │ B1   │ B2   │ B3   │ B4   │ B5   │ B6   │ B7   │ byte 10  │
+│ char0 (FE..FF)│ char1     │      │      │      │      │      │      │      │      │ '\n'     │
+└───────────────┴───────────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────────┘
+
+ID envelope bits:
+      char0 = 11111abc   (a..c = id10..id8)
+      char1 = defghijk   (d..k = id7..id0)
+```
+
+Radio TX payload bytes `B0..B7`:
+
+```text
+CAN payload byte map (inside Radio TX frame)
+┌─────────┬───────────┬────────────────────────────┬─────────────────────────────────────────────┐
+│ Symbol  │ Bit range │ Position in 64-bit payload │ Meaning                                      │
+├─────────┼───────────┼────────────────────────────┼─────────────────────────────────────────────┤
+│ B0      │   7..0    │ data_u8[0] / least-signif. │ Raw CAN data byte 0 (LSB side)               │
+│ B1      │  15..8    │ data_u8[1]                 │ Raw CAN data byte 1                          │
+│ B2      │  23..16   │ data_u8[2]                 │ Raw CAN data byte 2                          │
+│ B3      │  31..24   │ data_u8[3]                 │ Raw CAN data byte 3                          │
+│ B4      │  39..32   │ data_u8[4]                 │ Raw CAN data byte 4                          │
+│ B5      │  47..40   │ data_u8[5]                 │ Raw CAN data byte 5                          │
+│ B6      │  55..48   │ data_u8[6]                 │ Raw CAN data byte 6                          │
+│ B7      │  63..56   │ data_u8[7] / most-signif.  │ Raw CAN data byte 7 (MSB side)               │
+└─────────┴───────────┴────────────────────────────┴─────────────────────────────────────────────┘
+
+Interpretation rule:
+      B0..B7 are forwarded unchanged from the original CAN frame.
+      Their semantic meaning depends on CAN ID (see per-message tables below).
+```
+
+Configured packet set in `radio_packets` (AC/lib/CarState/CarStateRadio.h):
+
+```text
+Mandatory (selected examples)
+┌───────────────────────────────┬─────────────────────────────────────┐
+│ Group                         │ IDs                                 │
+├───────────────────────────────┼─────────────────────────────────────┤
+│ DC                            │ DC_BASE+0x00, DC_BASE+0x01          │
+│ AC                            │ AC_BASE+0x00                        │
+│ MPPT outputs                  │ MPPT[1..4]_BASE+0x01                │
+│ BMS telemetry/status          │ BMS_BASE+0x00..0x0C, +0xF4..0xFD    │
+└───────────────────────────────┴─────────────────────────────────────┘
+
+Nice-to-have
+┌───────────────────────────────┬─────────────────────────────────────┐
+│ Group                         │ IDs                                 │
+├───────────────────────────────┼─────────────────────────────────────┤
+│ MPPT extra                    │ MPPT[1..4]_BASE+0x00, +0x02         │
+│ BMS extra                     │ BMS_BASE+0x01, +0x02                │
+└───────────────────────────────┴─────────────────────────────────────┘
+```
 
 | AC                                  | Dir | Type         | ChaseCar            |
 | ----------------------------------- | --- | ------------ | ------------------- |
