@@ -196,18 +196,18 @@ Radio TX payload bytes `B0..B7`:
 
 ```text
 CAN payload byte map (inside Radio TX frame)
-┌─────────┬───────────┬────────────────────────────┬─────────────────────────────────────────────┐
-│ Symbol  │ Bit range │ Position in 64-bit payload │ Meaning                                      │
-├─────────┼───────────┼────────────────────────────┼─────────────────────────────────────────────┤
-│ B0      │   7..0    │ data_u8[0] / least-signif. │ Raw CAN data byte 0 (LSB side)               │
-│ B1      │  15..8    │ data_u8[1]                 │ Raw CAN data byte 1                          │
-│ B2      │  23..16   │ data_u8[2]                 │ Raw CAN data byte 2                          │
-│ B3      │  31..24   │ data_u8[3]                 │ Raw CAN data byte 3                          │
-│ B4      │  39..32   │ data_u8[4]                 │ Raw CAN data byte 4                          │
-│ B5      │  47..40   │ data_u8[5]                 │ Raw CAN data byte 5                          │
-│ B6      │  55..48   │ data_u8[6]                 │ Raw CAN data byte 6                          │
-│ B7      │  63..56   │ data_u8[7] / most-signif.  │ Raw CAN data byte 7 (MSB side)               │
-└─────────┴───────────┴────────────────────────────┴─────────────────────────────────────────────┘
+┌─────────┬───────────┬────────────────────────────┬────────────────────────────────┐
+│ Symbol  │ Bit range │ Position in 64-bit payload │ Meaning                        │
+├─────────┼───────────┼────────────────────────────┼────────────────────────────────┤
+│ B0      │   7..0    │ data_u8[0] / least-signif. │ Raw CAN data byte 0 (LSB side) │
+│ B1      │  15..8    │ data_u8[1]                 │ Raw CAN data byte 1            │
+│ B2      │  23..16   │ data_u8[2]                 │ Raw CAN data byte 2            │
+│ B3      │  31..24   │ data_u8[3]                 │ Raw CAN data byte 3            │
+│ B4      │  39..32   │ data_u8[4]                 │ Raw CAN data byte 4            │
+│ B5      │  47..40   │ data_u8[5]                 │ Raw CAN data byte 5            │
+│ B6      │  55..48   │ data_u8[6]                 │ Raw CAN data byte 6            │
+│ B7      │  63..56   │ data_u8[7] / most-signif.  │ Raw CAN data byte 7 (MSB side) │
+└─────────┴───────────┴────────────────────────────┴────────────────────────────────┘
 
 Interpretation rule:
       B0..B7 are forwarded unchanged from the original CAN frame.
