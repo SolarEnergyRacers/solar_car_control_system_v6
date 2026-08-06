@@ -77,7 +77,7 @@ void EngineerDisplay::write_engineer_info(bool force) {
 void EngineerDisplay::draw_display_background() {
   PhotoVoltaicOn.showLabel(display.tft);
   MotorOn.showLabel(display.tft);
-  // BatteryOn.showLabel(display.tft);
+  BatteryOn.showLabel(display.tft);
   Mppt1.showLabel(display.tft);
   Mppt2.showLabel(display.tft);
   Mppt3.showLabel(display.tft);
@@ -88,7 +88,7 @@ void EngineerDisplay::draw_display_background() {
   Temperature1.showLabel(display.tft);
   Temperature2.showLabel(display.tft);
   Temperature3.showLabel(display.tft);
-  // Temperature4.showLabel(display.tft);
+  Temperature4.showLabel(display.tft);
   TemperatureMin.showLabel(display.tft);
   TemperatureMax.showLabel(display.tft);
   BatteryCurrent.showLabel(display.tft);
@@ -125,7 +125,7 @@ void EngineerDisplay::task(void *pvParams) {
     // working state:
     case DISPLAY_STATUS::ENGINEER_RUNNING:
       display.lifeSign();
-      // BatteryOn.Value = carState.BatteryOn;
+      BatteryOn.Value = carState.BatteryOn;
       PhotoVoltaicOn.Value = carState.PhotoVoltaicOn;
       MotorOn.Value = carState.MotorOn;
       BatteryVoltage.Value = carState.BatteryVoltage;
@@ -133,7 +133,7 @@ void EngineerDisplay::task(void *pvParams) {
       Temperature1.Value = carState.T1;
       Temperature2.Value = carState.T2;
       Temperature3.Value = carState.T3;
-      // Temperature4.Value = carState.T4;
+      Temperature4.Value = carState.T4;
       EngineerInfo.Value = carState.EngineerInfo;
       TemperatureMin.Value = carState.Tmin;
       TemperatureMax.Value = carState.Tmax;
@@ -146,9 +146,10 @@ void EngineerDisplay::task(void *pvParams) {
       VoltageAvg.Value = carState.Uavg;
       VoltageMax.Value = carState.Umax;
 
-      // BatteryOn.showValue(display.tft);
+      BatteryOn.showValue(display.tft);
       PhotoVoltaicOn.showValue(display.tft);
       MotorOn.showValue(display.tft);
+      BatteryOn.showValue(display.tft);
 
       Mppt1.showValue(display.tft);
       Mppt2.showValue(display.tft);
@@ -167,7 +168,7 @@ void EngineerDisplay::task(void *pvParams) {
       Temperature1.showValue(display.tft);
       Temperature2.showValue(display.tft);
       Temperature3.showValue(display.tft);
-      // Temperature4.showValue(display.tft);
+      Temperature4.showValue(display.tft);
       TemperatureMin.showValue(display.tft);
       TemperatureMax.showValue(display.tft);
 

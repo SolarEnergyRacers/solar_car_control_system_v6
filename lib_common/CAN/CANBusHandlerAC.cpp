@@ -29,10 +29,11 @@ extern CANBus canBus;
 unsigned long ConfirmClearTime = 0;
 
 bool CANBus::is_to_ignore_packet(uint16_t packetId) {
-    // allow only AC life sign and the two DC packets (0x660, 0x661)
-    return !(packetId == (AC_BASE_ADDR | 0x00) ||
-             packetId == (DC_BASE_ADDR | 0x00) ||
-             packetId == (DC_BASE_ADDR | 0x01));
+    // // allow only AC life sign and the two DC packets (0x660, 0x661)
+    // return !(packetId == (AC_BASE_ADDR | 0x00) ||
+    //          packetId == (DC_BASE_ADDR | 0x00) ||
+    //          packetId == (DC_BASE_ADDR | 0x01));
+    return false;
 }
 
 std::map<uint16_t, uint16_t> can_address_map = {{0x950, 0x509},
@@ -286,7 +287,7 @@ void CANBus::handle_rx_packet(CANPacket packet) {
             if (verboseModeCanIn) {
                 console << ", Mppt3Cur=" << carState.Mppt3Current << NL;
             }
-            break; 
+            break;
         case MPPT4_BASE_ADDR | 0x01:
             carState.Mppt4Current = packet.getData_f32(1);
             carState.PhotoVoltaicCurrent =

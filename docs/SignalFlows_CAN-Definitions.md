@@ -318,6 +318,7 @@ Interval: 1000ms
 | u_8    | [2]    | 2      | Kp                                    |
 | u_8    | [3]    | 3      | Ki                                    |
 | u_8    | [4]    | 4      | Kd                                    |
+
 | b_33   | [33]   | 5      | ConstantMode: true-SPEED, false-POWER |
 
 #### CAN Address Offset: 0x01 - Speed, Acceleration, buttons
@@ -327,9 +328,9 @@ Interval: 1000ms
 | Format | IdxFmt | Index8 | Meaning                              |
 | ------ | ------ | ------ | ------------------------------------ |
 | u_16   | [1]    | 0,1    | Target Speed  [float as value\*1000] |
-| u_16   | [2]    | 2,3    | Target Power  [float as value\*1000] |
-| i_8    | [0]    | 4      | Display Acceleration                 |
-| u_8    | [1]    | 5      | Display Speed                        |
+| u_16   | [3]    | 2,3    | Target Power  [float as value\*1000] |
+| i_8    | [4]    | 4      | Display Acceleration                 |
+| u_8    | [5]    | 5      | Display Speed                        |
 | u_8    | [6]    | 6      | Drive                                |
 | b      | [56]   | 7      | Fwd [1] / Bwd [0]                    |
 | b      | [57]   | 7      | Button Lvl Brake Pedal               |
@@ -346,7 +347,7 @@ Interval: ?ms
 
 | Format | IdxFmt | Index8 | Meaning                |
 | ------ | ------ | ------ | ---------------------- |
-| u_16   | [1]    | 0,1    | Motor current          |
+| u_16   | [1]    | 0,1    | Motor current          |???
 | u_16   | [2]    | 2,3    | Battery voltage        |
 | u_16   | [3]    | 4,5    | PV voltage             |
 | b      | [48]   | 6      | Motor On [1] / Off [0] |
