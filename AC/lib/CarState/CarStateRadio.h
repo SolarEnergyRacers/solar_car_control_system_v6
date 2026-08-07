@@ -31,58 +31,62 @@ private:
 
   list<uint16_t> radio_packets = {
       // mandatory
-      (uint16_t)DC_BASE0x00,   //
-      (uint16_t)DC_BASE0x01,   //
-      (uint16_t)AC_BASE0x00,   //
-      (uint16_t)Mppt1Base0x01, //
-      (uint16_t)Mppt2Base0x01, //
-      (uint16_t)Mppt3Base0x01, //
-      (uint16_t)Mppt4Base0x01, //
-      (uint16_t)BmsBase0x00,   //
-      (uint16_t)BmsBase0x01,   //
-      (uint16_t)BmsBase0x02,   //
-      (uint16_t)BmsBase0x03,   //
-      (uint16_t)BmsBase0x03,   //
-      (uint16_t)BmsBase0x04,   //
-      (uint16_t)BmsBase0x05,   //
-      (uint16_t)BmsBase0x06,   //
-      (uint16_t)BmsBase0x07,   //
-      (uint16_t)BmsBase0x08,   //
-      (uint16_t)BmsBase0x09,   //
-      (uint16_t)BmsBase0x0A,   //
-      (uint16_t)BmsBase0x0B,   //
-      (uint16_t)BmsBase0x0C,   //
-      (uint16_t)BmsBase0xF4,   //
-      (uint16_t)BmsBase0xF5,   //
-      (uint16_t)BmsBase0xF6,   //
-      (uint16_t)BmsBase0xF7,   //
-      (uint16_t)BmsBase0xF8,   //
-      (uint16_t)BmsBase0xF9,   //
-      (uint16_t)BmsBase0xFA,   //
-      (uint16_t)BmsBase0xFB,   //
-      (uint16_t)BmsBase0xFC,   //
-      (uint16_t)BmsBase0xFD,   //
-      (uint16_t)BmsBase0xF7,   //
-      (uint16_t)BmsBase0xF8,   //
-      (uint16_t)BmsBase0xF9,   //
-      (uint16_t)BmsBase0xFA,   //
-      (uint16_t)BmsBase0xFD,   //
+      // DC / AC control state
+      (uint16_t)DC_BASE0x00,   // lifeSign, potentiometer, acceleration, deceleration
+      (uint16_t)DC_BASE0x01,   // targetSpeed, targetPower, accelDisplay, speed + drive flags
+      (uint16_t)AC_BASE0x00,   // lifeSign, constant mode, Kp/Ki/Kd, glide mode
+      // MPPT output telemetry (per tracker)
+      (uint16_t)Mppt1Base0x01, // MPPT1 output (voltage/current/power)
+      (uint16_t)Mppt2Base0x01, // MPPT2 output (voltage/current/power)
+      (uint16_t)Mppt3Base0x01, // MPPT3 output (voltage/current/power)
+      (uint16_t)Mppt4Base0x01, // MPPT4 output (voltage/current/power)
+      // BMS core telemetry / CMU data
+      (uint16_t)BmsBase0x00,   // BMU heartbeat
+      (uint16_t)BmsBase0x01,   // CMU temperatures set 1
+      (uint16_t)BmsBase0x02,   // CMU temperatures set 2
+      (uint16_t)BmsBase0x03,   // CMU temperatures set 3
+      (uint16_t)BmsBase0x03,   // CMU temperatures set 3 (duplicate kept intentionally)
+      (uint16_t)BmsBase0x04,   // CMU1 cell voltages part 1
+      (uint16_t)BmsBase0x05,   // CMU1 cell voltages part 2
+      (uint16_t)BmsBase0x06,   // CMU2 cell voltages part 1
+      (uint16_t)BmsBase0x07,   // CMU2 cell voltages part 2
+      (uint16_t)BmsBase0x08,   // CMU3 cell voltages part 1
+      (uint16_t)BmsBase0x09,   // CMU3 cell voltages part 2
+      (uint16_t)BmsBase0x0A,   // BMS extended CMU/pack telemetry
+      (uint16_t)BmsBase0x0B,   // BMS extended CMU/pack telemetry
+      (uint16_t)BmsBase0x0C,   // BMS extended CMU/pack telemetry
+      // BMS pack state / status blocks
+      (uint16_t)BmsBase0xF4,   // pack SOC
+      (uint16_t)BmsBase0xF5,   // balance SOC
+      (uint16_t)BmsBase0xF6,   // charger control
+      (uint16_t)BmsBase0xF7,   // precharge status
+      (uint16_t)BmsBase0xF8,   // min/max cell voltage
+      (uint16_t)BmsBase0xF9,   // min/max cell temperature
+      (uint16_t)BmsBase0xFA,   // pack voltage + pack current
+      (uint16_t)BmsBase0xFB,   // pack status
+      (uint16_t)BmsBase0xFC,   // pack fan status
+      (uint16_t)BmsBase0xFD,   // external pack status / battery error bits
+      (uint16_t)BmsBase0xF7,   // precharge status (duplicate kept intentionally)
+      (uint16_t)BmsBase0xF8,   // min/max cell voltage (duplicate kept intentionally)
+      (uint16_t)BmsBase0xF9,   // min/max cell temperature (duplicate kept intentionally)
+      (uint16_t)BmsBase0xFA,   // pack voltage + pack current (duplicate kept intentionally)
+      (uint16_t)BmsBase0xFD,   // external pack status / battery error bits (duplicate kept intentionally)
       // (uint16_t)McBase0x09,    //
       // (uint16_t)McBase0x0e,    //
       // (uint16_t)McBase0x0f,    //
       // (uint16_t)McBase0x10,    //
       // (uint16_t)McBase0x1b,    //
       // nice to have
-      (uint16_t)Mppt1Base0x00, //
-      (uint16_t)Mppt1Base0x02, //
-      (uint16_t)Mppt2Base0x00, //
-      (uint16_t)Mppt2Base0x02, //
-      (uint16_t)Mppt3Base0x00, //
-      (uint16_t)Mppt3Base0x02, //
-      (uint16_t)Mppt4Base0x00, //
-      (uint16_t)Mppt4Base0x02, //
-      (uint16_t)BmsBase0x01,   //
-      (uint16_t)BmsBase0x02    //
+      (uint16_t)Mppt1Base0x00, // MPPT1 input (panel side voltage/current/power)
+      (uint16_t)Mppt1Base0x02, // MPPT1 temperature
+      (uint16_t)Mppt2Base0x00, // MPPT2 input (panel side voltage/current/power)
+      (uint16_t)Mppt2Base0x02, // MPPT2 temperature
+      (uint16_t)Mppt3Base0x00, // MPPT3 input (panel side voltage/current/power)
+      (uint16_t)Mppt3Base0x02, // MPPT3 temperature
+      (uint16_t)Mppt4Base0x00, // MPPT4 input (panel side voltage/current/power)
+      (uint16_t)Mppt4Base0x02, // MPPT4 temperature
+      (uint16_t)BmsBase0x01,   // CMU temperatures set 1 (extra refresh)
+      (uint16_t)BmsBase0x02    // CMU temperatures set 2 (extra refresh)
   };
 
 public:

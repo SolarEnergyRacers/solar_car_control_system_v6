@@ -203,7 +203,7 @@ void CmdHandler::task(void *pvParams) {
           break;
         case 'B':
           if (input[1] == '\0') {
-            // console << "Serial2 baudrate=" << carState.Serial2Baudrate << NL;
+            // show settings;
           } else if (input[1] == 'v') {
             carStateRadio.verboseModeRadioSend = !carStateRadio.verboseModeRadioSend;
             console << "set verboseModeRadioSend: " << carStateRadio.verboseModeRadioSend << NL;
@@ -215,9 +215,11 @@ void CmdHandler::task(void *pvParams) {
             carState.Serial2Baudrate = atof(&input[2]);
             Serial2.end();
             Serial2.begin(carState.Serial2Baudrate, SERIAL_8N1, SERIAL2_RX, SERIAL2_TX);
+          } else if (input[1] == 'i') {
+            carState.CarDataSendPeriod = atof(&input[2]);
           }
           console << "Serial2(radio) baudrate=" << carState.Serial2Baudrate << ", send mode: " << SEND_MODE_str[(int)carStateRadio.mode]
-                  << ", SERIAL_RADIO_CMD_ON: " << SERIAL_RADIO_CMD_ON << NL;
+                  << ", SERIAL_RADIO_CMD_ON: " << SERIAL_RADIO_CMD_ON << "baud, interval: " << carState.CarDataSendPeriod << "ms" << NL;
           break;
         case 'I':
           if (input[1] == 's') {

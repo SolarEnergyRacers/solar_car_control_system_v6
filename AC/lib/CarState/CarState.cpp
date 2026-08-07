@@ -105,7 +105,7 @@ bool CarState::initalize_config(const string &configFile) {
   try {
     ConfigFile cf = ConfigFile(configFile);
     // [Main]
-    LogFilename = cf.get("Main", "LogFilename", "/SER4DATA.CSV");
+    LogFilename = cf.get("Main", "LogFilename", "/SER6DATA.CSV");
     LogFilePeriod = cf.get("Main", "LogFilePeriod", 24);
     LogInterval = cf.get("Main", "LogInterval", 1000);
     // [PID]
