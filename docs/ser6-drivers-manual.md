@@ -18,18 +18,18 @@ TODO: DESCRIBE IT!
 
 ![switch board](assets.ser6-drivers-manual/image-20230506130251806.png)
 
-| Switch Name | Function (what is switched)                            | Driver Screen / Steering Wheel                | Engineer Screen |
-| ----------- | ------------------------------------------------------ | --------------------------------------------- | --------------- |
-| Spare       | -                                                      | -                                             | -               |
-| Aux         | AC (auxiliary controller) power on (up) / off (down)   | %                                             | %               |
-| PreChg      |                                                        | no                                            | no              |
-| MC          | MC (motor controller)  power on/off                    | yes<br />(right from Motor current)           | yes             |
-| Drive       | DC (drive controller) power on (up) / off (down)       | %                                             | %               |
-| FrontLight  |                                                        | Right blue LED                                |                 |
-| DriveLight  |                                                        | Left yellow LED                               |                 |
-| Rearview    | Rear view camera power on (up) / off (down)            | no                                            | no              |
-| PR1         | Aggressiveness / sensitivity of the PLUS/MINUS buttons | yes<br />(below target speed)                 | no              |
-| Dir         | Drive direction forward / backward                     | yes if backward<br />(red below target speed) | no              |
+| Switch Name | Function (what is switched)                            | Driver Screen / Steering Wheel                                        | Engineer Screen |
+| ----------- | ------------------------------------------------------ | --------------------------------------------------------------------- | --------------- |
+| Spare       | -                                                      | -                                                                     | -               |
+| Aux         | AC (auxiliary controller) power on (up) / off (down)   | %                                                                     | %               |
+| PreChg      |                                                        | no                                                                    | no              |
+| MC          | MC (motor controller)  power on/off                    | yes<br />(right from Motor current)                                   | yes             |
+| Drive       | DC (drive controller) power on (up) / off (down)       | %                                                                     | %               |
+| FrontLight  |                                                        | Right blue LED                                                        |                 |
+| DriveLight  |                                                        | Left green LED                                                        |                 |
+| Rearview    | Rear view camera power on (up) / off (down)            | no                                                                    | no              |
+| PR1         | Aggressiveness / sensitivity of the PLUS/MINUS buttons | yes<br />(below target speed)                                         | no              |
+| Dir         | Drive direction forward / backward                     | yes if backward<br />(red above target speed)<br />➡️ stops const mode | no              |
 
 ### Steering Wheel
 
@@ -78,13 +78,13 @@ TODO
 
 ### Control Mode
 
- | Button        | Function                                                       |
- | ------------- | -------------------------------------------------------------- |
- | PLUS          | decrease deceleration (recuperation) ... increase acceleration |
- | MINUS         | decrease acceleration ... increase deceleration (recuperation) |
- | Break press   | max break deceleration (recuperation)                          |
- | Break release | set acceleration to 0 (neither recuperation nor acceleration)  |
- |               |                                                                |
+| Button                 | Function                                                       |
+| ---------------------- | -------------------------------------------------------------- |
+| PLUS                   | decrease deceleration (recuperation) ... increase acceleration |
+| MINUS                  | decrease acceleration ... increase deceleration (recuperation) |
+| Break press            | max break deceleration (recuperation)                          |
+| Break release          | set acceleration to 0 (neither recuperation nor acceleration)  |
+| Switch backwards drive | switch off constant mode                                       |
 
 Constant mode off:
 
@@ -132,9 +132,10 @@ Use the paddles to increase (right paddle) and decrease (left paddle) speed of t
 
 #### Constant Mode
 
-Constant mode is usable in paddle control mode and in classic control mode.
+Constant mode is usable in paddle control mode and in classic control mode.  
+It is switched off on pressing break pedal or switch to drive backwards.
 
-| Button                 | function                                         |
+| Button                 | Function                                         |
 | ---------------------- | ------------------------------------------------ |
 | SET (first time press) | set constant mode                                |
 | SET (next time press)  | overtake current speed / power                   |

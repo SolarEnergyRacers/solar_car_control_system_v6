@@ -107,6 +107,10 @@ int CarControl::calculate_acceleration_display(int valueDec, int valueAcc) {
 }
 
 bool CarControl::read_paddles() {
+  if (carState.DriveDirection == DRIVE_DIRECTION::BACKWARD) {
+    // #SAFETY#: on backwards -> clean 
+    carState.ConstantModeOn = false;
+  }
   if (carState.BreakPedal) {
     // #SAFETY#: on break pedal -> deccelerate
     carState.ConstantModeOn = false;
@@ -115,14 +119,15 @@ bool CarControl::read_paddles() {
     if (carState.Deceleration < dec_procent) {
       carState.Deceleration = dec_procent;
     }
-    carState.AccelerationDisplay = -64; //calculate_acceleration_display(carState.Deceleration, carState.Acceleration);
+    carState.AccelerationDisplay = -64; // calculate_acceleration_display(carState.Deceleration, carState.Acceleration);
     if (carControl.verboseMode) {
-      console << fmt::format("paddle with BREAK PEDAL: Decl={:6d}, {:6d} | Accl={:6d}, {:6d} | => [{:4d}]\n", carState.Deceleration, adc.stw_dec, carState.Acceleration, adc.stw_acc, carState.AccelerationDisplay);
+      console << fmt::format("paddle with BREAK PEDAL: Decl={:6d}, {:6d} | Accl={:6d}, {:6d} | => [{:4d}]\n", carState.Deceleration,
+                             adc.stw_dec, carState.Acceleration, adc.stw_acc, carState.AccelerationDisplay);
     }
   } else {
     carState.Deceleration = normalize_0_UINT16(ads_min_dec, ads_max_dec, adc.stw_dec);
     carState.Acceleration = normalize_0_UINT16(ads_min_acc, ads_max_acc, adc.stw_acc);
-    
+
     // #SAFETY#: Reset constant mode on deceleration paddel touched
     if (carState.Deceleration > 0) {
       carState.ConstantModeOn = false;
@@ -143,7 +148,8 @@ bool CarControl::read_paddles() {
   if (accelerationDisplayLast != carState.AccelerationDisplay) {
     accelerationDisplayLast = carState.AccelerationDisplay;
     if (carControl.verboseMode) {
-      console << fmt::format("paddle w/o  BREAK PEDAL: Decl={:6d}, {:6d} | Accl={:6d}, {:6d} | => [{:4d}]\n", carState.Deceleration, adc.stw_dec, carState.Acceleration, adc.stw_acc, carState.AccelerationDisplay);
+      console << fmt::format("paddle w/o  BREAK PEDAL: Decl={:6d}, {:6d} | Accl={:6d}, {:6d} | => [{:4d}]\n", carState.Deceleration,
+                             adc.stw_dec, carState.Acceleration, adc.stw_acc, carState.AccelerationDisplay);
     }
     return true;
   }
@@ -159,8 +165,10 @@ void CarControl::set_DAC() {
   dac.set_pot(valueDAC_acc, DAC::pot_chan::POT_CHAN0_ACC);
 
   if (carControl.verboseMode) {
-    console << fmt::format("set DAC:: valueDAC_dec={:6d}, valueDAC_acc={:6d} | valueDec={:6d}, valueAcc={:6d} [valueDisplay={:4d}] > Speed={:3d} ({:6d})\n", 
-                            valueDAC_dec, valueDAC_acc, carState.Deceleration, carState.Acceleration, carState.AccelerationDisplay, carState.Speed, adc.motor_speed);
+    console << fmt::format(
+        "set DAC:: valueDAC_dec={:6d}, valueDAC_acc={:6d} | valueDec={:6d}, valueAcc={:6d} [valueDisplay={:4d}] > Speed={:3d} ({:6d})\n",
+        valueDAC_dec, valueDAC_acc, carState.Deceleration, carState.Acceleration, carState.AccelerationDisplay, carState.Speed,
+        adc.motor_speed);
   }
 }
 
@@ -189,40 +197,40 @@ void CarControl::task(void *pvParams) {
       read_speed();
       read_potentiometer();
       if (read_paddles())
-        set_DAC();  // write DAC immediately when paddles change
+        set_DAC(); // write DAC immediately when paddles change
       switch_break_light();
       // update OUTPUT pins
       ioExt.writeAllPins(PinHandleMode::FORCED);
       constSpeed.update_pid();
 
-      for(int i=0; i<1; ++i)
-      canBus.writePacket(DC_BASE_ADDR | 0x00,
-                         carState.LifeSign,      // LifeSign
-                         carState.Potentiometer, // Potentiometer value
-                         carState.Acceleration,  // HAL-paddle Acceleration ADC value
-                         carState.Deceleration,  // HAL-paddle Deceleration ADC value
-                         force                   // force or not
-      );
+      for (int i = 0; i < 1; ++i)
+        canBus.writePacket(DC_BASE_ADDR | 0x00,
+                           carState.LifeSign,      // LifeSign
+                           carState.Potentiometer, // Potentiometer value
+                           carState.Acceleration,  // HAL-paddle Acceleration ADC value
+                           carState.Deceleration,  // HAL-paddle Deceleration ADC value
+                           force                   // force or not
+        );
 
       bool driveDirection = carState.DriveDirection == DRIVE_DIRECTION::FORWARD ? 1 : 0;
-      for(int i=0; i<1; ++i)
-      canBus.writePacket(DC_BASE_ADDR | 0x01,
-                         (uint16_t)carState.TargetSpeed,          // Target Speed [float as value\*1000]
-                         (uint16_t)(carState.TargetPower * 1000), // Target Power [float as value\*1000]
-                         carState.AccelerationDisplay,            // Display Acceleration
-                         dcPacketSeq,                             // sequence for loss detection
-                         carState.Speed,                          // Display Speed
-                         driveDirection,                          // Fwd [1] / Bwd [0]
-                         carState.BreakPedal,                     // Button Lvl Brake Pedal
-                         carState.MotorOn,                        // MC Off [0] / On [1]
-                         carState.ConstantModeOn,                 // Constant Mode Off [false], On [true]
-                         carState.ConfirmDriverInfo,              // Confirm driver had read info [true]
-                         false,                                   // empty
-                         false,                                   // empty
-                         false,                                   // empty
-                         force                                    // force or not
-      );
-                  dcPacketSeq++;
+      for (int i = 0; i < 1; ++i)
+        canBus.writePacket(DC_BASE_ADDR | 0x01,
+                           (uint16_t)carState.TargetSpeed,          // Target Speed [float as value\*1000]
+                           (uint16_t)(carState.TargetPower * 1000), // Target Power [float as value\*1000]
+                           carState.AccelerationDisplay,            // Display Acceleration
+                           dcPacketSeq,                             // sequence for loss detection
+                           carState.Speed,                          // Display Speed
+                           driveDirection,                          // Fwd [1] / Bwd [0]
+                           carState.BreakPedal,                     // Button Lvl Brake Pedal
+                           carState.MotorOn,                        // MC Off [0] / On [1]
+                           carState.ConstantModeOn,                 // Constant Mode Off [false], On [true]
+                           carState.ConfirmDriverInfo,              // Confirm driver had read info [true]
+                           false,                                   // empty
+                           false,                                   // empty
+                           false,                                   // empty
+                           force                                    // force or not
+        );
+      dcPacketSeq++;
 
       // vTaskDelay(10);
 
@@ -235,8 +243,8 @@ void CarControl::task(void *pvParams) {
         console << fmt::format("        P.Id=0x{:03x}-S-data:tgtSpeed={:5d}, Powr={:5d}, accD={:5d}, speed={:3d}, "
                                "direct={:1d}, break={}, MotorOn={}, ConstandModeOn={}, ConfirmDriverInfo={}",
                                DC_BASE_ADDR | 0x01, (uint16_t)(carState.TargetSpeed * 1000), (uint16_t)(carState.TargetPower * 1000),
-                               carState.AccelerationDisplay, carState.Speed, driveDirection, carState.BreakPedal,
-                               carState.MotorOn, carState.ConstantModeOn, carState.ConfirmDriverInfo)
+                               carState.AccelerationDisplay, carState.Speed, driveDirection, carState.BreakPedal, carState.MotorOn,
+                               carState.ConstantModeOn, carState.ConfirmDriverInfo)
                 << NL;
       }
     }

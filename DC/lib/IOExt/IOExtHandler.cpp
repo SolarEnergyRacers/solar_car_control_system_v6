@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <string>
 
-#include <Wire.h>     // I2C
+#include <Wire.h> // I2C
 
 #include <CarControl.h>
 #include <Console.h>
@@ -35,7 +35,7 @@ void breakPedalHandler() {
     return;
 
   carState.BreakPedal = carState.getPin(DI_BreakPedal_GPIO04_name)->value != 0;
-  carControl.read_paddles(); // read peaddels and handels breeak
+  carControl.read_paddles(); // read paddles and handles break and backward drive
 
   if (ioExt.verboseModeDInHandler)
     console << "Break pedal pressed " << (carState.BreakPedal ? "pressed" : "released") << NL;
@@ -60,7 +60,7 @@ void buttonConfirmDriverInfoHandler() {
   carState.ConfirmDriverInfo = true;
   carState.DriverInfo = "";
   if (ioExt.verboseModeDInHandler)
-    console << "ConfirmDriverInfo: " << carState.ConfirmDriverInfo<< " - buttenConfirmDriverInfoResetHandler " << NL;
+    console << "ConfirmDriverInfo: " << carState.ConfirmDriverInfo << " - buttenConfirmDriverInfoResetHandler " << NL;
 }
 
 void buttonMinusHandler() {
@@ -123,8 +123,9 @@ void fwdBwdHandler() {
     return;
   int value = carState.getPin(DI_FWD_BWD_SENSOR_VN_GPIO39_name)->value;
   carState.DriveDirection = value == 1 ? DRIVE_DIRECTION::FORWARD : DRIVE_DIRECTION::BACKWARD;
+  carControl.read_paddles(); // read paddles and handles break and backward drive
   if (ioExt.verboseModeDInHandler)
-    console << "Direction " << (carState.DriveDirection == DRIVE_DIRECTION::FORWARD ? "Forward" : "Backward") << " (" << value <<")\n";
+    console << "Direction " << (carState.DriveDirection == DRIVE_DIRECTION::FORWARD ? "Forward" : "Backward") << " (" << value << ")\n";
 }
 
 void mcOnOffHandler() {
