@@ -26,6 +26,7 @@ public:
   bool isMounted();
   // write a string into the dataFile
   void write_log(const string msg);
+  bool write_log_header();
   // prints the directory tree of the card
   void directory();
   // print content of a file

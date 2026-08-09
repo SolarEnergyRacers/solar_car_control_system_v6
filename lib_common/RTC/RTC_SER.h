@@ -98,6 +98,8 @@ public:
   bool set_RTC_running(bool do_run);
   bool get_RTC_running();
   bool set_RTC_squarewave(DS1307SquareWaveOut sq_freq);
+  bool rtc_datetime_valid();
+  uint8_t rtc_last_error();
 };
 
 #endif // SOLAR_CAR_CONTROL_SYSTEM_RTC_SER_H

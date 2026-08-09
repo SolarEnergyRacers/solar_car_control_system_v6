@@ -102,7 +102,6 @@ Display display = Display(&ili9341);
 
 void app_main(void) {
   string msg;
-  carState.init_values();
   carStateRadio.verboseModeRadioSend = false;
 
   // init console IO and radio console
@@ -137,7 +136,16 @@ void app_main(void) {
                          compiletime.Day(), compiletime.Month(), compiletime.Year(), wd[compiletime.DayOfWeek()]);
   int RTC_err = globalTime.init(DS1307SquareWaveOut_Low, 1);
   console << "RTC init errorcode: " << RTC_err << "\n";
+  bool rtc_valid = globalTime.rtc_datetime_valid();
+  uint8_t rtc_last_error = globalTime.rtc_last_error();
+  if (rtc_valid) {
+    console << "RTC status: datetime valid (backup domain OK).\n";
+  } else {
+    console << "RTC status: datetime invalid (possible backup battery loss or uninitialized clock), LastError="
+            << (int)rtc_last_error << "\n";
+  }
   console << "RTC time: " << globalTime.strTime("%H:%M:%S %Y-%m-%d (%a)") << "\n";
+  carState.init_values();
   // sleep(5);
   // console << "time 5s: " << globalTime.strTime("%H:%M:%S %Y-%m-%d (%a)") << "\n";
   // sleep(60);
@@ -252,7 +260,7 @@ void app_main(void) {
   //--- SD card available
   if (sdCard.isMounted()) {
     carState.initalize_config();
-    console << carState.print("State after reading SER4CNFG.INI") << NL;
+    console << carState.print("State after reading " + string(FILENAME_SER6CONFIG)) << NL;
     sdCard.check_log_file();
     //------from now config ini values can be used
   } else {
@@ -286,17 +294,17 @@ void app_main(void) {
   ss << "----------------------------------------------------" << NL;
   ss << "Initialization ready as AuxiliaryController" << NL;
   ss << fmt::format("- i2cBus.verboseModeI2C              = {}", i2cBus.verboseModeI2C) << NL;
-  ss << fmt::format("- canBus.verboseModeCanIn            = {}", canBus.verboseModeCanIn) << NL;
-  ss << fmt::format("-        verboseModeCanInNative      = {}", canBus.verboseModeCanInNative) << NL;
-  ss << fmt::format("-        verboseModeCanOut           = {}", canBus.verboseModeCanOut) << NL;
-  ss << fmt::format("-        verboseModeCanOutNative     = {}", canBus.verboseModeCanOutNative) << NL;
-  ss << fmt::format("-        verboseModeCanBusLoad       = {}", canBus.verboseModeCanBusLoad) << NL;
-  ss << fmt::format("- carControl.verboseModeCC           = {}", carControl.verboseModeCarControl) << NL;
-  ss << fmt::format("-            verboseModeCCDebug      = {}", carControl.verboseModeCarControlDebug) << NL;
-  ss << fmt::format("- engineerDisplay.verboseModeED      = {}", engineerDisplay.verboseModeEngineer) << NL;
-  ss << fmt::format("- driverDisplay.verboseModeDD        = {}", driverDisplay.verboseModeDriver) << NL;
-  ss << fmt::format("- carStateRadio.verboseModeRadioSend = {}", carStateRadio.verboseModeRadioSend) << NL;
-  ss << fmt::format("- sdCard.verboseModeSdCard           = {}", sdCard.verboseModeSdCard) << NL;
+  // ss << fmt::format("- canBus.verboseModeCanIn            = {}", canBus.verboseModeCanIn) << NL;
+  // ss << fmt::format("-        verboseModeCanInNative      = {}", canBus.verboseModeCanInNative) << NL;
+  // ss << fmt::format("-        verboseModeCanOut           = {}", canBus.verboseModeCanOut) << NL;
+  // ss << fmt::format("-        verboseModeCanOutNative     = {}", canBus.verboseModeCanOutNative) << NL;
+  // ss << fmt::format("-        verboseModeCanBusLoad       = {}", canBus.verboseModeCanBusLoad) << NL;
+  // ss << fmt::format("- carControl.verboseModeCC           = {}", carControl.verboseModeCarControl) << NL;
+  // ss << fmt::format("-            verboseModeCCDebug      = {}", carControl.verboseModeCarControlDebug) << NL;
+  // ss << fmt::format("- engineerDisplay.verboseModeED      = {}", engineerDisplay.verboseModeEngineer) << NL;
+  // ss << fmt::format("- driverDisplay.verboseModeDD        = {}", driverDisplay.verboseModeDriver) << NL;
+  // ss << fmt::format("- carStateRadio.verboseModeRadioSend = {}", carStateRadio.verboseModeRadioSend) << NL;
+  // ss << fmt::format("- sdCard.verboseModeSdCard           = {}", sdCard.verboseModeSdCard) << NL;
   ss << "----------------------------------------------------" << NL;
   // vTaskDelay(10);
   console << ss.str();

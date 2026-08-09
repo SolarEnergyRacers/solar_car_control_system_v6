@@ -96,10 +96,10 @@ void CarState::init_values() {
 
   // read from SER4CONFIG.INI file
   initalize_config();
-  console << print("State after reading SER4CNFG.INI") << NL;
+  console << print("State after reading " + string(FILENAME_SER6CONFIG)) << NL;
 }
 
-bool CarState::initalize_config() { return initalize_config(FILENAME_SER4CONFIG); }
+bool CarState::initalize_config() { return initalize_config(FILENAME_SER6CONFIG); }
 
 bool CarState::initalize_config(const string &configFile) {
   try {
@@ -127,7 +127,7 @@ bool CarState::initalize_config(const string &configFile) {
     DriverDisplayInfoFrameY = cf.get("DriverDisplay", "InfoFrame", 182);
 
   } catch (exception &ex) {
-    console << "WARN: No config file: '" << FILENAME_SER4CONFIG << "' found or readable: " << ex.what() << NL;
+    console << "WARN: No config file: '" << FILENAME_SER6CONFIG << "' found or readable: " << ex.what() << NL;
     return false;
   }
   return true;
@@ -146,72 +146,66 @@ const string CarState::print(string msg, bool withColors) {
   ss << "====uptime:" << globalTime.strUptime() << "s====" << globalTime.strTime("%F %R") << "==\n";
   if (msg.length() > 0)
     ss << msg << NL;
-  ss << "Display Status ........ " << DISPLAY_STATUS_str[(int)displayStatus] << NL
-    << "Driver Name ........... " << DriverName << NL
-    << "Potentiometer ......... " << (int)Potentiometer << NL
-    << "Speed ................. " << (int)Speed << NL
-    << "Acceleration locked ... " << BOOL_str[(int)(AccelerationLocked)] << NL
-    << "Acceleration .......... " << (int)Acceleration << NL
-    << "Deceleration .......... " << (int)Deceleration << NL
-    << "Acceleration Display .. " << (int)AccelerationDisplay << NL
-    << "Break pedal pressed ... " << BOOL_str[(int)(BreakPedal)] << NL
-    << NL
-    << "Battery On............. " << BatteryOn << NL
-    << "Battery Voltage ....... " << BatteryVoltage << NL
-    << "Battery Current........ " << BatteryCurrent << NL
-    << "Battery Errors ........." << batteryErrorsAsString(true) << NL
-    << "Battery Precharge State "
-    << PRECHARGE_STATE_str[(int)(PrechargeState)] << NL
-    << "Photo Voltaic On ...... " << PhotoVoltaicOn << NL
-    << "MPPT1 Current ......... " << Mppt1Current << NL
-    << "MPPT2 Current ......... " << Mppt2Current << NL
-    << "MPPT3 Current ......... " << Mppt3Current << NL
-    << "MPPT4 Current ......... " << Mppt4Current << NL
-    << "Photo Voltaic Current . " << PhotoVoltaicCurrent << NL
-    << "Photo Reference Cell .. " << ReferenceSolarCell << NL
-
-    << "Photo Voltaic On ...... " << PhotoVoltaicOn << NL
-    << "Motor On .............. " << MotorOn << NL
-    << "Motor Current ......... " << MotorCurrent << NL
-    << "Drive Direction ....... " << DRIVE_DIRECTION_str[(int)(DriveDirection)] << NL
-
-     // << "Green Light ........... " << GreenLight << NL
-
+  // clang-format off
+  ss << "Display Status ........ " << DISPLAY_STATUS_str[(int)displayStatus] << NL 
+     << "Driver Name ........... " << DriverName << ", Potentiometer ......... " << (int)Potentiometer << NL 
+     << "Speed ................. " << (int)Speed << NL
+     << "Acceleration locked ... " << BOOL_str[(int)(AccelerationLocked)] << NL 
+     << "Acceleration Display .. " << (int)AccelerationDisplay << ", Acceleration .......... " << (int)Acceleration << ", Deceleration .......... " << (int)Deceleration << NL 
+     << "Break pedal pressed ... " << BOOL_str[(int)(BreakPedal)] << NL 
+     << NL 
+     // [Battery]
+     << "Battery On............. " << BatteryOn << NL
+     << "Battery Voltage ....... " << BatteryVoltage << NL 
+     << "Battery Current........ " << BatteryCurrent << NL
+     << "Battery Errors ........." << batteryErrorsAsString(true) << NL 
+     << "Battery Precharge State "
+     << PRECHARGE_STATE_str[(int)(PrechargeState)] << NL 
      << NL
-    << "Constant Mode ......... " << CONSTANT_MODE_str[(int)(ConstantMode)] << NL
-    << "Target Speed .......... " << (int)TargetSpeed << NL
-		 << "Target Power .......... " << (int)TargetPower << NL
-		 << "EngineerInfo Last ..... " << "[NORMAL] " << getCleanString(EngineerInfo) << NL
-		
-		 << "DriverInfo Last ....... " << "[" << INFO_TYPE_str[(int)DriverInfoType] << "] "
-     << getCleanString(DriverInfo) << NL
-		 << "Speed Arrow ........... " << SPEED_ARROW_str[(int)SpeedArrow] << NL
-     << "IO .................... " << printIOs("", false) << NL
-		 << NL
-		 << "SD Card detected....... " << BOOL_str[(int)(SdCardDetect)] << "("
-     << SdCardDetect << "), mounted:" << BOOL_str[(int)(sdCard.isMounted())] << NL
-		 << "Log file name ......... " << LogFilename << NL
-     << "Log file period [h].... " << LogFilePeriod << NL << "Log file interval [ms]. " << LogInterval << NL
+     // [PV]
+     << "Photo Voltaic On ...... " << PhotoVoltaicOn << NL 
+     << "MPPT1 Current ......... " << Mppt1Current << ", MPPT2 Current ......... " << Mppt2Current << NL 
+     << "MPPT3 Current ......... " << Mppt3Current << ", MPPT4 Current ......... " << Mppt4Current << NL 
+     << "Photo Voltaic Current . " << PhotoVoltaicCurrent << NL
+     << "Photo Reference Cell .. " << ReferenceSolarCell << NL
+     << NL
+     // [Motor]
+     << "Motor On .............. " << MotorOn << NL 
+     << "Motor Current ......... " << MotorCurrent << NL 
+     << "Drive Direction ....... " << DRIVE_DIRECTION_str[(int)(DriveDirection)]
+     << NL
+     << "Constant Mode ......... " << CONSTANT_MODE_str[(int)(ConstantMode)] << " Target Speed = " << (int)TargetSpeed << "km/h, Target Power = " << (int)TargetPower << "W" << NL 
+     << NL
+     << "EngineerInfo Last ..... " << "[NORMAL] " << getCleanString(EngineerInfo) << NL
+     << "DriverInfo Last ....... " << "[" << INFO_TYPE_str[(int)DriverInfoType] << "] " << getCleanString(DriverInfo) << NL
+     << "Speed Arrow ........... " << SPEED_ARROW_str[(int)SpeedArrow] << NL 
+     //<< "IO .................... " << printIOs("", false) << NL
+     << NL
+     << "SD Card detected....... " << BOOL_str[(int)(SdCardDetect)] << "(" << SdCardDetect << "), mounted:" << BOOL_str[(int)(sdCard.isMounted())] << NL 
+     << "Log file name ......... " << LogFilename << NL
+     << "Log file period [h].... " << LogFilePeriod << NL 
+     << "Log file interval [ms]. " << LogInterval << NL
      << NL
      // [PID]
-     << "Kp .................... " << Kp << NL 
-     << "Ki .................... " << Ki << NL 
-     << "Kd .................... " << Kd << NL
-     << "Glide Mode ............ " << (int)GlideMode << " of 7"
-     << NL
+     << "Kp .................... " << Kp  << ", Ki .................... " << Ki  << ", Kd .................... " << Kd << NL
+     << "Glide Mode ............ " << (int)GlideMode << " of 7" << NL
      // [Dynamic]
      << "Const speed increase .. " << ConstSpeedIncrease << NL 
      << "Const power increase .. " << ConstPowerIncrease << NL
      << NL
      // [Communication]
-     << "Serial 1 baud rate .... " << Serial1Baudrate << NL << "Serial 2 baud rate .... " << Serial2Baudrate << NL
-     << "Serial 2 mode ......... " << SEND_MODE_str[(int)(carStateRadio.mode)] << "\n"
+     << "Serial 1 baud rate .... " << Serial1Baudrate << NL 
+     << "Serial 2 baud rate .... " << Serial2Baudrate << NL
+     << "Serial 2 mode ......... " << SEND_MODE_str[(int)(carStateRadio.mode)] << NL
      << "Car data send period .. " << CarDataSendPeriod << "ms" << NL
      << NL
      // [Telemetry]
-     << "Telemetry send interval " << SendInterval << "ms" << NL << "Telemetry cache records " << MaxCachedRecords << NL << NL
-     << "Driver Display Info Frame Offset Y ... " << DriverDisplayInfoFrameY << NL << "Driver Display Data Frame Offset Y ... "
-     << DriverDisplayDataFrameY << NL << "========================================================================" << NL;
+     << "Telemetry send interval " << SendInterval << "ms" << NL 
+     << "Telemetry cache records " << MaxCachedRecords << NL << NL
+    //  << "Driver Display Data Frame Offset Y ... " << DriverDisplayDataFrameY << NL 
+    //  << "Driver Display Info Frame Offset Y ... " << DriverDisplayInfoFrameY << NL 
+     << "========================================================================" << NL;
+  // clang-format on
   return ss.str();
 }
 
@@ -280,104 +274,106 @@ const string CarState::serialize(const string msg) {
   return fmt::format("{}\n", cJSON_Print(carData));
 }
 
+const string CarState::csvHeader() {
+  stringstream ss;
+  ss << "DateTimeStamp, "
+     << "uptime, "
+     << "LifeSign, "
+     << "Driver, "
+     << "msg, "
+     << "potentiomenter, "
+     << "speed, "
+     << "acceleration, "
+     << "deceleration, "
+     << "accelerationDisplay, "
+     << "batteryVoltage, "
+     << "batteryCurrent, "
+     << "voltageMin, "
+     << "voltageAvg, "
+     << "voltageMax, "
+     << "batteryErrors, "
+     << "batteryPrechargeState, "
+     << "pvOn, "
+     << "pvCurrent, "
+     << "motorOn, "
+     << "motorCurrent, "
+     << "mppt1Current, "
+     << "mppt2Current, "
+     << "mppt3Current, "
+     << "mppt4Current, "
+     << "T1, "
+     << "T2, "
+     << "T3, "
+     << "T4, "
+     << "Tmin, "
+     << "Tmax, "
+     << "driveDirection, "
+     << "constantMode, "
+     << "displayStatus, "
+     << "targetSpeed, "
+     << "Kp, "
+     << "Ki, "
+     << "Kd, "
+     << "Slide, "
+     << "targetPower, "
+     << "engineerInfo, "
+     << "driverInfo, "
+     << "speedArrow, "
+     << "#" << NL;
+  return ss.str();
+}
+
 const string CarState::csv(const string msg, bool withHeader) {
   stringstream ss;
   if (withHeader) {
-    // header
-    ss << "DateTimeStamp, "
-       << "uptime, "
-       << "LifeSign, "
-       << "Driver, "
-       << "msg, "
-       << "potentiomenter, "
-       << "speed, "
-       << "acceleration, "
-       << "deceleration, "
-       << "accelerationDisplay, "
-
-       << "batteryVoltage, "
-       << "batteryCurrent, "
-       << "batteryErrors, "
-       << "batteryPrechargeState, "
-       << "pvOn, "
-       << "pvCurrent, "
-       << "motorOn, "
-       << "motorCurrent, "
-
-       << "mppt1Current, "
-       << "mppt2Current, "
-       << "mppt3Current, "
-       << "mppt4Current, "
-       << "voltageMin, "
-       << "voltageAvg, "
-       << "voltageMax, "
-       << "T1, "
-       << "T2, "
-       << "T3, "
-       << "Tmin, "
-       << "Tmax, "
-
-       << "driveDirection, "
-       << "constantMode, "
-       << "displayStatus, "
-
-       << "targetSpeed, "
-       << "Kp, "
-       << "Ki, "
-       << "Kd, "
-       << "Slide, "
-       << "targetPower, "
-       << "engineerInfo, "
-       << "driverInfo, "
-       << "speedArrow, " << NL;
+    ss << csvHeader();
   }
-  // data
-  ss << globalTime.strTime("%FT%X") << ", " 
-     << globalTime.strUptime() << ", " 
-     << LifeSign << ", " << DriverName.c_str() << ", "
-     << msg.c_str() << ", " 
-     << (int)Potentiometer << ", " 
-     << (int)Speed << ", " 
-     << (int)Acceleration << ", " 
-     << (int)Deceleration << ", "
-     << (int)AccelerationDisplay << ", "
- 
-     << floor(BatteryVoltage * 1000.0 + .5) / 1000.0 << ", " 
+  // clang-format off
+  ss << globalTime.strTime("%FT%X") << ", "
+     << globalTime.strUptime() << ", "
+     << static_cast<int>(LifeSign) << ", "
+     << DriverName.c_str() << ", "
+     << msg.c_str() << ", "
+     << static_cast<int>(Potentiometer) << ", "
+     << static_cast<int>(Speed) << ", "
+     << static_cast<int>(Acceleration) << ", "
+     << static_cast<int>(Deceleration) << ", "
+     << static_cast<int>(AccelerationDisplay) << ", "
+     << floor(BatteryVoltage * 1000.0 + .5) / 1000.0 << ", "
      << floor(BatteryCurrent * 1000.0 + .5) / 1000.0 << ", "
-     << batteryErrorsAsString() << ", " 
-     << PRECHARGE_STATE_str[(int)(PrechargeState)] << ", " 
-     << PhotoVoltaicOn << ", "
-     << floor(PhotoVoltaicCurrent * 1000.0 + .5) / 1000.0 << ", " 
-     << MotorOn << ", " 
-     << floor(MotorCurrent * 1000.0 + .5) / 1000.0 << ", "
- 
-     << floor(Mppt1Current * 1000.0 + .5) / 1000.0 << ", " 
-     << floor(Mppt2Current * 1000.0 + .5) / 1000.0 << ", "
-     << floor(Mppt3Current * 1000.0 + .5) / 1000.0 << ", " 
      << floor(Umin * 1000.0 + .5) / 1000.0 << ", "
-     << floor(Uavg * 1000.0 + .5) / 1000.0 << ", " 
-     << floor(Umax * 1000.0 + .5) / 1000.0 << ", " 
+     << floor(Uavg * 1000.0 + .5) / 1000.0 << ", "
+     << floor(Umax * 1000.0 + .5) / 1000.0 << ", "
+     << batteryErrorsAsString() << ", "
+     << PRECHARGE_STATE_str[(int)(PrechargeState)] << ", "
+     << PhotoVoltaicOn << ", "
+     << floor(PhotoVoltaicCurrent * 1000.0 + .5) / 1000.0 << ", "
+     << MotorOn << ", "
+     << floor(MotorCurrent * 1000.0 + .5) / 1000.0 << ", "
+     << floor(Mppt1Current * 1000.0 + .5) / 1000.0 << ", "
+     << floor(Mppt2Current * 1000.0 + .5) / 1000.0 << ", "
+     << floor(Mppt3Current * 1000.0 + .5) / 1000.0 << ", "
+     << floor(Mppt4Current * 1000.0 + .5) / 1000.0 << ", "
      << floor(T1 * 1000.0 + .5) / 1000.0 << ", "
-     << floor(T2 * 1000.0 + .5) / 1000.0 << ", " 
-     << floor(T3 * 1000.0 + .5) / 1000.0 << ", " 
+     << floor(T2 * 1000.0 + .5) / 1000.0 << ", "
+     << floor(T3 * 1000.0 + .5) / 1000.0 << ", "
+     << floor(T4 * 1000.0 + .5) / 1000.0 << ", "
      << floor(Tmin * 1000.0 + .5) / 1000.0 << ", "
      << floor(Tmax * 1000.0 + .5) / 1000.0 << ", "
- 
-     << DRIVE_DIRECTION_str[(int)(DriveDirection)] << ", " 
+     << DRIVE_DIRECTION_str[(int)(DriveDirection)] << ", "
      << CONSTANT_MODE_str[(int)(ConstantMode)] << ", "
- 
      << DISPLAY_STATUS_str[(int)displayStatus] << ", "
- 
-     << TargetSpeed << ", " 
-     << Kp << ", " 
-     << Ki << ", " 
-     << Kd << ", " 
-     << GlideMode << ", " 
-     << TargetPower << ", "
+     << static_cast<float>(TargetSpeed) << ", "
+     << static_cast<double>(Kp) << ", "
+     << static_cast<double>(Ki) << ", "
+     << static_cast<double>(Kd) << ", "
+     << static_cast<int>(GlideMode) << ", "
+     << static_cast<float>(TargetPower) << ", "
      << fmt::format("\"EngInf {}: {}\"", "", getCleanString(EngineerInfo)) << ", "
      << fmt::format("\"DrvInf {}: {}\"", INFO_TYPE_str[(int)DriverInfoType], getCleanString(DriverInfo)) << ", "
-     << SPEED_ARROW_str[(int)SpeedArrow] 
-     << NL;
+     << SPEED_ARROW_str[(int)SpeedArrow] << ", "
+     << "#" << NL;
+  // clang-format on
   return ss.str();
 }
 

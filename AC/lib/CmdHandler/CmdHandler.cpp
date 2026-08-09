@@ -284,16 +284,23 @@ void CmdHandler::task(void *pvParams) {
           if (count == 0) {
             console << "Received: '" << input.c_str() << "' --> DateTime: " << globalTime.strTime("%X %F (%a)")
                     << ", Uptime: " << globalTime.strUptime(true) << NL;
+          } else if (count != 6) {
+            console << "ERROR: 'T' expects 6 values: yyyy mm dd HH MM SS" << NL;
           } else {
-            int yy = atof(arr[0].c_str());
-            int mm = atof(arr[1].c_str());
-            int dd = atof(arr[2].c_str());
-            int hh = atof(arr[3].c_str());
-            int MM = atof(arr[4].c_str());
-            int ss = atof(arr[5].c_str());
+            int yy = atoi(arr[0].c_str());
+            int mm = atoi(arr[1].c_str());
+            int dd = atoi(arr[2].c_str());
+            int hh = atoi(arr[3].c_str());
+            int MM = atoi(arr[4].c_str());
+            int ss = atoi(arr[5].c_str());
             RtcDateTime dateTime = RtcDateTime(yy, mm, dd, hh, MM, ss);
-            globalTime.set_RTC(dateTime);
-            console << "Received: '" << input.c_str() << "' --> Onboard time now: " << globalTime.strTime("%X %F (%a)") << NL;
+            if (!dateTime.IsValid()) {
+              console << "ERROR: Invalid datetime. Use: T yyyy mm dd HH MM SS" << NL;
+            } else if (!globalTime.set_RTC(dateTime)) {
+              console << "ERROR: Failed to write RTC time." << NL;
+            } else {
+              console << "Received: '" << input.c_str() << "' --> Onboard time now: " << globalTime.strTime("%X %F (%a)") << NL;
+            }
           }
         } break;
         case 'K': {

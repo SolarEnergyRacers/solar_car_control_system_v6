@@ -75,7 +75,7 @@ string SDCard::init() {
 // https://github.com/espressif/arduino-esp32/blob/master/libraries/SPI/examples/SPI_Multiple_Buses/SPI_Multiple_Buses.ino
 
 bool SDCard::update_sd_card_detect() {
-  carState.SdCardDetect = (bool)digitalRead(ESP32_AC_SD_DETECT_GPIO35);
+  carState.SdCardDetect = (digitalRead(ESP32_AC_SD_DETECT_GPIO35) == HIGH);
   return carState.SdCardDetect;
 }
 
@@ -132,7 +132,19 @@ bool SDCard::mount() {
       xSemaphoreGive(lifecycleMutex);
     return false;
   }
+
+  if (!isMounted() && carState.SdCardDetect) {
+    carState.EngineerInfo = "SD card detected. Not mounted yet.";
+    console << "     " << carState.EngineerInfo << NL;
+  }
   bool hasSemaphore = false; // prevent SemaphoreGive when taken by other task
+  if (spiBus.mutex == nullptr) {
+    carState.EngineerInfo = "ERROR: SPI bus not initialized";
+    console << "     " << carState.EngineerInfo << NL;
+    if (hasLifecycleSemaphore)
+      xSemaphoreGive(lifecycleMutex);
+    return false;
+  }
   try {
     carState.EngineerInfo = "  Mounting SD card...";
     console << "     " << carState.EngineerInfo << NL;
@@ -188,6 +200,9 @@ bool SDCard::mount() {
       carState.EngineerInfo = "  SD card mounted";
       console << "     " << carState.EngineerInfo << ", " << attempts << " attempts" << NL;
       mounted = true;
+      if (!write_log_header()) {
+        console << "     WARNING: failed to write SD card CSV header" << NL;
+      }
       if (hasLifecycleSemaphore)
         xSemaphoreGive(lifecycleMutex);
       return true;
@@ -423,20 +438,61 @@ void SDCard::printDirectory(File dir, int numTabs) {
   }
 }
 
+bool SDCard::write_log_header() {
+  if (!isMounted()) {
+    console << "  SD card not mounted (write_log_header failed)" << NL;
+    return false;
+  }
+
+  bool success = false;
+  xSemaphoreTakeT(spiBus.mutex);
+  try {
+    if (dataFile) {
+      dataFile.flush();
+      dataFile.close();
+      dataFile = (fs::File)0;
+    }
+
+    dataFile = SD.open(carState.LogFilename.c_str(), FILE_APPEND);
+    if (dataFile) {
+      dataFile.print(carState.csvHeader().c_str());
+      dataFile.flush();
+      dataFile.close();
+      dataFile = (fs::File)0;
+      success = true;
+    }
+  } catch (exception &ex) {
+    dataFile = (fs::File)0;
+    console << "     ERROR writing SD card header: " << ex.what() << NL;
+  }
+
+  xSemaphoreGive(spiBus.mutex);
+  return success;
+}
+
 void SDCard::write_log(const string msg) {
   if (!isMounted()) {
     console << "  SD card not mounted" << NL;
     return;
   }
   try {
+    if (msg.empty())
+      return;
     string mounted_info = "SD card mounted.";
     string logInfo = "#Log to SD card";
-    if(mounted_info.compare(carState.EngineerInfo) == 0) {
+    if (mounted_info.compare(carState.EngineerInfo) == 0) {
       carState.EngineerInfo += logInfo;
     }
-    open_log_file();
+    if (!open_log_file()) {
+      carState.EngineerInfo = "ERROR at write_log: unable to open logfile";
+      console << "     " << carState.EngineerInfo << NL;
+      return;
+    }
     xSemaphoreTakeT(spiBus.mutex);
     dataFile.print(msg.c_str());
+    if (msg.back() != '\n') {
+      dataFile.print('\n');
+    }
     xSemaphoreGive(spiBus.mutex);
     close_log_file();
   } catch (exception &ex) {

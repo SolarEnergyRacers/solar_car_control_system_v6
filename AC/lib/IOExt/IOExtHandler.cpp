@@ -102,7 +102,7 @@ void sdCardDetectHandler() {
 		return;
 
 	bool sdCardDetectOld = carState.SdCardDetect;
-	carState.SdCardDetect = pin->value != 0;
+	carState.SdCardDetect = (pin->value != 0);
 	if (carState.SdCardDetect && !sdCardDetectOld) {
 		carState.EngineerInfo = "SD card detected. Not mounted yet.";
 		console << "     " << carState.EngineerInfo << NL;

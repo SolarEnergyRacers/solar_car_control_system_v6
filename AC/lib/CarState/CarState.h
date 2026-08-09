@@ -254,6 +254,7 @@ public:
   const string print(const string msg = "", bool withColors = true);
   const string printIOs(const string msg = "", bool withColors = true, bool deltaOnly = false);
   const string serialize(const string msg = "");
+  const string csvHeader();
   const string csv(const string msg = "", bool withHeader = false);
   const string batteryErrorsAsString(bool verbose = false);
   const string drive_data();

@@ -78,21 +78,22 @@ void CarControl::task(void *pvParams) {
                                             (uint8_t)(carState.Kp * 4),       // Kp
                                             (uint8_t)(carState.Ki * 10),      // Ki
                                             (uint8_t)(carState.Kd * 10),      // Kd
-                                            (uint8_t) carState.GlideMode,     // 0...7: 0:glide, 3:half glide/half recup, 7:recuperation
+                                            (uint8_t)carState.GlideMode,      // 0...7: 0:glide, 3:half glide/half recup, 7:recuperation
                                             (bool)constantMode,               // switch constant mode Speed / Power
                                             (bool)carState.ConfirmDriverInfo, // got confirm of driver about info
                                             (bool)force                       // force or not
       );
       carStateRadio.push_if_radio_packet(AC_BASE0x00, packet);
 #endif
-  CarStatePin *buttonNextScreenPin = carState.getPin(ESP32_AC_BUTTON_NEXT_SCREEN_GPIO27_name);
-  CarStatePin *buttonConstModePin = carState.getPin(ESP32_AC_BUTTON_CONST_MODE_GPIO02_name);
-  if (carControl.verboseModeCarControlDebug)
-        console << fmt::format("[I:{:02d}|{:02d},O::{:02d}|{:02d}] CAN.PacketId=0x{:03x}-S-data:LifeSign={:4x}, buttonNextScreen = {:1x}, buttonConst = {:1x} ",
+      CarStatePin *buttonNextScreenPin = carState.getPin(ESP32_AC_BUTTON_NEXT_SCREEN_GPIO27_name);
+      CarStatePin *buttonConstModePin = carState.getPin(ESP32_AC_BUTTON_CONST_MODE_GPIO02_name);
+      if (carControl.verboseModeCarControlDebug)
+        console << fmt::format("[I:{:02d}|{:02d},O::{:02d}|{:02d}] CAN.PacketId=0x{:03x}-S-data:LifeSign={:4x}, buttonNextScreen = {:1x}, "
+                               "buttonConst = {:1x} ",
                                canBus.availablePacketsIn(), canBus.getMaxPacketsBufferInUsage(), canBus.availablePacketsOut(),
                                canBus.getMaxPacketsBufferOutUsage(), AC_BASE0x00, carState.LifeSign,
-           buttonNextScreenPin != NULL ? buttonNextScreenPin->value : -1,
-           buttonConstModePin != NULL ? buttonConstModePin->value : -1)
+                               buttonNextScreenPin != NULL ? buttonNextScreenPin->value : -1,
+                               buttonConstModePin != NULL ? buttonConstModePin->value : -1)
                 << NL;
       // self destroying engineer info
       if (carState.EngineerInfo.compare(carStateEngineerInfoLast) != 0) {
@@ -106,12 +107,12 @@ void CarControl::task(void *pvParams) {
       if ((millis() > millisNextStampCsv) || (millis() > millisNextStampSnd)) {
         if (verboseModeCarControl)
           console << carState.drive_data();
-        string record = carState.csv("log");
         if (sdCard.isMounted() && millis() > millisNextStampCsv) {
-          millisNextStampCsv = millis() + carState.LogInterval;
+          string record = carState.csv("ControlLog");
+          sdCard.write_log(record);
           if (sdCard.verboseModeSdCard)
             console << "SDCARD:: Interval=" << carState.LogInterval << ", Rec: " << record;
-          sdCard.write_log(record);
+          millisNextStampCsv = millis() + carState.LogInterval;
         }
         // vTaskDelay(10);
         if (millis() > millisNextStampSnd) {

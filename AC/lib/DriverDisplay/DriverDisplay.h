@@ -6,7 +6,7 @@
 // InfoFrame (box to display texta for the driver) and LifeSign.
 // There are two steps: the background is drawn once and then the values are updated in the loop.
 // The background is drawn in the init() function and the values are updated in the task() function.
-// The DataFrame and InfoFrame can be moved up and down by the user via the config file SER4CNFG.INI
+// The DataFrame and InfoFrame can be moved up and down by the user via the config file {FILENAME_SER6CONFIG}
 
 #ifndef SER_DRIVER_DISPLAY_C_H
 #define SER_DRIVER_DISPLAY_C_H

@@ -30,12 +30,26 @@ extern Console console;
 int GlobalTime::init(DS1307SquareWaveOut sq_freq, bool do_run) {
   int err_code = 0;
   is_init = true; // must be true before accessing I2CBus
+  try {
+    auto lock = RAII_mux(i2cBus->mutex, portMAX_DELAY);
+    Rtc.Begin();
+  } catch (const std::runtime_error &e) {
+    console << "ERROR: RTC init failed: couldn't lock I2C bus for Rtc.Begin().\n";
+  }
   err_code += 0x1 * !set_RTC_squarewave(sq_freq);
   err_code += 0x2 * !set_RTC_running(do_run);
   if (_datetime.TotalSeconds() == 0) {
-    err_code += 0x4 * !get_RTC();
+    if (!get_RTC()) {
+      err_code += 0x4;
+      console << "ERROR: RTC read failed during init. Time fallback may appear as reset.\n";
+    }
   } else {
-    err_code += 0x4 * !set_RTC(_datetime);
+    if (!_datetime.IsValid()) {
+      err_code += 0x4;
+      console << "ERROR: Refusing to write invalid datetime to RTC during init.\n";
+    } else {
+      err_code += 0x4 * !set_RTC(_datetime);
+    }
   }
   err_code += 0x8 * !set_RTC_running(1);
   return err_code;
@@ -46,6 +60,8 @@ int GlobalTime::init(DS1307SquareWaveOut sq_freq, bool do_run) {
  */
 void GlobalTime::update() {
   constexpr int min_wait = 60; // min. time before next RTC query (seconds)
+  if (!is_init)
+    return;
   // auto lock = RAII_mux(mutex, portMAX_DELAY);
   // if (!lock.ok()) return;
   try {
@@ -149,6 +165,30 @@ bool GlobalTime::get_RTC_running() {
   }
 }
 
+bool GlobalTime::rtc_datetime_valid() {
+  if (!is_init) {
+    return 0;
+  }
+  try {
+    auto lock = RAII_mux(i2cBus->mutex, portMAX_DELAY);
+    return Rtc.IsDateTimeValid();
+  } catch (const std::runtime_error &e) {
+    return 0;
+  }
+}
+
+uint8_t GlobalTime::rtc_last_error() {
+  if (!is_init) {
+    return 0xff;
+  }
+  try {
+    auto lock = RAII_mux(i2cBus->mutex, portMAX_DELAY);
+    return Rtc.LastError();
+  } catch (const std::runtime_error &e) {
+    return 0xff;
+  }
+}
+
 // return 1 on success, 0 otherwise
 bool GlobalTime::set_RTC_squarewave(DS1307SquareWaveOut sq_freq) {
   if (!is_init) {
@@ -181,11 +221,18 @@ bool GlobalTime::get_RTC() {
   // if (lock.ok()){
   try {
     auto lock = RAII_mux(i2cBus->mutex, portMAX_DELAY);
-    _datetime = Rtc.GetDateTime();
+    RtcDateTime rtc_now = Rtc.GetDateTime();
+    if (!Rtc.IsDateTimeValid() || !rtc_now.IsValid()) {
+      console << "ERROR: RTC datetime invalid (LastError=" << (int)Rtc.LastError()
+              << "). Possible backup battery loss or uninitialized clock.\n";
+      return 0;
+    }
+    _datetime = rtc_now;
     last_update = millis() / 1000;
     sec0 = last_update;
     return 1;
   } catch (const std::runtime_error &e) {
+    console << "ERROR: RTC read failed: couldn't lock I2C bus.\n";
     return 0;
   }
 }
