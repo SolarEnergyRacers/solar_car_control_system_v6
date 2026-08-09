@@ -2,9 +2,9 @@
 // CAN Bus
 //
 #ifndef DCMODE
-#pragma message "DC-Mode not compiled"
+#pragma message "No DC-Mode --> not compiled"
 #else
-#pragma message "Compiling for DC-Mode"
+#pragma message "DC-Mode --> compiling..."
 
 #include <Arduino.h>
 #include <CANBus.h>

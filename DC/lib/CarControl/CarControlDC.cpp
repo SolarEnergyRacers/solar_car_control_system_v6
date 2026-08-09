@@ -108,7 +108,7 @@ int CarControl::calculate_acceleration_display(int valueDec, int valueAcc) {
 
 bool CarControl::read_paddles() {
   if (carState.DriveDirection == DRIVE_DIRECTION::BACKWARD) {
-    // #SAFETY#: on backwards -> clean 
+    // #SAFETY#: on backwards -> clean
     carState.ConstantModeOn = false;
   }
   if (carState.BreakPedal) {
@@ -203,33 +203,31 @@ void CarControl::task(void *pvParams) {
       ioExt.writeAllPins(PinHandleMode::FORCED);
       constSpeed.update_pid();
 
-      for (int i = 0; i < 1; ++i)
-        canBus.writePacket(DC_BASE_ADDR | 0x00,
-                           carState.LifeSign,      // LifeSign
-                           carState.Potentiometer, // Potentiometer value
-                           carState.Acceleration,  // HAL-paddle Acceleration ADC value
-                           carState.Deceleration,  // HAL-paddle Deceleration ADC value
-                           force                   // force or not
-        );
+      canBus.writePacket(DC_BASE_ADDR | 0x00,
+                         carState.LifeSign,      // LifeSign
+                         carState.Potentiometer, // Potentiometer value
+                         carState.Acceleration,  // HAL-paddle Acceleration ADC value
+                         carState.Deceleration,  // HAL-paddle Deceleration ADC value
+                         force                   // force or not
+      );
 
       bool driveDirection = carState.DriveDirection == DRIVE_DIRECTION::FORWARD ? 1 : 0;
-      for (int i = 0; i < 1; ++i)
-        canBus.writePacket(DC_BASE_ADDR | 0x01,
-                           (uint16_t)carState.TargetSpeed,          // Target Speed [float as value\*1000]
-                           (uint16_t)(carState.TargetPower * 1000), // Target Power [float as value\*1000]
-                           carState.AccelerationDisplay,            // Display Acceleration
-                           dcPacketSeq,                             // sequence for loss detection
-                           carState.Speed,                          // Display Speed
-                           driveDirection,                          // Fwd [1] / Bwd [0]
-                           carState.BreakPedal,                     // Button Lvl Brake Pedal
-                           carState.MotorOn,                        // MC Off [0] / On [1]
-                           carState.ConstantModeOn,                 // Constant Mode Off [false], On [true]
-                           carState.ConfirmDriverInfo,              // Confirm driver had read info [true]
-                           false,                                   // empty
-                           false,                                   // empty
-                           false,                                   // empty
-                           force                                    // force or not
-        );
+      canBus.writePacket(DC_BASE_ADDR | 0x01,
+                         (uint16_t)carState.TargetSpeed,          // Target Speed [float as value\*1000]
+                         (uint16_t)(carState.TargetPower * 1000), // Target Power [float as value\*1000]
+                         carState.AccelerationDisplay,            // Display Acceleration
+                         dcPacketSeq,                             // sequence for loss detection
+                         carState.Speed,                          // Display Speed
+                         driveDirection,                          // Fwd [1] / Bwd [0]
+                         carState.BreakPedal,                     // Button Lvl Brake Pedal
+                         carState.MotorOn,                        // MC Off [0] / On [1]
+                         carState.ConstantModeOn,                 // Constant Mode Off [false], On [true]
+                         carState.ConfirmDriverInfo,              // Confirm driver had read info [true]
+                         false,                                   // empty
+                         false,                                   // empty
+                         false,                                   // empty
+                         force                                    // force or not
+      );
       dcPacketSeq++;
 
       // vTaskDelay(10);

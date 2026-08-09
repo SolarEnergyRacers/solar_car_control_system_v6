@@ -421,17 +421,19 @@ const string CarState::drive_data() {
   ss << globalTime.strTime("%F %X") << " ~";
   ss << globalTime.strUptime() << " ";
   // ss << LifeSign << " ";
-  ss << fmt::format("Speed:  {:3d}km/h,  Accel:{:3d}%    ", Speed, AccelerationDisplay);
-  ss << fmt::format("Target({}): {:3d}km/h-{:4.1f}kW [p={:5.2f} i={:5.2f} d={:5.2f}] {}\n{}",
+  // clang-format off
+  ss << fmt::format("Speed:  {:3d}km/h,  Accel:{:3d}%    ", Speed, AccelerationDisplay)
+     << fmt::format("Target({}): {:3d}km/h-{:4.1f}kW [p={:5.2f} i={:5.2f} d={:5.2f}] {}\n{}",
                     ConstantModeOn ? CONSTANT_MODE_str[(int)(ConstantMode)] : "manual", (int)TargetSpeed, TargetPower, (float)Kp, (float)Ki,
-                    (float)Kd, DRIVE_DIRECTION_str[(int)(DriveDirection)], ident);
-  ss << fmt::format("[MotC={:4.1f}A ({}) | BatV={:5.1f}V [Umin={:5.3f}V | Uavg={:5.3f}V | Umax={:5.3f}V] Tmin={:4.1f}°C "
+                    (float)Kd, DRIVE_DIRECTION_str[(int)(DriveDirection)], ident)
+     << fmt::format("[MotC={:4.1f}A ({}) | BatV={:5.1f}V [Umin={:5.3f}V | Uavg={:5.3f}V | Umax={:5.3f}V] Tmin={:4.1f}°C "
                     "Tmax={:4.1f}°C] {}\n{}",
-                    MotorCurrent, MotorOn ? "ON!" : "off", BatteryVoltage, Umin, Uavg, Umax, Tmin, Tmax, batteryErrorsAsString(), ident);
-  ss << fmt::format("[PvC ={:4.1f}A (___) | MT1={:5.2f}A | MT2={:5.2f}A | MT3={:5.2f}A]\n{}", PhotoVoltaicCurrent, Mppt1Current,
-                    Mppt2Current, Mppt3Current, ident);
-  ss << fmt::format("[DrvInf {}: {}]\n{}", INFO_TYPE_str[(int)DriverInfoType], getCleanString(DriverInfo), ident);
-  ss << fmt::format("sdCard: {} detected & {} mounted", SdCardDetect ? "" : "not", sdCard.isMounted() ? "" : "not", ident);
-  ss << NL;
+                    MotorCurrent, MotorOn ? "ON!" : "off", BatteryVoltage, Umin, Uavg, Umax, Tmin, Tmax, batteryErrorsAsString(), ident)
+     << fmt::format("[PvC ={:4.1f}A (___) | MT1={:5.2f}A | MT2={:5.2f}A | MT3={:5.2f}A] | MT4={:5.2f}A]\n{}", PhotoVoltaicCurrent, Mppt1Current,
+                    Mppt2Current, Mppt3Current, Mppt4Current, ident)
+     << fmt::format("[DrvInf {}: {}]\n{}", INFO_TYPE_str[(int)DriverInfoType], getCleanString(DriverInfo), ident)
+     << fmt::format("sdCard: {}detected & {}mounted", SdCardDetect ? "" : "not ", sdCard.isMounted() ? "" : "not ")
+     << NL;
+  // clang-format on
   return ss.str();
 }
