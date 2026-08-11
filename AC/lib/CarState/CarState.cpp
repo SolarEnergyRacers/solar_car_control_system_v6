@@ -405,9 +405,9 @@ const string CarState::batteryErrorsAsString(bool verbose /*= false*/) {
   ss << "[";
   for (auto const &battErr : BatteryErrors) {
     if (verbose) {
-      ss << BATTERY_ERROR_str[(int)(battErr)];
+      ss << (int)(battErr) << " " << BATTERY_ERROR_str[(int)(battErr)] << " ";
     } else {
-      ss << (int)(battErr);
+      ss << (int)(battErr) << " ";
     }
     ss << (--counter > 0 ? "-" : "");
   }
@@ -426,8 +426,8 @@ const string CarState::drive_data() {
      << fmt::format("Target({}): {:3d}km/h-{:4.1f}kW [p={:5.2f} i={:5.2f} d={:5.2f}] {}\n{}",
                     ConstantModeOn ? CONSTANT_MODE_str[(int)(ConstantMode)] : "manual", (int)TargetSpeed, TargetPower, (float)Kp, (float)Ki,
                     (float)Kd, DRIVE_DIRECTION_str[(int)(DriveDirection)], ident)
-     << fmt::format("[MotC={:4.1f}A ({}) | BatV={:5.1f}V [Umin={:5.3f}V | Uavg={:5.3f}V | Umax={:5.3f}V] Tmin={:4.1f}°C "
-                    "Tmax={:4.1f}°C] {}\n{}",
+     << fmt::format("[MotC={:4.1f}A ({}) | BatV={:5.1f}V [Umin={:5.3f}V | Uavg={:5.3f}V | Umax={:5.3f}V] Tmin={:4.1f}C "
+                    "Tmax={:4.1f}C, BatErr: {}\n{}",
                     MotorCurrent, MotorOn ? "ON!" : "off", BatteryVoltage, Umin, Uavg, Umax, Tmin, Tmax, batteryErrorsAsString(), ident)
      << fmt::format("[PvC ={:4.1f}A (___) | MT1={:5.2f}A | MT2={:5.2f}A | MT3={:5.2f}A] | MT4={:5.2f}A]\n{}", PhotoVoltaicCurrent, Mppt1Current,
                     Mppt2Current, Mppt3Current, Mppt4Current, ident)
