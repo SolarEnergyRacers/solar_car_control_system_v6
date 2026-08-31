@@ -211,8 +211,6 @@ public:
   // All IO pins
   static CarStatePin pins[IOExtPINCOUNT];
   int getIdx(const string pinName);
-  CarStatePin *getPin(int devNr, int pinNr);
-  CarStatePin *getPin(int port);
   CarStatePin *getPin(const string pinName);
 
   std::map<string, int> idxOfPin;

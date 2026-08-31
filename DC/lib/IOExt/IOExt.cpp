@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <string>
 
-#include <Wire.h>     // I2C
+#include <Wire.h> // I2C
 
 #include <CarControl.h>
 #include <Console.h>
@@ -39,28 +39,28 @@ string IOExt::re_init() { return init(); }
 string IOExt::init() {
   bool hasError = false;
   int defined_devices_count = sizeof(CarState::pins) / sizeof(CarState::pins[0]);
-  console << "[  ] Init IOExt "<< defined_devices_count<<" devices...\n";
+  console << "[  ] Init IOExt " << defined_devices_count << " devices...\n";
 
   try {
     for (int pinNr = 0; pinNr < defined_devices_count; pinNr++) {
       CarStatePin *pin = carState.getPin(pinNr);
-      console << "Setup '" << pin->name <<"', mode:"<< pin->mode << ", continuousMode:" << pin->continuousMode << ", debounceTime_ms:" << pin->debounceTime_ms << NL;
+      console << "Setup '" << pin->name << "', mode:" << pin->mode << ", continuousMode:" << pin->continuousMode
+              << ", debounceTime_ms:" << pin->debounceTime_ms << NL;
       carState.idxOfPin.insert(pair<string, int>{pin->name, pinNr});
       pinMode(pin->gpio, pin->mode);
     }
     console << "     ok " << getName() << NL;
     // inital read the io pins
     readAllPins();
-  }
-  catch (exception &ex) {
+  } catch (exception &ex) {
     hasError = true;
     console << "ERROR: Couldn not init GPIOs, ex: " << ex.what() << NL;
   }
   // setup inerrupt handling
   ioInterruptRequest = false;
   isInInputHandler = false;
-  //pinMode(I2C_INTERRUPT, INPUT_PULLUP);
-  //attachInterrupt(digitalPinToInterrupt(I2C_INTERRUPT), ioExt_interrupt_handler, CHANGE);
+  // pinMode(I2C_INTERRUPT, INPUT_PULLUP);
+  // attachInterrupt(digitalPinToInterrupt(I2C_INTERRUPT), ioExt_interrupt_handler, CHANGE);
   return fmt::format("[{}] IOExt initialized.", hasError ? "--" : "ok");
 }
 
@@ -72,7 +72,12 @@ void IOExt::exit(void) {
 void IOExt::writeAllPins(PinHandleMode mode) {
   for (auto &pin : carState.pins) {
     if (pin.mode == OUTPUT && (pin.oldValue != pin.value || !pin.inited || mode == PinHandleMode::FORCED)) {
-      digitalWrite(pin.gpio, pin.value);
+      if (ioExt.verboseModeDOut) {
+        console << fmt::format("GPIO {:02}: {} --> {}, inited: {:5s}: {:18s}-DO_BreakLight_GPIO27\t({})", pin.gpio, pin.oldValue, pin.value,
+                               carState.getPin(pin.gpio)->value, carState.getPin(DO_BreakLight_GPIO27)->value, pin.inited ? "true" : "false", pin.name, millis())
+                << NL;
+      }
+      digitalWrite(pin.gpio, carState.getPin(pin.gpio)->value);
       pin.oldValue = pin.value;
       pin.inited = true;
     }
@@ -82,12 +87,11 @@ void IOExt::writeAllPins(PinHandleMode mode) {
 void IOExt::readAllPins() {
   for (CarStatePin &pin : carState.pins) {
     if (pin.mode != OUTPUT) {
-        pin.value = digitalRead(pin.gpio);
+      pin.value = digitalRead(pin.gpio);
     }
   }
   if (verboseModeDIn) {
-    console << fmt::format("IOExt ({}ms)", millis())
-            << ", Car state: " << carState.printIOs("", true, false) << "\n";
+    console << fmt::format("IOExt ({}ms)", millis()) << ", Car state: " << carState.printIOs("", true, false) << "\n";
   }
 }
 
@@ -106,7 +110,7 @@ bool IOExt::readAndHandlePins(PinHandleMode mode) {
       if ((pin.value == 0 || (pin.debounceTime_ms == 0 && pin.oldValue != pin.value)) &&
           (timestamp > pin.timestamp + pin.debounceTime_ms) &&
           (pin.continuousMode || pin.oldValue != pin.value || !pin.inited || mode == PinHandleMode::FORCED)) {
-        if (ioExt.verboseModeDIn)
+        if (verboseModeDIn)
           console << fmt::format("Get BOOL -- 0x{:02x}: {} --> {}, inited: {}  <-- {:18s} \t({})\t -> handle ({}ms)\n", pin.gpio,
                                  pin.oldValue, pin.value, pin.inited, pin.name, millis(), timestamp - pin.timestamp);
         pinHandlerList.push_back(pin.handlerFunction);

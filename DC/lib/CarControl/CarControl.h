@@ -11,6 +11,7 @@
 
 #include <AbstractTask.h>
 #include <global_definitions.h>
+
 #include "../definitions.h"
 
 class CarControl : public AbstractTask {
@@ -33,14 +34,14 @@ public:
   void set_DAC();
 
   bool read_paddles();
-   bool verboseMode = false;
+  bool verboseMode = false;
   bool verboseModeDebug = false;
 
 private:
   int ads_min_dec = 0;
   int ads_min_acc = 0;
-  int ads_max_dec = 15000; //45000
-  int ads_max_acc = 15000; //45000
+  int ads_max_dec = 15000; // 45000
+  int ads_max_acc = 15000; // 45000
   int accelLast = INT_MAX;
   int recupLast = INT_MAX;
   int accelerationDisplayLast = INT_MAX;

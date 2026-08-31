@@ -44,25 +44,6 @@ int CarState::getIdx(const string pinName) {
   return -1;
 }
 
-CarStatePin *CarState::getPin(int devNr, int pinNr) {
-  int idx = devNr * 16 + pinNr;
-  if (idx < 0 || idx >= IOExtPINCOUNT)
-    return NULL;
-  if (carState.pins[idx].name.length() == 0)
-    return NULL;
-  return &(carState.pins[idx]);
-}
-
-CarStatePin *CarState::getPin(int port) {
-  for (int pinIdx = 0; pinIdx < IOExtPINCOUNT; ++pinIdx) {
-    if (carState.pins[pinIdx].name.length() == 0)
-      continue;
-    if (carState.pins[pinIdx].gpio == port)
-      return &(carState.pins[pinIdx]);
-  }
-  return NULL;
-}
-
 CarStatePin *CarState::getPin(const string pinName) {
   int idx = carState.getIdx(pinName);
   if (idx < 0 || idx >= IOExtPINCOUNT)
