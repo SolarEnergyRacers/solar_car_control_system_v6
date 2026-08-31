@@ -359,7 +359,7 @@ void CmdHandler::task(void *pvParams) {
           console << "Received: '" << input.c_str() << "' -->  carState.SpeedArrow=" << SPEED_ARROW_str[(int)(carState.SpeedArrow)] << NL;
           break;
         case ':':
-          carState.DriverInfoType = INFO_TYPE::INFO;
+          carState.DriverInfoType = INFO_TYPE::STATUS;
           carState.DriverInfo = &input[1];
           console << "Received: '" << input.c_str() << "' -->  carState.DriverInfo " << INFO_TYPE_str[(int)carState.DriverInfoType] << ": "
                   << carState.DriverInfo << NL;

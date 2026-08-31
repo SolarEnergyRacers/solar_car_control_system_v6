@@ -65,11 +65,11 @@ int DriverDisplay::getColorForInfoType(INFO_TYPE type) {
   int color;
   switch (type) {
   case INFO_TYPE::ERROR:
-    color = ILI9341_RED;
+    color = ILI9341_MAROON;
     break;
 
   case INFO_TYPE::WARN:
-    color = ILI9341_GREENYELLOW;
+    color = ILI9341_RED;
     break;
 
   case INFO_TYPE::STATUS:
@@ -78,7 +78,7 @@ int DriverDisplay::getColorForInfoType(INFO_TYPE type) {
 
   case INFO_TYPE::INFO:
   default:
-    color = ILI9341_WHITE;
+    color = ILI9341_DARKGREEN; // GREEN;
     break;
   }
   return color;
