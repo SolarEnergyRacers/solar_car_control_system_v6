@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# pepped up version of one liner
+# while true; do echo "-------------------$(date)------------------" ; ll /dev/ttyU* ; ll /dev/esp* ; sleep 1.000 ; done
+
+# ANSI color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+MAGENTA='\033[0;35m'
+RESET='\033[0m'
+
+# Countdown timer in seconds (default 3, override with first argument)
+COUNTDOWN=${1:-3}
+
+echo -e "${CYAN}Starting loop... (countdown=${COUNTDOWN}s)${RESET}"
+echo ""
+
+# Main loop with countdown
+COUNT=0
+while true; do
+    ((COUNT++))
+    # echo -e "${GREEN}Iteration: $COUNT${RESET}"
+    ls -l --color=auto /dev/ttyU* /dev/esp* 2>/dev/null
+    echo -ne "${MAGENTA}--${GREEN}$COUNT${RESET}-----$(date)----------${RESET}"
+    for ((i=COUNTDOWN; i>0; i--)); do
+        echo -ne "${MAGENTA}$i-${RESET}"
+        sleep 1
+    done
+    echo ""
+done
