@@ -121,8 +121,8 @@ bool CarControl::read_paddles() {
     }
     carState.AccelerationDisplay = -64; // calculate_acceleration_display(carState.Deceleration, carState.Acceleration);
     if (carControl.verboseMode) {
-      console << fmt::format("paddle with BREAK PEDAL: Decl={:6d}, {:6d} | Accl={:6d}, {:6d} | => [{:4d}]\n", carState.Deceleration,
-                             adc.stw_dec, carState.Acceleration, adc.stw_acc, carState.AccelerationDisplay);
+      console << fmt::format("paddle with BREAK PEDAL: Decl={:6d}, {:6d} | Accl={:6d}, {:6d} | => [{:4d}] | break light {}\n", carState.Deceleration,
+                             adc.stw_dec, carState.Acceleration, adc.stw_acc, carState.AccelerationDisplay, carState.getPin(DO_BreakLight_GPIO27)->value ? "ON" : "OFF");
     }
   } else {
     carState.Deceleration = normalize_0_UINT16(ads_min_dec, ads_max_dec, adc.stw_dec);
@@ -148,8 +148,8 @@ bool CarControl::read_paddles() {
   if (accelerationDisplayLast != carState.AccelerationDisplay) {
     accelerationDisplayLast = carState.AccelerationDisplay;
     if (carControl.verboseMode) {
-      console << fmt::format("paddle w/o  BREAK PEDAL: Decl={:6d}, {:6d} | Accl={:6d}, {:6d} | => [{:4d}]\n", carState.Deceleration,
-                             adc.stw_dec, carState.Acceleration, adc.stw_acc, carState.AccelerationDisplay);
+      console << fmt::format("paddle w/o  BREAK PEDAL: Decl={:6d}, {:6d} | Accl={:6d}, {:6d} | => [{:4d}] | break light {}\n", carState.Deceleration,
+                             adc.stw_dec, carState.Acceleration, adc.stw_acc, carState.AccelerationDisplay, carState.getPin(DO_BreakLight_GPIO27)->value ? "ON" : "OFF");
     }
     return true;
   }
@@ -166,9 +166,9 @@ void CarControl::set_DAC() {
 
   if (carControl.verboseMode) {
     console << fmt::format(
-        "set DAC:: valueDAC_dec={:6d}, valueDAC_acc={:6d} | valueDec={:6d}, valueAcc={:6d} [valueDisplay={:4d}] > Speed={:3d} ({:6d})\n",
+        "set DAC:: valueDAC_dec={:6d}, valueDAC_acc={:6d} | valueDec={:6d}, valueAcc={:6d} [valueDisplay={:4d}] > Speed={:3d} ({:6d}) | break light {}\n",
         valueDAC_dec, valueDAC_acc, carState.Deceleration, carState.Acceleration, carState.AccelerationDisplay, carState.Speed,
-        adc.motor_speed);
+        adc.motor_speed, carState.getPin(DO_BreakLight_GPIO27)->value ? "ON" : "OFF");
   }
 }
 
@@ -196,7 +196,7 @@ void CarControl::task(void *pvParams) {
       // read_reference_cell_data();
       read_speed();
       read_potentiometer();
-      if (read_paddles())
+      if (read_paddles() || carState.BreakPedal)
         set_DAC(); // write DAC immediately when paddles change
       switch_break_light();
       // update OUTPUT pins
