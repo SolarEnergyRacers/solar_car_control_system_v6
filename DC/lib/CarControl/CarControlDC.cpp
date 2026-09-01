@@ -111,23 +111,17 @@ bool CarControl::read_paddles() {
     // #SAFETY#: on backwards -> clean
     carState.ConstantModeOn = false;
   }
+  carState.Deceleration = normalize_0_UINT16(ads_min_dec, ads_max_dec, adc.stw_dec);
+  carState.Acceleration = normalize_0_UINT16(ads_min_acc, ads_max_acc, adc.stw_acc);
   if (carState.BreakPedal) {
     // #SAFETY#: on break pedal -> deccelerate
     carState.ConstantModeOn = false;
     carState.Acceleration = 0;
-    uint16_t dec_procent = ads_max_dec * 0.64;
-    if (carState.Deceleration < dec_procent) {
-      carState.Deceleration = dec_procent;
-      carState.AccelerationDisplay = -64; // calculate_acceleration_display(carState.Deceleration, carState.Acceleration);
-    }
-    if (carControl.verboseMode) {
-      console << fmt::format("paddle with BREAK PEDAL: Decl={:6d}, {:6d} | Accl={:6d}, {:6d} | => [{:4d}] | break light {}\n", carState.Deceleration,
-                             adc.stw_dec, carState.Acceleration, adc.stw_acc, carState.AccelerationDisplay, carState.getPin(DO_BreakLight_GPIO27)->value ? "ON" : "OFF");
+    carState.AccelerationDisplay = calculate_acceleration_display(carState.Deceleration, carState.Acceleration);
+    if (carState.AccelerationDisplay > -64) {
+      carState.AccelerationDisplay = -64;
     }
   } else {
-    carState.Deceleration = normalize_0_UINT16(ads_min_dec, ads_max_dec, adc.stw_dec);
-    carState.Acceleration = normalize_0_UINT16(ads_min_acc, ads_max_acc, adc.stw_acc);
-
     // #SAFETY#: Reset constant mode on deceleration paddel touched
     if (carState.Deceleration > 0) {
       carState.ConstantModeOn = false;
@@ -148,10 +142,17 @@ bool CarControl::read_paddles() {
   if (accelerationDisplayLast != carState.AccelerationDisplay) {
     accelerationDisplayLast = carState.AccelerationDisplay;
     if (carControl.verboseMode) {
-      console << fmt::format("paddle w/o  BREAK PEDAL: Decl={:6d}, {:6d} | Accl={:6d}, {:6d} | => [{:4d}] | break light {}\n", carState.Deceleration,
-                             adc.stw_dec, carState.Acceleration, adc.stw_acc, carState.AccelerationDisplay, carState.getPin(DO_BreakLight_GPIO27)->value ? "ON" : "OFF");
+      console << fmt::format("=-Brake pedal: {:3s} [light {:3s}] Decl={:6d}, {:6d} | Accl={:6d}, {:6d} | => [{:4d}] \n",
+                             carState.BreakPedal ? "ON" : "OFF", carState.getPin(DO_BreakLight_GPIO27)->value ? "ON" : "OFF",
+                             carState.Deceleration, adc.stw_dec, carState.Acceleration, adc.stw_acc, carState.AccelerationDisplay);
     }
+    set_DAC();
     return true;
+  }
+  if (carControl.verboseMode) {
+    console << fmt::format("--Brake pedal: {:3s} [light {:3s}] Decl={:6d}, {:6d} | Accl={:6d}, {:6d} | => [{:4d}] \n",
+                           carState.BreakPedal ? "ON" : "OFF", carState.getPin(DO_BreakLight_GPIO27)->value ? "ON" : "OFF",
+                           carState.Deceleration, adc.stw_dec, carState.Acceleration, adc.stw_acc, carState.AccelerationDisplay);
   }
   return false;
 }
@@ -164,11 +165,11 @@ void CarControl::set_DAC() {
   dac.set_pot(valueDAC_dec, DAC::pot_chan::POT_CHAN1_DEC);
   dac.set_pot(valueDAC_acc, DAC::pot_chan::POT_CHAN0_ACC);
 
-  if (carControl.verboseMode) {
-    console << fmt::format(
-        "set DAC:: valueDAC_dec={:6d}, valueDAC_acc={:6d} | valueDec={:6d}, valueAcc={:6d} [valueDisplay={:4d}] > Speed={:3d} ({:6d}) | break light {}\n",
-        valueDAC_dec, valueDAC_acc, carState.Deceleration, carState.Acceleration, carState.AccelerationDisplay, carState.Speed,
-        adc.motor_speed, carState.getPin(DO_BreakLight_GPIO27)->value ? "ON" : "OFF");
+  if (carControl.verboseModeDebug) {
+    console << fmt::format("set DAC:: valueDAC_dec={:6d}, valueDAC_acc={:6d} | valueDec={:6d}, valueAcc={:6d} [valueDisplay={:4d}] > "
+                           "Speed={:3d} ({:6d}) | break light {}\n",
+                           valueDAC_dec, valueDAC_acc, carState.Deceleration, carState.Acceleration, carState.AccelerationDisplay,
+                           carState.Speed, adc.motor_speed, carState.getPin(DO_BreakLight_GPIO27)->value ? "ON" : "OFF");
   }
 }
 
