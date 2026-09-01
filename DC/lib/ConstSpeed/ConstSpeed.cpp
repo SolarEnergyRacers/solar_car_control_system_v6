@@ -19,11 +19,13 @@
 #include <CarState.h>
 #include <ConstSpeed.h>
 
+// #include <ADC_SER.h>
 #include <Console.h>
 #include <DAC.h>
 #include <Helper.h>
 #include <PID_v1.h>
 
+// extern ADC adc;
 extern Console console;
 extern PID pid;
 extern ConstSpeed constSpeed;
@@ -97,34 +99,50 @@ void ConstSpeed::task(void *pvParams) {
       input_value = carState.Speed;
       target_speed = carState.TargetSpeed;
 
-      if (verboseModePID) {
-        console << "#- input_value=" << input_value << ", target_speed=" << target_speed << " =>";
-      }
+      int accelerationDisplay_paddle = carControl.calculate_acceleration_display(carState.Deceleration, carState.Acceleration);
+
       // update pid controller
       bool hasNewValue = pid.Compute();
+      if (verboseModePID) {
+        console << fmt::format("# curSpeed={:4.0f} -> tarSpeed={:4.0f} => accD={:3d}, oSP={:8.2f}", input_value, target_speed,
+                               carState.AccelerationDisplay, output_setpoint);
+      }
       if (!hasNewValue) {
         if (verboseModePID) {
-          console << " cst=0" << carState.AccelerationDisplay << "(" << output_setpoint << ")\n";
+          console << fmt::format(" ==> OK.") << NL;
         }
         return;
       }
-
+      if (verboseModePID) {
+        console << fmt::format(" ==> CTRL: ");
+      }
       // set acceleration & deceleration
       uint8_t acc = 0;
       uint8_t dec = 0;
+      int accelerationDisplay_SetPoint = 0;
+
+      carControl.read_paddles();
 
       if (output_setpoint > 0) {
         acc = round(output_setpoint);
       } else if (output_setpoint < 0) {
-        dec = round(-output_setpoint * carState.GlideMode/7.);
+        dec = round(-output_setpoint * carState.GlideMode / 7.);
       }
-      carState.AccelerationDisplay = round((acc > 0 ? acc : -dec) * normalisation_factor);
+      accelerationDisplay_SetPoint = round((acc > 0 ? acc : -dec) * normalisation_factor);
+
+      if (accelerationDisplay_paddle > accelerationDisplay_SetPoint)
+        carState.AccelerationDisplay = accelerationDisplay_paddle;
+      else
+        carState.AccelerationDisplay = accelerationDisplay_SetPoint;
+
       carControl.set_DAC();
 
       if (verboseModePID) {
-        console << "dec=" << dec;
-        console << "acc=" << acc;
-        console << ", disp: " << carState.AccelerationDisplay << " (" << output_setpoint << ")\n";
+        console << fmt::format("dec={:5d}, acc={:5d}, nSP:{:8.2f}", dec, acc, output_setpoint)
+                << fmt::format(" | Decl={:6d} | Accl={:6d} | => [{:4d}|{:4d}]  | Brake P:{:3s}[L:{:3s}]\n",
+                               carState.Deceleration, carState.Acceleration, carState.AccelerationDisplay,
+                               accelerationDisplay_paddle, carState.BreakPedal ? "ON" : "OFF",
+                               carState.getPin(DO_BreakLight_GPIO27)->value ? "ON" : "OFF");
       }
     }
     taskSuspend();

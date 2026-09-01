@@ -28,9 +28,9 @@ public:
 
   // Class functions and members
 private:
-  double input_value;
-  double output_setpoint;
-  double target_speed;          // in m/s
+  double input_value = 0;
+  double output_setpoint = 0;
+  double target_speed = 0;      // in m/s
   double speed_increment = 1.0; // in m/s
   PID pid = PID(&input_value, &output_setpoint, &target_speed, carState.Kp, carState.Ki, carState.Kd, DIRECT);
 
