@@ -29,5 +29,5 @@ while true; do
         echo -ne "${MAGENTA}$i-${RESET}"
         sleep 1
     done
-    echo ""
+    echo "|"
 done
