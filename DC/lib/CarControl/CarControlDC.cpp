@@ -116,10 +116,10 @@ bool CarControl::read_paddles() {
     carState.ConstantModeOn = false;
     carState.Acceleration = 0;
     uint16_t dec_procent = ads_max_dec * 0.64;
-    if (carState.Deceleration > dec_procent) {
+    if (carState.Deceleration < dec_procent) {
       carState.Deceleration = dec_procent;
+      carState.AccelerationDisplay = -64; // calculate_acceleration_display(carState.Deceleration, carState.Acceleration);
     }
-    carState.AccelerationDisplay = -carState.Deceleration; //-64; // calculate_acceleration_display(carState.Deceleration, carState.Acceleration);
     if (carControl.verboseMode) {
       console << fmt::format("paddle with BREAK PEDAL: Decl={:6d}, {:6d} | Accl={:6d}, {:6d} | => [{:4d}] | break light {}\n", carState.Deceleration,
                              adc.stw_dec, carState.Acceleration, adc.stw_acc, carState.AccelerationDisplay, carState.getPin(DO_BreakLight_GPIO27)->value ? "ON" : "OFF");
