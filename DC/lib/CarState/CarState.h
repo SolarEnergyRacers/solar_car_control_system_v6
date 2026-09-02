@@ -146,6 +146,7 @@ public:
 
   // physical car data (measurement values)
   uint8_t Speed;          // ADC
+  double SpeedExact; // exact speed value before rounding
   uint16_t Potentiometer; // ADC potentiometer from switch board
   uint16_t Acceleration;  // ADC Steering Wheel
   uint16_t Deceleration;  // ADC Steering Wheel

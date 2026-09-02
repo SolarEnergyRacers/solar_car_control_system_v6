@@ -95,9 +95,10 @@ bool CarControl::read_speed() {
   // float rpm = 370 * voltage;                 // round per minute
   // int speed = round(3.1416 * diameter * rpm * 6. / 100.); // [km/h]
 
-  int speed = 40 * voltage;
-  if (carState.Speed != speed) {
-    carState.Speed = speed;
+  double speed = 40. * voltage;
+  if (abs(carState.SpeedExact - speed) > 0.1) {
+    carState.SpeedExact = speed;
+    carState.Speed = round(speed);
     return true;
   }
   return false;

@@ -100,7 +100,7 @@ void ConstSpeed::task(void *pvParams) {
   while (1) {
     if (SystemInited && carState.ConstantModeOn && carState.ConstantMode == CONSTANT_MODE::SPEED) {
       // read target speed
-      input_value = carState.Speed;
+      input_value = carState.SpeedExact;
       target_speed = carState.TargetSpeed;
 
       int accelerationDisplay_paddle = carControl.calculate_acceleration_display(carState.Deceleration, carState.Acceleration);
