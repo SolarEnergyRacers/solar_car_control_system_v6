@@ -10,6 +10,7 @@
 #include <CANBus.h>
 #include <CarState.h>
 #include <Console.h>
+#include <ConstSpeed.h>
 #include <Helper.h>
 #include <fmt/core.h>
 #include <freertos/FreeRTOS.h>
@@ -19,6 +20,7 @@
 extern CarState carState;
 extern Console console;
 extern CANBus canBus;
+extern ConstSpeed constSpeed;
 
 bool CANBus::is_to_ignore_packet(uint16_t packetId) {
     // // allow only AC life sign and the two DC packets (0x660, 0x661)
@@ -38,18 +40,19 @@ void CANBus::handle_rx_packet(CANPacket packet) {
         console << print_raw_packet("R", packet) << NL;
 
     switch (packetId) {
-        case AC_BASE_ADDR | 0x00:
+        case AC_BASE_ADDR | 0x00: {
             carState.LifeSign = packet.getData_u16(0);
-            carState.Kp = (double)packet.getData_u8(2) / 4.;
-            carState.Ki = (double)packet.getData_u8(3) / 10.;
-            carState.Kd = (double)packet.getData_u8(4) / 10.;
+            double Kp = (double)packet.getData_u8(2) / 4.;
+            double Ki = (double)packet.getData_u8(3) / 10.;
+            double Kd = (double)packet.getData_u8(4) / 10.;
+            constSpeed.set_pid(Kp, Ki, Kd);
             carState.GlideMode = (uint8_t)(packet.getData_u8(5) & 0x07);
             carState.ConstantMode = packet.getData_b(48) ? CONSTANT_MODE::SPEED : CONSTANT_MODE::POWER;
             carState.ConfirmDriverInfo = packet.getData_b(49);
             if (verboseModeCanIn)
                 console << fmt::format("LifeSign= {:4x}, Kp={5.2f}, Ki={5.2f}, Kd={5.2f} carState.ConstantMode={}, GlideMode={} of 7\n", carState.LifeSign, carState.Kp,
                                        carState.Ki, carState.Kd, CONSTANT_MODE_str[(int)(carState.ConstantMode)], carState.GlideMode);
-            break;
+        } break;
 
         case DC_BASE_ADDR:
             break;

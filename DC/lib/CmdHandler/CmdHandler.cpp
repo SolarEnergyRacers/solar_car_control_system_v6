@@ -247,9 +247,12 @@ void CmdHandler::task(void *pvParams) {
               float Ki = atof(arr[1].c_str());
               float Kd = atof(arr[2].c_str());
               constSpeed.set_pid(Kp, Ki, Kd);
-              console << "PID set parameters: ";
+              console << " ==> set new PID parameters: ";
             }
-            console << "Kp=" << carState.Kp << ", Ki=" << carState.Ki << ", Kd=" << carState.Kd << NL;
+            float Kp = constSpeed.getKp();
+            float Ki = constSpeed.getKi();
+            float Kd = constSpeed.getKd();
+            console << "Kp=" << Kp << ", Ki=" << Ki << ", Kd=" << Kd << " Will be overwritten when AC is running!" << NL;
           }
           break;
         default:

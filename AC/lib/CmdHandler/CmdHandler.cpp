@@ -324,7 +324,7 @@ void CmdHandler::task(void *pvParams) {
             else
               carState.Kd = atof(arr[2].c_str());
             // later Kp,Ki,Kd will be sent by CAN to DC
-            console << "PID set parameters: ";
+            console << " ==> set new PID parameters: ";
           }
           console << "Kp=" << carState.Kp << ", Ki=" << carState.Ki << ", Kd=" << carState.Kd << NL;
 #else

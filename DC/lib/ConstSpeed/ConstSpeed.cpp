@@ -74,6 +74,10 @@ void ConstSpeed::set_pid(double Kp, double Ki, double Kd) {
   pid.SetTunings(carState.Kp, carState.Ki, carState.Kd);
 }
 
+double ConstSpeed::getKp() { return pid.GetKp(); }
+double ConstSpeed::getKi() { return pid.GetKi(); }
+double ConstSpeed::getKd() { return pid.GetKd(); }
+  
 void ConstSpeed::update_pid() {
   if (carState.Kp != pid.GetKp() || carState.Ki != pid.GetKi() || carState.Kd != pid.GetKd())
     pid.SetTunings(carState.Kp, carState.Ki, carState.Kd);
@@ -139,10 +143,9 @@ void ConstSpeed::task(void *pvParams) {
 
       if (verboseModePID) {
         console << fmt::format("dec={:5d}, acc={:5d}, nSP:{:8.2f}", dec, acc, output_setpoint)
-                << fmt::format(" | Decl={:6d} | Accl={:6d} | => [{:4d}|{:4d}]  | Brake P:{:3s}[L:{:3s}]\n",
-                               carState.Deceleration, carState.Acceleration, carState.AccelerationDisplay,
-                               accelerationDisplay_paddle, carState.BreakPedal ? "ON" : "OFF",
-                               carState.getPin(DO_BreakLight_GPIO27)->value ? "ON" : "OFF");
+                << fmt::format(" | Decl={:6d} | Accl={:6d} | => [{:4d}|{:4d}]  | Brake P:{:3s}[L:{:3s}]\n", carState.Deceleration,
+                               carState.Acceleration, carState.AccelerationDisplay, accelerationDisplay_paddle,
+                               carState.BreakPedal ? "ON" : "OFF", carState.getPin(DO_BreakLight_GPIO27)->value ? "ON" : "OFF");
       }
     }
     taskSuspend();
