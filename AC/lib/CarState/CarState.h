@@ -169,6 +169,7 @@ public:
   float PhotoVoltaicCurrent; // ADC
   float MotorVoltage;        // ADC
   float MotorCurrent;        // ADC
+  uint8_t Backlight;         // Display Backlight
 
   float Mppt1Current; // CAN
   float Mppt2Current; // CAN

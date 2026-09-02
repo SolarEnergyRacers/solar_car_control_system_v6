@@ -106,6 +106,7 @@ bool CarState::initalize_config(const string &configFile) {
     // [DriverDisplay]
     DriverDisplayDataFrameY = cf.get("DriverDisplay", "DataFrame", 0);
     DriverDisplayInfoFrameY = cf.get("DriverDisplay", "InfoFrame", 182);
+    Backlight = cf.get("DriverDisplay", "Backlight", 255);
 
   } catch (exception &ex) {
     console << "WARN: No config file: '" << FILENAME_SER6CONFIG << "' found or readable: " << ex.what() << NL;
@@ -185,6 +186,7 @@ const string CarState::print(string msg, bool withColors) {
      << "Telemetry cache records " << MaxCachedRecords << NL << NL
     //  << "Driver Display Data Frame Offset Y ... " << DriverDisplayDataFrameY << NL 
     //  << "Driver Display Info Frame Offset Y ... " << DriverDisplayInfoFrameY << NL 
+     << "Backlight ............... " << (int)Backlight << NL
      << "========================================================================" << NL;
   // clang-format on
   return ss.str();

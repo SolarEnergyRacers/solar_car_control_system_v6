@@ -32,6 +32,7 @@
 #include <CarStateRadio.h>
 #include <CmdHandler.h>
 #include <Console.h>
+#include <DAC.h>
 #include <Display.h>
 #include <DriverDisplay.h>
 #include <EngineerDisplay.h>
@@ -48,12 +49,14 @@ extern CarState carState;
 extern CarStateRadio carStateRadio;
 extern CANBus canBus;
 extern CarControl carControl;
+extern DAC dac;
 extern Display display;
 extern DriverDisplay driverDisplay;
 extern EngineerDisplay engineerDisplay;
 extern SDCard sdCard;
 extern Console console;
 extern Uart uart;
+
 #if RTC_ON
 extern GlobalTime globalTime;
 #endif
@@ -344,6 +347,18 @@ void CmdHandler::task(void *pvParams) {
           }
           console << "Glide mode set to: " << (int)carState.GlideMode << " of 7" << NL;
         } break;
+        case 'Y':
+          dac.verboseModeDAC = !dac.verboseModeDAC;
+          console << "set verboseModeDAC: " << dac.verboseModeDAC << NL;
+          break;
+        case 'y':
+          if (input.length() > 1) {
+            carState.Backlight = atoi(&input[1]);
+            dac.set_pot(carState.Backlight);
+            console << "Received: '" << input.c_str() << "' --> ";
+          }
+          console << "carState.Backlight = " << carState.Backlight << NL;
+          break;
         case 'i':
           carControl.verboseModeCarControl = !carControl.verboseModeCarControl;
           console << "set verboseModeCarControl: " << carControl.verboseModeCarControl << NL;
