@@ -17,7 +17,7 @@ public:
   void task(void *pvParams);
 
   // Class functions and members
-  string commands = "REDPSVJMUFBICOTKGi:!sc?";
+  string commands = "REDPSVJMUFBICOTKGi:!scy?";
   string helpText = "Available commands (" + commands +
                     "):\n"
                     "\t-------- SYSTEM COMMANDS -------------------------\n"
@@ -55,7 +55,9 @@ public:
                     "\t!<text> _ _ _ _ _ _ _ _ _ display driver warn text\n"
                     "\ts [|+|-]  _ _ _ _ _ _ _ _ speed arrow off, green up (+), red down (-)\n"
                     "\t-------- Driver SUPPORT COMMANDS -----------------\n"
-                    "\tc [-|+|s|p] _ _ _ _ _ _ _ constant mode on (-:off|+:on|s:speed|p:power)\n";
+                    "\tc [-|+|s|p] _ _ _ _ _ _ _ constant mode on (-:off|+:on|s:speed|p:power)\n"
+                    "\ty [val] _ _ _ _ _ _ _ _ _ backlight (0-255)\n"
+                    "\tY _ _ _ _ _ _ _ _ _ _ _ _ DAC verbose Mode DAC\n";
 
   string printSystemValues(void);
 };

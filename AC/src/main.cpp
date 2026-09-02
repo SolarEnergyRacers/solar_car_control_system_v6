@@ -40,6 +40,7 @@
 #include <CarStateRadio.h>
 #include <CmdHandler.h>
 #include <Console.h>
+#include <DAC.h>
 #include <Display.h>
 #include <DriverDisplay.h>
 #include <EngineerDisplay.h>
@@ -68,6 +69,7 @@ void app_main(void);
 using namespace std;
 
 int base_offset_suspend = 10;
+bool dacInited = false;
 bool SystemInited = false;
 bool SystemJustInited = true;
 uint64_t life_sign = 0;
@@ -78,6 +80,7 @@ CarState carState;
 CarStateRadio carStateRadio;
 CmdHandler cmdHandler;
 Console console;
+DAC dac;
 DriverDisplay driverDisplay;
 EngineerDisplay engineerDisplay;
 GPInputOutput gpio;
@@ -141,8 +144,8 @@ void app_main(void) {
   if (rtc_valid) {
     console << "RTC status: datetime valid (backup domain OK).\n";
   } else {
-    console << "RTC status: datetime invalid (possible backup battery loss or uninitialized clock), LastError="
-            << (int)rtc_last_error << "\n";
+    console << "RTC status: datetime invalid (possible backup battery loss or uninitialized clock), LastError=" << (int)rtc_last_error
+            << "\n";
   }
   console << "RTC time: " << globalTime.strTime("%H:%M:%S %Y-%m-%d (%a)") << "\n";
   carState.init_values();
@@ -266,9 +269,17 @@ void app_main(void) {
   } else {
     console << "WARN: Skip config read from SD, card not mounted." << NL;
   }
-
+  
+  // DAC (PWM)
+  msg = dac.init();
+  console << msg << NL;
+  dac.verboseModeDAC = false;
+  // vTaskDelay(10);
+ 
   SystemInited = true;
-
+  
+  dac.set_pot(carState.Backlight);  
+  
   //------------------------------------------------------------
   // IOExt AC
   msg = ioExt.init_t(1, 10, 4000, base_offset_suspend + 20);
@@ -289,6 +300,8 @@ void app_main(void) {
   display.print(msg + "\n");
   // vTaskDelay(10);
 
+  dac.set_pot(carState.Backlight);  
+  
   stringstream ss;
   ss << NL;
   ss << "----------------------------------------------------" << NL;
