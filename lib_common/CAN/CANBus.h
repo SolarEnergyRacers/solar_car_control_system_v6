@@ -199,6 +199,7 @@ class CANBus : public AbstractTask {
     // SemaphoreHandle_t mutex_in;
     SemaphoreHandle_t mutex_out;
     bool verboseModeCanIn = false;
+    bool verboseModeCanAddr = false;
     bool verboseModeCanInNative = false;
     bool verboseModeCanOut = false;
     bool verboseModeCanOutNative = false;

@@ -86,6 +86,19 @@ static bool read_can_packet(CANPacket& outPacket) {
     }
 
     uint16_t packetId = static_cast<uint16_t>(message.identifier & 0x7FF);
+
+    if (canBus.verboseModeCanAddr) {
+        string indent = "";
+        if ((packetId & 0xFF0) == 0x500) indent = "";
+        if ((packetId & 0xFF0) == 0x600) indent = "      ";
+        if ((packetId & 0xFF0) == 0x610) indent = "            ";
+        if ((packetId & 0xFF0) == 0x620) indent = "                  ";
+        if ((packetId & 0xFF0) == 0x630) indent = "                        ";
+        if ((packetId & 0xFF0) == 0x650) indent = "                              ";
+        if ((packetId & 0xFF0) == 0x660) indent = "                                    ";
+        if ((packetId & 0xF00) == 0x700) indent = "                                          ";
+        console << fmt::format("CAN packet ID:{}0x{:03X}", indent, packetId) << NL;
+    }
     if (!is_relevant_can_id(packetId)) {
         return false;
     }
@@ -271,7 +284,7 @@ void CANBus::init_ages() {
     max_ages[MPPT4_BASE_ADDR | 0x3] = MAXAGE_MPPT_AUX_POWER;
     max_ages[MPPT4_BASE_ADDR | 0x4] = MAXAGE_MPPT_LIMITS;
     max_ages[MPPT4_BASE_ADDR | 0x5] = MAXAGE_MPPT_STATUS;
-    max_ages[MPPT4_BASE_ADDR | 0x6] = MAXAGE_MPPT_POWER_CONN;    
+    max_ages[MPPT4_BASE_ADDR | 0x6] = MAXAGE_MPPT_POWER_CONN;
 
     // init ages
     ages[AC_BASE_ADDR | 0x00] = INT32_MAX;
@@ -414,40 +427,40 @@ CANPacket CANBus::writePacket(uint16_t adr, CANPacket packet, bool force) {
 }
 
 void CANBus::write_rx_packet(CANPacket packet) {
-        static constexpr uint8_t CRITICAL_TX_MAX_RETRY = 3;
-        static constexpr uint16_t TX_FAIL_RECOVERY_THRESHOLD = 50;
+    static constexpr uint8_t CRITICAL_TX_MAX_RETRY = 3;
+    static constexpr uint16_t TX_FAIL_RECOVERY_THRESHOLD = 50;
 
-        auto retry_critical_packet = [&](uint16_t packetId) {
-            if (!is_critical_control_id(packetId)) {
-                return;
-            }
-            uint8_t& retries = criticalTxRetries[packetId];
-            if (retries < CRITICAL_TX_MAX_RETRY) {
-                retries++;
-                pushOut(packet);
-            }
-        };
+    auto retry_critical_packet = [&](uint16_t packetId) {
+        if (!is_critical_control_id(packetId)) {
+            return;
+        }
+        uint8_t& retries = criticalTxRetries[packetId];
+        if (retries < CRITICAL_TX_MAX_RETRY) {
+            retries++;
+            pushOut(packet);
+        }
+    };
 
     uint16_t adr = 0;
     try {
         if (xSemaphoreTake(mutex_out, (TickType_t)32) != pdTRUE) {
-                    counterW_notAvail++;
-                    txFailStreak++;
-                    if (is_critical_control_id(packet.getId())) {
-                        counterCriticalTxFail++;
-                    }
-                    retry_critical_packet(packet.getId());
-                    if (counterW_notAvail > TX_FAIL_RECOVERY_THRESHOLD && (millis() - lastReinitMs) > (REINIT_COOLDOWN_MS / 2)) {
-                        twai_status_info_t statusInfo = {};
-                        if (twai_get_status_info(&statusInfo) == ESP_OK && statusInfo.state == TWAI_STATE_BUS_OFF) {
-                            console << "WARN: TWAI bus-off detected during transmit failure, initiating recovery." << NL;
-                            twai_initiate_recovery();
-                        } else {
-                            console << "WARN: Reinitializing CAN after repeated transmit failure without bus-off." << NL;
-                            re_init();
-                        }
-                    }
-          return;
+            counterW_notAvail++;
+            txFailStreak++;
+            if (is_critical_control_id(packet.getId())) {
+                counterCriticalTxFail++;
+            }
+            retry_critical_packet(packet.getId());
+            if (counterW_notAvail > TX_FAIL_RECOVERY_THRESHOLD && (millis() - lastReinitMs) > (REINIT_COOLDOWN_MS / 2)) {
+                twai_status_info_t statusInfo = {};
+                if (twai_get_status_info(&statusInfo) == ESP_OK && statusInfo.state == TWAI_STATE_BUS_OFF) {
+                    console << "WARN: TWAI bus-off detected during transmit failure, initiating recovery." << NL;
+                    twai_initiate_recovery();
+                } else {
+                    console << "WARN: Reinitializing CAN after repeated transmit failure without bus-off." << NL;
+                    re_init();
+                }
+            }
+            return;
         }
         adr = packet.getId();
         if (adr == 0) {
@@ -472,10 +485,10 @@ void CANBus::write_rx_packet(CANPacket packet) {
         xSemaphoreGive(mutex_out);
         if (!ok) {
             counterW_notAvail++;
-                        if (is_critical_control_id(adr)) {
-                            counterCriticalTxFail++;
-                        }
-                        retry_critical_packet(adr);
+            if (is_critical_control_id(adr)) {
+                counterCriticalTxFail++;
+            }
+            retry_critical_packet(adr);
             if ((counterW_notAvail % 100) == 0) {
                 console << fmt::format("CAN transmit timeout/fail (W_notAvail={})\n", counterW_notAvail);
             }
@@ -492,18 +505,18 @@ void CANBus::write_rx_packet(CANPacket packet) {
         } else {
             counterW_notAvail = 0;
             txFailStreak = 0;
-                        if (is_critical_control_id(adr)) {
-                            criticalTxRetries[adr] = 0;
-                        }
+            if (is_critical_control_id(adr)) {
+                criticalTxRetries[adr] = 0;
+            }
         }
     } catch (exception& ex) {
         xSemaphoreGive(mutex_out);
         txFailStreak++;
-                uint16_t packetId = adr > 0 ? adr : packet.getId();
-                if (is_critical_control_id(packetId)) {
-                    counterCriticalTxFail++;
-                }
-                retry_critical_packet(packetId);
+        uint16_t packetId = adr > 0 ? adr : packet.getId();
+        if (is_critical_control_id(packetId)) {
+            counterCriticalTxFail++;
+        }
+        retry_critical_packet(packetId);
         console << "ERROR: Couldn not send uint64_t data to address " << adr
                 << ", ex: " << ex.what() << NL;
     }
@@ -536,17 +549,17 @@ void CANBus::task(void* pvParams) {
             if (deadCounter == 0) {
                 deadCounter = millis() + 15e3;  // on boot: do not terminate for some time
             }
-                if ((counterR_notAvail > REINIT_FAIL_THRESHOLD || counterI_notAvail > REINIT_FAIL_THRESHOLD ||
+            if ((counterR_notAvail > REINIT_FAIL_THRESHOLD || counterI_notAvail > REINIT_FAIL_THRESHOLD ||
                  txFailStreak > REINIT_FAIL_THRESHOLD) &&
                 (millis() - lastReinitMs > REINIT_COOLDOWN_MS)) {
                 console << NL
-                           << fmt::format("CANBus REINIT trigger: I{}|{}, R{}|{}, W{}|{}, txFailStreak={}, rxOv={}, txOv={}, critTxDrop={}, critTxFail={}, critStale={}, critSeqGap={}, qCrit={}, qTel={}",
+                        << fmt::format("CANBus REINIT trigger: I{}|{}, R{}|{}, W{}|{}, txFailStreak={}, rxOv={}, txOv={}, critTxDrop={}, critTxFail={}, critStale={}, critSeqGap={}, qCrit={}, qTel={}",
                                        counterI_notAvail, counterI, counterR_notAvail,
-                               counterR, counterW_notAvail, counterW, txFailStreak,
-                               counterRxOverwrite, counterTxOverwrite,
-                               counterCriticalTxDrop, counterCriticalTxFail,
-                               counterCriticalStale, counterCriticalSeqGap,
-                               availablePacketsOutCritical(), availablePacketsOutTelemetry())
+                                       counterR, counterW_notAvail, counterW, txFailStreak,
+                                       counterRxOverwrite, counterTxOverwrite,
+                                       counterCriticalTxDrop, counterCriticalTxFail,
+                                       counterCriticalStale, counterCriticalSeqGap,
+                                       availablePacketsOutCritical(), availablePacketsOutTelemetry())
                         << NL;
                 canBus.re_init();
             }

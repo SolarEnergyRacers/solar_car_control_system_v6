@@ -37,6 +37,7 @@ public:
                     "\tI _ _ _ _ _ _ _ _ _ _ _ _ read and show IOs\n"
                     "\t  [s]                       - scan and show I2C devices\n"
                     "\tC _ _ _ _ _ _ _ _ _ _ _ _ set CAN verbose mode\n"
+                    "\t  [x]                       - CAN address display\n"
                     "\t  [i]                       - verbose CAN in\n"
                     "\t  [I]                       - verbose CAN in native packages\n"
                     "\t  [o]                       - verbose CAN out\n"

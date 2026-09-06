@@ -166,6 +166,7 @@ void app_main(void) {
   msg = canBus.init_t(0, 24, 10000, base_offset_suspend + 0);
   console << msg << NL;
   canBus.verboseModeCanIn = false;
+  canBus.verboseModeCanAddr = false;
   canBus.verboseModeCanInNative = false;
   canBus.verboseModeCanOut = false;
   canBus.verboseModeCanOutNative = false;
@@ -308,6 +309,7 @@ void app_main(void) {
   ss << "Initialization ready as AuxiliaryController" << NL;
   ss << fmt::format("- i2cBus.verboseModeI2C              = {}", i2cBus.verboseModeI2C) << NL;
   // ss << fmt::format("- canBus.verboseModeCanIn            = {}", canBus.verboseModeCanIn) << NL;
+  // ss << fmt::format("-        verboseModeCanInAddr        = {}", canBus.verboseModeCanAddr) << NL;
   // ss << fmt::format("-        verboseModeCanInNative      = {}", canBus.verboseModeCanInNative) << NL;
   // ss << fmt::format("-        verboseModeCanOut           = {}", canBus.verboseModeCanOut) << NL;
   // ss << fmt::format("-        verboseModeCanOutNative     = {}", canBus.verboseModeCanOutNative) << NL;

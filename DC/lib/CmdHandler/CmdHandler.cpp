@@ -162,7 +162,10 @@ void CmdHandler::task(void *pvParams) {
           break;
         // -------------- chase car commands
         case 'C':
-          if (input[1] == 'i') {
+          if (input[1] == 'x') {
+            canBus.verboseModeCanAddr = !canBus.verboseModeCanAddr;
+            console << "set verboseModeCanAddr: " << canBus.verboseModeCanAddr << NL;
+          } else if (input[1] == 'i') {
             canBus.verboseModeCanIn = !canBus.verboseModeCanIn;
             console << "set verboseModeCanIn: " << canBus.verboseModeCanIn << NL;
           } else if (input[1] == 'I') {

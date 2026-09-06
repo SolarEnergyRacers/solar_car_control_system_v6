@@ -150,6 +150,7 @@ void app_main(void) {
   msg = canBus.init_t(0, 24, 10000, base_offset_suspend + 0);
   console << msg << NL;
   canBus.verboseModeCanIn = false;
+  canBus.verboseModeCanAddr = false;
   canBus.verboseModeCanInNative = false;
   canBus.verboseModeCanOut = false;
   canBus.verboseModeCanOutNative = false;
