@@ -237,6 +237,11 @@ void CarControl::task(void *pvParams) {
       );
       dcPacketSeq++;
 
+      if (carState.Tmax > carState.FanStartStopTemp)
+        carState.BatteryFan = true;
+      else if (carState.Tmax < carState.FanStartStopTemp - carState.FanStartStopHystersis)
+        carState.BatteryFan = false;
+
       // vTaskDelay(10);
 
       if (carControl.verboseModeDebug) {

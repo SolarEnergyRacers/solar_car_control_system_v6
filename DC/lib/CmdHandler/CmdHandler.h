@@ -17,7 +17,7 @@ public:
   void task(void *pvParams);
 
   // Class functions and members
-  string commands = "SVICOTK:!sc?";
+  string commands = "SVICOTKF:!sc?";
   string helpText = "Available commands (" + commands +
                     "):\n"
                     "\t-------- SYSTEM COMMANDS -------------------------\n"
@@ -42,11 +42,13 @@ public:
                     "\t  [O]                 - verbose debug\n"
                     "\tT [yyyy mm dd hh MM]  get/set RTC date and time\n"
                     "\tK [|kp ki kd] _ _ _ _ show / update PID constants\n"
+                    "\tF [|Tmax hyst]  _ _ _ show / update Tmax for fan startup and dT for hysteresis\n"
                     "\t-------- DRIVER INFO COMMANDS --------------------\n"
                     "\t:<text> _ _ _ _ _ _ _ display driver info text\n"
                     "\t!<text> _ _ _ _ _ _ _ display driver warn text\n"
                     "\ts [|+|-]  _ _ _ _ _ _ speed arrow off, green up (+), red down (-)\n"
                     "\t-------- Driver SUPPORT COMMANDS -----------------\n"
+                  
                     "\tc [-|s|p] _ _ _ _ _ _ constant mode on (-:off|s:speed|p:power)\n";
 
   string printSystemValues(void);
