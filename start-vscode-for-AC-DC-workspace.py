@@ -35,6 +35,7 @@ def open_console_with_device_listing():
     bash_cmd = (
         'ls -lisa /dev/ttyU* ; ls -lisa /dev/esp* ; ls -lisa /dev/ttyA* 2>/dev/null || true; '
         'echo; echo "ll /dev/ttyU* ; ll /dev/esp* ; ll /dev/ttyA*"; '
+        './showports; '
         'echo; echo "Terminal remains open. Close it when done."; '
         'exec bash'
     )

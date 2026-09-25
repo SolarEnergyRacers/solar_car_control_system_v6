@@ -103,6 +103,9 @@ public:
     Deceleration = 0;
     BatteryVoltage = 0;
     BatteryCurrent = 0;
+    FanStartStopTemp = 50;
+    FanStartStopHystersis = 2;
+    BatteryFan = true;
     PhotoVoltaicCurrent = 0;
     MotorCurrent = 0;
 
@@ -141,12 +144,12 @@ public:
   bool ButtonPlus;
   bool ButtonMinus;
   bool ButtonConstantModeOn;
-  bool ButtonConfirmDriverInfo; //former: ButtonConstantModeOFF
+  bool ButtonConfirmDriverInfo; // former: ButtonConstantModeOFF
   bool ButtonConstant_v_P;
 
   // physical car data (measurement values)
   uint8_t Speed;          // ADC
-  double SpeedExact; // exact speed value before rounding
+  double SpeedExact;      // exact speed value before rounding
   uint16_t Potentiometer; // ADC potentiometer from switch board
   uint16_t Acceleration;  // ADC Steering Wheel
   uint16_t Deceleration;  // ADC Steering Wheel
@@ -165,6 +168,9 @@ public:
 
   float BatteryVoltage;      // CAN
   float BatteryCurrent;      // CAN
+  bool BatteryFan;           // GIO
+  int FanStartStopTemp;
+  int FanStartStopHystersis;
   float PhotoVoltaicCurrent; // ADC
   float MotorVoltage;        // ADC
   float MotorCurrent;        // ADC
@@ -230,7 +236,7 @@ public:
   double Kd = 0.01; // differential
 
   // [Dynamic]
-  int PaddleDamping = 50;  // reduced from 160 for faster response (0...ca.30000)
+  int PaddleDamping = 80;  // reduced from 160 for faster response (0...ca.30000)
   int StartOffset_acc = 0; // 0 ... 65535: offset calculated for paddle at start
   int StartOffset_dec = 0; // 0 ... 65535: offset calculated for paddle at start
   uint8_t GlideMode = 0;   // 0 ... 7: 0:glide, 3:half glide/half recup, 7:recuperation

@@ -258,6 +258,25 @@ void CmdHandler::task(void *pvParams) {
             console << "Kp=" << Kp << ", Ki=" << Ki << ", Kd=" << Kd << " Will be overwritten when AC is running!" << NL;
           }
           break;
+        case 'F': {
+          int localFanStartStopTemp;
+          int localFanStartStopHystersis;
+          string arr[2];
+          int count = splitString(arr, &input[1]);
+          if (count == 0) {
+            console << "Fan parameters: ";
+          } else {
+            localFanStartStopTemp = atof(arr[0].c_str());
+            localFanStartStopHystersis = atof(arr[1].c_str());
+            if (localFanStartStopTemp >= 20 && localFanStartStopTemp <=95 
+              && localFanStartStopHystersis >= 0 && localFanStartStopHystersis <= 8) {
+              carState.FanStartStopTemp = localFanStartStopTemp;
+              carState.FanStartStopHystersis = localFanStartStopHystersis;
+            }
+            console << " ==> set new Fan parameters: ";
+          }
+          console << "FanStartStopTemp=" << carState.FanStartStopTemp << ", FanStartStopHystersis=" << carState.FanStartStopHystersis << NL;
+        } break;
         default:
           if (isalpha(input[0])) {
             console << "unknown command, ? for help" << NL;

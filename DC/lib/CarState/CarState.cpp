@@ -37,6 +37,8 @@ void CarState::init_values() {
   Deceleration = 0;
   BatteryVoltage = 0;
   BatteryCurrent = 0;
+  FanStartStopTemp = 50;
+  FanStartStopHystersis = 2;
   PhotoVoltaicCurrent = 0;
   ReferenceSolarCell = 0;
   MotorCurrent = 0;
@@ -244,6 +246,7 @@ const string CarState::csv(const string msg, bool withHeader) {
     ss << "T3, ";
     ss << "Tmin, ";
     ss << "Tmax, ";
+    ss << "batteryFan";
 
     ss << "driveDirection, ";
     ss << "constantMode, ";
@@ -298,6 +301,8 @@ const string CarState::csv(const string msg, bool withHeader) {
   ss << floor(T3 * 1000.0 + .5) / 1000.0 << ", ";
   ss << floor(Tmin * 1000.0 + .5) / 1000.0 << ", ";
   ss << floor(Tmax * 1000.0 + .5) / 1000.0 << ", ";
+  ss << BatteryFan <<", ";
+
 
   ss << DRIVE_DIRECTION_str[(int)(DriveDirection)] << ", ";
   ss << CONSTANT_MODE_str[(int)(ConstantMode)] << ", ";
